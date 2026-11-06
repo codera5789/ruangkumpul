@@ -1,0 +1,81 @@
+import { Compass, Users } from "lucide-react";
+import Link from "next/link";
+import { Logo } from "@/components/layout/logo";
+import { SearchInput } from "@/components/layout/search-input";
+import { UserMenu } from "@/components/layout/user-menu";
+import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/server";
+
+const navItems = [
+  { href: "/jelajahi", label: "Jelajahi", icon: Compass },
+  { href: "/komunitas", label: "Komunitas", icon: Users },
+  { href: "/artikel", label: "Artikel" },
+  { href: "/tools", label: "Tools" },
+];
+
+export async function Header() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let profile: { username: string; full_name: string | null; avatar_url: string | null } | null =
+    null;
+
+  if (user) {
+    const { data } = await supabase
+      .from("profiles")
+      .select("username, full_name, avatar_url")
+      .eq("id", user.id)
+      .single();
+    profile = data;
+  }
+
+  return (
+    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-surface/90 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6">
+        <Logo />
+
+        {/* Navigasi desktop */}
+        <nav aria-label="Navigasi utama" className="hidden items-center gap-1 lg:flex">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="rounded-lg px-3 py-2 text-sm font-medium text-ink-secondary transition-colors hover:bg-surface-muted hover:text-ink"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+
+        {/* Pencarian desktop */}
+        <div className="hidden min-w-0 flex-1 justify-end md:flex">
+          <SearchInput className="max-w-md" />
+        </div>
+
+        <div className="ml-auto flex items-center gap-2 md:ml-0">
+          {user && profile ? (
+            <UserMenu
+              user={{
+                username: profile.username,
+                fullName: profile.full_name,
+                avatarUrl: profile.avatar_url,
+                email: user.email ?? "",
+              }}
+            />
+          ) : (
+            <>
+              <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+                <Link href="/login">Masuk</Link>
+              </Button>
+              <Button asChild size="sm">
+                <Link href="/register">Daftar</Link>
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}

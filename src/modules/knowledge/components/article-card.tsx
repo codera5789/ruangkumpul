@@ -1,0 +1,67 @@
+import { Eye } from "lucide-react";
+import Link from "next/link";
+import { Avatar } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { formatCompactId, formatDateId } from "@/lib/utils";
+import type { ArticleWithAuthor } from "@/modules/knowledge/services";
+
+export function ArticleCard({ article }: { article: ArticleWithAuthor }) {
+  const authorName =
+    article.profiles?.full_name || article.profiles?.username || "Anonim";
+
+  return (
+    <article className="group flex flex-col overflow-hidden rounded-card border border-slate-200/80 bg-surface shadow-card transition-all hover:-translate-y-0.5 hover:shadow-card-hover">
+      <Link href={`/artikel/${article.slug}`} className="flex h-full flex-col">
+        {article.featured_image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={article.featured_image}
+            alt={article.title}
+            className="aspect-16/9 w-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="aspect-16/9 w-full bg-gradient-to-br from-brand-100 to-accent-100" />
+        )}
+
+        <div className="flex flex-1 flex-col gap-3 p-5">
+          {article.article_categories ? (
+            <Badge variant="brand" className="w-fit">
+              {article.article_categories.name}
+            </Badge>
+          ) : null}
+
+          <h3 className="text-pretty font-bold leading-snug text-ink transition-colors group-hover:text-brand-800">
+            {article.title}
+          </h3>
+
+          {article.excerpt ? (
+            <p className="line-clamp-2 text-sm leading-relaxed text-ink-secondary">
+              {article.excerpt}
+            </p>
+          ) : null}
+
+          <div className="mt-auto flex items-center gap-2.5 pt-2">
+            <Avatar
+              src={article.profiles?.avatar_url}
+              name={authorName}
+              className="size-7"
+            />
+            <div className="min-w-0 flex-1 text-xs">
+              <p className="truncate font-semibold text-ink">{authorName}</p>
+              <p className="text-ink-muted">
+                {article.published_at ? formatDateId(article.published_at) : ""}
+                {article.view_count > 0 ? (
+                  <span className="ml-1.5 inline-flex items-center gap-0.5">
+                    <Eye className="size-3" aria-hidden="true" />
+                    {formatCompactId(article.view_count)}
+                  </span>
+                ) : null}
+              </p>
+            </div>
+          </div>
+        </div>
+      </Link>
+    </article>
+  );
+}
