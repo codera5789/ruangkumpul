@@ -6,7 +6,7 @@ import { actionSetArticleStatus, actionToggleToolStatus } from "@/modules/admin/
 import { createClient } from "@/lib/supabase/server";
 import { formatDateId } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Admin — Tools & Artikel" };
+export const metadata: Metadata = { title: "Admin · Tools & Artikel" };
 
 export default async function AdminKontenPage() {
   const supabase = await createClient();

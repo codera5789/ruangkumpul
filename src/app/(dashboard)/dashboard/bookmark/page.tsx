@@ -195,7 +195,7 @@ export default async function BookmarkPage() {
         <div className="rounded-card border border-dashed border-slate-300 bg-surface px-6 py-14 text-center">
           <p className="font-semibold text-ink">Belum ada bookmark</p>
           <p className="mx-auto mt-1 max-w-sm text-sm text-ink-secondary">
-            Simpan artikel, diskusi, dan tool favoritmu dengan tombol bookmark —
+            Simpan artikel, diskusi, dan tool favoritmu dengan tombol bookmark,
             akan tersedia di seluruh halaman konten.
           </p>
           <Link

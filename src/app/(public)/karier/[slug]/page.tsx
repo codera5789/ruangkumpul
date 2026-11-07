@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: JobDetailPageProps): Promise<
     description: job.description.slice(0, 160),
     alternates: { canonical: `/karier/${job.slug}` },
     openGraph: {
-      title: `${job.title} — ${job.company_name}`,
+      title: `${job.title} · ${job.company_name}`,
       description: job.description.slice(0, 160),
       url: `/karier/${job.slug}`,
       type: "article",

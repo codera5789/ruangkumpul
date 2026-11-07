@@ -1,9 +1,10 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BookOpen, CalendarDays, Briefcase, Compass, Users, Wrench } from "lucide-react";
+import { ArrowRight, BookOpen, CalendarDays, Briefcase, Users, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { PageHero } from "@/components/shared/page-hero";
 import { Reveal } from "@/components/shared/reveal";
 import { CommunityCard } from "@/modules/community/components/community-card";
 import { ArticleCard } from "@/modules/knowledge/components/article-card";
@@ -117,22 +118,10 @@ export default function JelajahiPage() {
 
   return (
     <div className="animate-fade-in">
-      <section className="relative overflow-hidden bg-gradient-to-br from-brand-800 to-accent-600">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-          <div className="absolute -top-20 -left-16 size-72 rounded-full bg-accent-400/25 blur-3xl animate-float" />
-          <div className="absolute -right-12 -bottom-24 size-80 rounded-full bg-brand-300/20 blur-3xl animate-float [animation-delay:-3.5s]" />
-        </div>
-        <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6">
-          <div className="animate-slide-up-far">
-            <p className="flex items-center gap-2 text-sm font-semibold text-brand-200">
-              <Compass className="size-4" aria-hidden="true" /> Jelajahi
-            </p>
-            <h1 className="mt-1 text-balance text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-              Semua yang RuangKumpul punya, dalam satu halaman.
-            </h1>
-          </div>
-        </div>
-      </section>
+      <PageHero
+        eyebrow="Jelajahi"
+        title="Semua yang RuangKumpul punya, dalam satu halaman."
+      />
 
       <div className="mx-auto max-w-7xl space-y-14 px-4 py-12 sm:px-6">
         {/* Tools */}
@@ -170,7 +159,7 @@ export default function JelajahiPage() {
           <div className="mb-5 flex items-end justify-between gap-4">
             <div>
               <h2 id="jelajahi-artikel" className="flex items-center gap-2 text-xl font-extrabold text-ink">
-                <BookOpen className="size-5 text-accent-600" aria-hidden="true" /> Artikel
+                <BookOpen className="size-5 text-brand-800" aria-hidden="true" /> Artikel
               </h2>
               <p className="mt-1 text-sm text-ink-secondary">
                 Bacaan terbaru dari kontributor.
@@ -192,7 +181,7 @@ export default function JelajahiPage() {
           <div className="mb-5 flex items-end justify-between gap-4">
             <div>
               <h2 id="jelajahi-komunitas" className="flex items-center gap-2 text-xl font-extrabold text-ink">
-                <Users className="size-5 text-emerald-600" aria-hidden="true" /> Komunitas
+                <Users className="size-5 text-brand-800" aria-hidden="true" /> Komunitas
               </h2>
               <p className="mt-1 text-sm text-ink-secondary">
                 Tempat berkumpulnya diskusi aktif.
@@ -236,7 +225,7 @@ export default function JelajahiPage() {
           <div className="mb-5 flex items-end justify-between gap-4">
             <div>
               <h2 id="jelajahi-karier" className="flex items-center gap-2 text-xl font-extrabold text-ink">
-                <Briefcase className="size-5 text-accent-600" aria-hidden="true" /> Lowongan
+                <Briefcase className="size-5 text-brand-800" aria-hidden="true" /> Lowongan
               </h2>
               <p className="mt-1 text-sm text-ink-secondary">
                 Peluang kerja dan freelance terbaru.

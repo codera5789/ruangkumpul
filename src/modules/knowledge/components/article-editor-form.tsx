@@ -167,8 +167,8 @@ export function ArticleEditorForm({
               Status
             </label>
             <select id="status" name="status" defaultValue={defaults?.status ?? "draft"} className={inputCls}>
-              <option value="draft">Draft — hanya kamu</option>
-              <option value="review">Review — menunggu moderasi</option>
+              <option value="draft">Draft: hanya kamu</option>
+              <option value="review">Review: menunggu moderasi</option>
               <option value="published">Terbitkan langsung</option>
             </select>
             <p className="mt-2 text-xs text-ink-muted">

@@ -13,10 +13,10 @@ type ErrorLevel = "L" | "M" | "Q" | "H";
 const SIZE_OPTIONS = [256, 512, 1024] as const;
 
 const LEVEL_OPTIONS: { value: ErrorLevel; label: string }[] = [
-  { value: "L", label: "L — Rendah (±7%)" },
-  { value: "M", label: "M — Sedang (±15%)" },
-  { value: "Q", label: "Q — Kuat (±25%)" },
-  { value: "H", label: "H — Sangat kuat (±30%)" },
+  { value: "L", label: "L: Rendah (±7%)" },
+  { value: "M", label: "M: Sedang (±15%)" },
+  { value: "Q", label: "Q: Kuat (±25%)" },
+  { value: "H", label: "H: Sangat kuat (±30%)" },
 ];
 
 const SELECT_CLASS =

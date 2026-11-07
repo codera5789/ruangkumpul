@@ -73,7 +73,7 @@ export default async function DashboardPage() {
         />
         <div className="min-w-0 animate-slide-up-far [animation-delay:100ms]">
           <h1 className="text-2xl font-extrabold tracking-tight text-ink">
-            Halo, {profile.full_name || profile.username} 👋
+            Halo, {profile.full_name || profile.username}
           </h1>
           <p className="text-sm text-ink-secondary">
             @{profile.username}

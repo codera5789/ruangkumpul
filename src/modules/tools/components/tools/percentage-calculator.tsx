@@ -48,7 +48,7 @@ function compute(mode: Mode, x: number | null, y: number | null): Computation | 
     if (y === 0) {
       return {
         headline: "Tidak terdefinisi",
-        detail: "Pembagian dengan nol — nilai Y tidak boleh 0.",
+        detail: "Pembagian dengan nol: nilai Y tidak boleh 0.",
         isError: true,
       };
     }
@@ -167,7 +167,7 @@ export default function PercentageCalculator() {
                   : "bg-brand-50 text-brand-900",
               )}
             >
-              <p className="text-xs font-semibold tracking-wide uppercase opacity-80">
+              <p className="text-xs font-semibold opacity-80">
                 {result.isError ? "Tidak dapat dihitung" : "Hasil"}
               </p>
               <p className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">

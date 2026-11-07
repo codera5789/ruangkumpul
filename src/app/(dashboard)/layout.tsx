@@ -4,7 +4,11 @@ import { redirect } from "next/navigation";
 import { Logo } from "@/components/layout/logo";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { LogoutButton } from "@/components/layout/logout-button";
-import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
+import {
+  DashboardMobileNav,
+  DashboardSidebar,
+} from "@/components/layout/dashboard-sidebar";
 import { createClient } from "@/lib/supabase/server";
 
 function ShellSkeleton() {
@@ -30,7 +34,7 @@ async function DashboardShell({
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-surface/90 backdrop-blur-md animate-slide-down">
+      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-surface">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
           <Logo />
           <div className="flex items-center gap-3">
@@ -40,6 +44,7 @@ async function DashboardShell({
             >
               ← Kembali ke beranda
             </Link>
+            <ThemeToggle />
             <LogoutButton />
           </div>
         </div>
@@ -50,7 +55,10 @@ async function DashboardShell({
           <DashboardSidebar />
         </aside>
 
-        <main className="min-w-0 flex-1 pb-16 animate-fade-in md:pb-0">{children}</main>
+        <main className="min-w-0 flex-1 pb-16 animate-fade-in md:pb-0">
+          <DashboardMobileNav />
+          {children}
+        </main>
       </div>
 
       <MobileNav />

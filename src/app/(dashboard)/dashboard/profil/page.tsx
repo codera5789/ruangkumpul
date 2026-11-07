@@ -48,7 +48,7 @@ export default async function ProfilPage() {
       </div>
 
       <p className="text-xs text-ink-muted">
-        Email akun: {user.email} — perubahan email tersedia di{" "}
+        Email akun: {user.email}, perubahan email tersedia di{" "}
         <a href="/dashboard/pengaturan" className="font-semibold text-brand-700 hover:underline">
           Pengaturan
         </a>

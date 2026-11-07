@@ -4,13 +4,14 @@ import Link from "next/link";
 import { Plus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PageHero } from "@/components/shared/page-hero";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { CommunitySearch } from "@/modules/community/components/community-search";
 import { listTopCommunities } from "@/modules/community/services";
 
 export const metadata: Metadata = {
-  title: "Komunitas — Temukan dan Bangun Komunitasmu",
+  title: "Komunitas · Temukan dan Bangun Komunitasmu",
   description:
     "Jelajahi komunitas di RuangKumpul: diskusi, berbagi ide, dan bangun jaringan dengan sesama pengguna dari berbagai minat.",
   keywords: ["komunitas online indonesia", "forum diskusi", "community indonesia"],
@@ -36,36 +37,22 @@ async function KomunitasContent({
 
   return (
     <div className="animate-fade-in">
-      <section className="relative overflow-hidden bg-gradient-to-br from-brand-800 to-accent-600">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-          <div className="absolute -top-20 -left-16 size-72 rounded-full bg-accent-400/25 blur-3xl animate-float" />
-          <div className="absolute -right-12 -bottom-24 size-80 rounded-full bg-brand-300/20 blur-3xl animate-float [animation-delay:-3.5s]" />
-        </div>
-        <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6">
-          <div className="flex flex-wrap items-end justify-between gap-6 animate-slide-up-far">
-            <div>
-              <p className="text-sm font-semibold text-brand-200">Ruang Komunitas</p>
-              <h1 className="mt-1 text-balance text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-                Temukan komunitasmu.
-              </h1>
-              <p className="mt-3 max-w-2xl text-pretty text-brand-100">
-                Bergabung dengan diskusi yang relevan, atau bangun komunitas
-                sendiri untuk minat dan profesimu.
-              </p>
-            </div>
-            <Button
-              asChild
-              size="lg"
-              className="bg-white text-brand-800 shadow-lg shadow-brand-950/25 hover:bg-brand-50"
-            >
-              <Link href="/komunitas/buat">
-                <Plus className="size-5" aria-hidden="true" />
-                Buat Komunitas
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+      <PageHero
+        eyebrow="Ruang Komunitas"
+        title="Temukan komunitasmu."
+        description="Bergabung dengan diskusi yang relevan, atau bangun komunitas sendiri untuk minat dan profesimu."
+      >
+        <Button
+          asChild
+          size="lg"
+          className="bg-white text-brand-800 shadow-lg shadow-brand-950/25 hover:bg-brand-50"
+        >
+          <Link href="/komunitas/buat">
+            <Plus className="size-5" aria-hidden="true" />
+            Buat Komunitas
+          </Link>
+        </Button>
+      </PageHero>
 
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
         {visible.length > 0 ? (

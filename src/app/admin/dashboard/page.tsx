@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import { formatCompactId, timeAgoId } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Admin — Statistik" };
+export const metadata: Metadata = { title: "Admin · Statistik" };
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient();

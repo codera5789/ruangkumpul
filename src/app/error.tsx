@@ -22,7 +22,7 @@ export default function GlobalError({
       </div>
       <h1 className="mt-5 text-2xl font-extrabold text-ink">Ada yang salah</h1>
       <p className="mt-2 max-w-md text-sm text-ink-secondary">
-        Terjadi kesalahan tak terduga. Coba lagi — jika masih berlanjut,
+        Terjadi kesalahan tak terduga. Coba lagi; jika masih berlanjut,
         hubungi kami melalui halaman kontak.
       </p>
       <Button onClick={reset} className="mt-7">

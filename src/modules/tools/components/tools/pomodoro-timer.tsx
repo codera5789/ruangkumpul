@@ -128,7 +128,7 @@ export default function PomodoroTimer() {
   useEffect(() => {
     if (!running) return;
     const label = phase === "fokus" ? "Fokus" : "Istirahat";
-    document.title = `${formatMs(remainingMs)} — ${label} | RuangKumpul`;
+    document.title = `${formatMs(remainingMs)} · ${label} | RuangKumpul`;
   }, [running, remainingMs, phase]);
 
   const isFokus = phase === "fokus";
@@ -197,7 +197,7 @@ export default function PomodoroTimer() {
         <div className="flex flex-col items-center gap-5">
           <span
             className={cn(
-              "inline-flex items-center rounded-full px-3.5 py-1 text-xs font-bold tracking-widest uppercase",
+              "inline-flex items-center rounded-full px-3.5 py-1 text-xs font-bold",
               isFokus ? "bg-brand-50 text-brand-800" : "bg-emerald-50 text-emerald-700",
             )}
           >

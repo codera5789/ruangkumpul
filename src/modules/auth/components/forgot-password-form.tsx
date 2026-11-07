@@ -19,7 +19,7 @@ export function ForgotPasswordForm() {
       <div>
         <h1 className="text-xl font-extrabold text-ink">Lupa password?</h1>
         <p className="mt-1 text-sm text-ink-secondary">
-          Masukkan email kamu — kami kirim link untuk membuat password baru.
+          Masukkan email kamu: kami kirim link untuk membuat password baru.
         </p>
       </div>
 

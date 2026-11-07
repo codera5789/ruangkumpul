@@ -174,7 +174,7 @@ async function SearchContent({
                           <meta.icon className="size-5" aria-hidden="true" />
                         </span>
                         <div className="min-w-0">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                          <p className="text-xs font-semibold text-ink-muted">
                             {meta.label}
                           </p>
                           <p className="mt-0.5 font-bold text-ink">{result.title}</p>

@@ -12,7 +12,7 @@ export function Logo({
   return (
     <Link
       href={href}
-      aria-label="RuangKumpul — Beranda"
+      aria-label="RuangKumpul · Beranda"
       className={cn("flex shrink-0 items-center gap-2", className)}
     >
       <span className="flex size-8 items-center justify-center rounded-lg bg-brand-800 text-white">

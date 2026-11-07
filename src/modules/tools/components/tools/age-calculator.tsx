@@ -101,7 +101,7 @@ function StatCard({ label, value, hint, className }: StatCardProps) {
         className,
       )}
     >
-      <p className="text-xs font-semibold tracking-wide text-ink-secondary uppercase">
+      <p className="text-xs font-semibold text-ink-secondary">
         {label}
       </p>
       <p className="mt-1.5 text-2xl font-extrabold tracking-tight text-ink">{value}</p>

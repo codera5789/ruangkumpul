@@ -139,7 +139,7 @@ async function EventDetailContent({ params }: EventDetailPageProps) {
             <div className="flex items-start gap-2.5">
               <CalendarDays className="mt-0.5 size-5 shrink-0 text-brand-700" aria-hidden="true" />
               <div>
-                <dt className="text-xs font-semibold text-ink-muted uppercase">Mulai</dt>
+                <dt className="text-xs font-semibold text-ink-muted">Mulai</dt>
                 <dd className="text-sm font-semibold text-ink">
                   {formatDateId(event.starts_at, {
                     weekday: "long",
@@ -156,7 +156,7 @@ async function EventDetailContent({ params }: EventDetailPageProps) {
               <div className="flex items-start gap-2.5">
                 <Clock className="mt-0.5 size-5 shrink-0 text-brand-700" aria-hidden="true" />
                 <div>
-                  <dt className="text-xs font-semibold text-ink-muted uppercase">Selesai</dt>
+                  <dt className="text-xs font-semibold text-ink-muted">Selesai</dt>
                   <dd className="text-sm font-semibold text-ink">
                     {formatDateId(event.ends_at, {
                       day: "numeric",
@@ -172,7 +172,7 @@ async function EventDetailContent({ params }: EventDetailPageProps) {
               <div className="flex items-start gap-2.5">
                 <MapPin className="mt-0.5 size-5 shrink-0 text-brand-700" aria-hidden="true" />
                 <div>
-                  <dt className="text-xs font-semibold text-ink-muted uppercase">Lokasi</dt>
+                  <dt className="text-xs font-semibold text-ink-muted">Lokasi</dt>
                   <dd className="text-sm font-semibold text-ink">{event.location}</dd>
                 </div>
               </div>
@@ -181,7 +181,7 @@ async function EventDetailContent({ params }: EventDetailPageProps) {
               <div className="flex items-start gap-2.5">
                 <Video className="mt-0.5 size-5 shrink-0 text-brand-700" aria-hidden="true" />
                 <div>
-                  <dt className="text-xs font-semibold text-ink-muted uppercase">Akses online</dt>
+                  <dt className="text-xs font-semibold text-ink-muted">Akses online</dt>
                   <dd className="text-sm font-semibold text-ink">
                     {isOrganizer || registered ? (
                       event.online_url ? (
@@ -206,7 +206,7 @@ async function EventDetailContent({ params }: EventDetailPageProps) {
             <div className="flex items-start gap-2.5">
               <Users className="mt-0.5 size-5 shrink-0 text-brand-700" aria-hidden="true" />
               <div>
-                <dt className="text-xs font-semibold text-ink-muted uppercase">Peserta</dt>
+                <dt className="text-xs font-semibold text-ink-muted">Peserta</dt>
                 <dd className="text-sm font-semibold text-ink">
                   {formatCompactId(event.participant_count)}
                   {event.max_participants ? ` dari ${formatCompactId(event.max_participants)} kuota` : ""}

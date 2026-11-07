@@ -42,3 +42,7 @@ next-env.d.ts
 
 # skrip ekstraksi sekali pakai
 .tmp/
+
+# Artefak pengujian & konfigurasi lokal
+gui-test-screenshots/
+.zcode/

@@ -1,5 +1,6 @@
 import { Eye } from "lucide-react";
 import Link from "next/link";
+import { KumpulMotif } from "@/components/shared/kumpul-motif";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { formatCompactId, formatDateId } from "@/lib/utils";
@@ -21,7 +22,9 @@ export function ArticleCard({ article }: { article: ArticleWithAuthor }) {
             loading="lazy"
           />
         ) : (
-          <div className="aspect-16/9 w-full bg-gradient-to-br from-brand-100 to-accent-100 transition-transform duration-500 ease-out-expo group-hover:scale-105" />
+          <div className="relative flex aspect-16/9 w-full items-center justify-center bg-brand-50 transition-transform duration-500 ease-out-expo group-hover:scale-105">
+            <KumpulMotif className="size-28 text-brand-800/20 dark:text-brand-300/25" />
+          </div>
         )}
 
         <div className="flex flex-1 flex-col gap-3 p-5">

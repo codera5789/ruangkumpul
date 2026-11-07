@@ -268,7 +268,7 @@ export default function ImageCompressor() {
                 </p>
               ) : (
                 <p className="mt-3 text-sm text-red-600">
-                  Penghematan: {percentFormatter.format(savingsPct)}% — tidak efisien, coba
+                  Penghematan: {percentFormatter.format(savingsPct)}%, tidak efisien, coba
                   kualitas lebih rendah.
                 </p>
               )}

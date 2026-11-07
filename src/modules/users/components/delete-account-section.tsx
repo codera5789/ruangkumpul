@@ -16,7 +16,7 @@ export function DeleteAccountSection() {
   if (state.success) {
     return (
       <div className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800" role="status">
-        {state.success} —{" "}
+        {state.success}:{" "}
         <Link href="/" className="font-semibold underline">
           Kembali ke beranda
         </Link>

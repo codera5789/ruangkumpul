@@ -30,7 +30,7 @@ const navItems = [
 
 export function DashboardSidebar() {
   return (
-    <nav aria-label="Menu dashboard" className="sticky top-24 space-y-1 animate-fade-in">
+    <nav aria-label="Menu dashboard" className="sticky top-24 space-y-1">
       {navItems.map((item) => (
         <SidebarLink
           key={item.href}
@@ -38,6 +38,22 @@ export function DashboardSidebar() {
           label={item.label}
           icon={item.icon}
         />
+      ))}
+    </nav>
+  );
+}
+
+/** Baris navigasi horizontal untuk layar sempit (tampil < md, saat sidebar tersembunyi). */
+export function DashboardMobileNav() {
+  return (
+    <nav
+      aria-label="Menu dashboard"
+      className="mb-6 flex gap-1.5 overflow-x-auto pb-1 md:hidden"
+    >
+      {navItems.map((item) => (
+        <span key={item.href} className="shrink-0">
+          <SidebarLink href={item.href} label={item.label} icon={item.icon} />
+        </span>
       ))}
     </nav>
   );

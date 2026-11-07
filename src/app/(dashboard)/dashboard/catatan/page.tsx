@@ -29,7 +29,7 @@ export default async function CatatanPage() {
           Catatan
         </h1>
         <p className="mt-1 text-sm text-ink-secondary">
-          Ruang pribadimu — catatan hanya bisa dilihat oleh kamu.
+          Ruang pribadimu: catatan hanya bisa dilihat oleh kamu.
         </p>
       </div>
 

@@ -48,7 +48,7 @@ export function JobForm() {
 
           <div>
             <label htmlFor="applyUrl" className="mb-1.5 block text-sm font-semibold text-ink">
-              URL lamaran * <span className="font-normal text-ink-muted">(email/hr portal — pelamar diarahkan ke sini)</span>
+              URL lamaran * <span className="font-normal text-ink-muted">(email/hr portal, pelamar diarahkan ke sini)</span>
             </label>
             <Input id="applyUrl" name="applyUrl" type="url" required placeholder="https://karier.perusahaan.com/loker-frontend" />
           </div>

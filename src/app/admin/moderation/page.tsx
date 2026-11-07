@@ -5,7 +5,7 @@ import { actionUpdateReportStatus } from "@/modules/admin/actions";
 import { createClient } from "@/lib/supabase/server";
 import { timeAgoId } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Admin — Moderasi" };
+export const metadata: Metadata = { title: "Admin · Moderasi" };
 
 const statusVariants = {
   pending: "warning",

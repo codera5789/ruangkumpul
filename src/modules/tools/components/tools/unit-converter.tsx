@@ -213,7 +213,7 @@ export default function UnitConverter() {
         <div className="mt-5" aria-live="polite">
           {output ? (
             <div className="rounded-card bg-brand-50 px-4 py-5 text-brand-900 sm:px-5">
-              <p className="text-xs font-semibold tracking-wide uppercase opacity-80">
+              <p className="text-xs font-semibold opacity-80">
                 Hasil konversi
               </p>
               <p className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">

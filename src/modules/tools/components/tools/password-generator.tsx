@@ -170,7 +170,7 @@ export default function PasswordGenerator() {
         </div>
         <p className={cn("mt-1.5 text-xs", strength.textClass)}>
           {hasAnySet
-            ? `${strength.label} — entropi ±${Math.round(entropy)} bit`
+            ? `${strength.label} (entropi ±${Math.round(entropy)} bit)`
             : "Pilih minimal satu jenis karakter untuk membuat password."}
         </p>
       </div>

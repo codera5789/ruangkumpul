@@ -1,6 +1,6 @@
 export const siteConfig = {
   name: "RuangKumpul",
-  tagline: "One Platform. Endless Possibilities.",
+  tagline: "Satu ruang untuk tools, ilmu, dan komunitas.",
   description:
     "RuangKumpul adalah satu tempat untuk menemukan tools, mendapatkan informasi, belajar, berbagi ide, membangun komunitas, dan menemukan berbagai peluang digital.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://ruangkumpul.my.id",

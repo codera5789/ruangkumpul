@@ -41,7 +41,7 @@ export function RegisterEventButton({
             ? "Batalkan pendaftaran"
             : isFull
               ? "Kuota penuh"
-              : "Daftar Sekarang — Gratis"}
+              : "Daftar Sekarang (Gratis)"}
         </Button>
       </form>
       {state.error ? (

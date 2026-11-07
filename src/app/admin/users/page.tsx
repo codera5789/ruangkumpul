@@ -5,7 +5,7 @@ import { UserRoleManager } from "@/modules/admin/components/user-role-manager";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateId } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Admin — Pengguna" };
+export const metadata: Metadata = { title: "Admin · Pengguna" };
 
 const PAGE_SIZE = 30;
 
@@ -52,7 +52,7 @@ export default async function AdminUsersPage({
       <div>
         <h1 className="text-2xl font-extrabold tracking-tight text-ink">Pengguna</h1>
         <p className="mt-1 text-sm text-ink-secondary">
-          {count ?? 0} akun terdaftar. Kelola role dengan hati-hati — setiap
+          {count ?? 0} akun terdaftar. Kelola role dengan hati-hati: setiap
           perubahan tercatat di audit log.
         </p>
       </div>

@@ -33,7 +33,7 @@ export function CommunitySearch({ communities }: { communities: CommunitySummary
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Cari komunitas..."
           aria-label="Cari komunitas"
-          className="[&_input]:h-11 [&_input]:pl-11"
+          className="h-11 pl-11"
         />
       </div>
 

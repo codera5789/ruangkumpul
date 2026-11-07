@@ -50,7 +50,7 @@ export function NotesList({ notes }: { notes: Note[] }) {
 
       {sorted.length === 0 ? (
         <p className="rounded-card border border-dashed border-slate-300 bg-surface px-6 py-12 text-center text-sm text-ink-secondary">
-          Belum ada catatan. Ide, referensi, atau hal yang ingin kamu ingat — simpan di sini.
+          Belum ada catatan. Ide, referensi, atau hal yang ingin kamu ingat, simpan di sini.
         </p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">

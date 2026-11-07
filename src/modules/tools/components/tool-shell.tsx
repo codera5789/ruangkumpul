@@ -19,7 +19,7 @@ export function ToolPanel({
       )}
     >
       {title ? (
-        <h2 className="mb-4 text-sm font-bold tracking-wide text-ink-secondary uppercase">
+        <h2 className="mb-4 text-sm font-bold text-ink-secondary">
           {title}
         </h2>
       ) : null}

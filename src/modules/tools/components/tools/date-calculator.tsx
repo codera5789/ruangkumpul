@@ -126,7 +126,7 @@ function shiftDate(base: DateParts, amount: number, unit: Unit, direction: Direc
 function StatCard({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div className="rounded-card border border-slate-200/80 bg-surface p-4 shadow-card">
-      <p className="text-xs font-semibold tracking-wide text-ink-secondary uppercase">
+      <p className="text-xs font-semibold text-ink-secondary">
         {label}
       </p>
       <p className="mt-1.5 text-2xl font-extrabold tracking-tight text-ink">{value}</p>
@@ -227,7 +227,7 @@ export default function DateCalculator() {
             {difference ? (
               <div className="space-y-3">
                 <div className="rounded-card bg-brand-50 px-4 py-5 text-brand-900 sm:px-5">
-                  <p className="text-xs font-semibold tracking-wide uppercase opacity-80">
+                  <p className="text-xs font-semibold opacity-80">
                     Selisih
                   </p>
                   <p className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">
@@ -238,14 +238,14 @@ export default function DateCalculator() {
                     {difference.remainingDays > 0
                       ? `${numberFormatter.format(difference.remainingDays)} hari`
                       : "persis"}{" "}
-                    — sekitar {numberFormatter.format(difference.months)} bulan
+                   , sekitar {numberFormatter.format(difference.months)} bulan
                   </p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <StatCard
                     label="Akhir pekan"
                     value={`${numberFormatter.format(difference.saturdays + difference.sundays)} hari`}
-                    hint={`Sabtu: ${numberFormatter.format(difference.saturdays)} — Minggu: ${numberFormatter.format(difference.sundays)}`}
+                    hint={`Sabtu: ${numberFormatter.format(difference.saturdays)}, Minggu: ${numberFormatter.format(difference.sundays)}`}
                   />
                   <StatCard
                     label="Rentang"
@@ -256,7 +256,7 @@ export default function DateCalculator() {
               </div>
             ) : (
               <p className="rounded-xl border border-dashed border-slate-200 bg-surface-muted px-3.5 py-3 text-center text-sm text-ink-secondary">
-                Isi kedua tanggal untuk melihat selisihnya. Urutan tanggal bebas — kami
+                Isi kedua tanggal untuk melihat selisihnya. Urutan tanggal bebas: kami
                 otomatis mengurutkannya.
               </p>
             )}
@@ -338,14 +338,14 @@ export default function DateCalculator() {
               </div>
             ) : shifted ? (
               <div className="rounded-card bg-brand-50 px-4 py-5 text-brand-900 sm:px-5">
-                <p className="text-xs font-semibold tracking-wide uppercase opacity-80">
+                <p className="text-xs font-semibold opacity-80">
                   {direction === "tambah" ? "Hasil setelah ditambah" : "Hasil setelah dikurangi"}
                 </p>
                 <p className="mt-1 text-2xl font-extrabold tracking-tight sm:text-3xl">
                   {longDateFormatter.format(shifted.result)}
                 </p>
                 <p className="mt-1.5 text-sm opacity-80">
-                  Dari {formatPartsId(shifted.base)} — {numberFormatter.format(shifted.amount)}{" "}
+                  Dari {formatPartsId(shifted.base)}: {numberFormatter.format(shifted.amount)}{" "}
                   {unit}
                 </p>
               </div>

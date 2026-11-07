@@ -209,8 +209,8 @@ export default async function ToolPage({ params }: ToolPageProps) {
             Lihat semua{" "}
             <Link href="/tools" className="font-semibold text-brand-700 hover:underline">
               {TOOLS.length} tools RuangKumpul
-            </Link>{" "}
-            — kategori {TOOL_CATEGORIES.map((c) => c.name.toLowerCase()).join(", ")}.
+            </Link>
+            : kategori {TOOL_CATEGORIES.map((c) => c.name.toLowerCase()).join(", ")}.
           </p>
         </section>
       ) : null}

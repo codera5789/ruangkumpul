@@ -43,7 +43,7 @@ export function TasksBoard({ tasks }: { tasks: Task[] }) {
           required
           minLength={2}
           maxLength={200}
-          placeholder="Tugas baru — mis. Kirim lamaran ke PT X"
+          placeholder="Tugas baru, mis. Kirim lamaran ke PT X"
           className="min-w-48 flex-1 rounded-xl border border-slate-200 bg-surface px-3.5 py-2.5 text-sm text-ink focus:outline-hidden"
         />
         <input

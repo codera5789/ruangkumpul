@@ -19,7 +19,7 @@ export function CommunityCard({ community }: { community: CommunitySummary }) {
             loading="lazy"
           />
         ) : (
-          <span className="flex size-11 items-center justify-center rounded-xl bg-accent-100 text-accent-700 transition-all duration-300 ease-out-expo group-hover:scale-110 group-hover:bg-accent-600 group-hover:text-white">
+          <span className="flex size-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700 transition-all duration-300 ease-out-expo group-hover:scale-110 group-hover:bg-brand-800 group-hover:text-white">
             <Users className="size-5" aria-hidden="true" />
           </span>
         )}

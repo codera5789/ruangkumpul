@@ -1,18 +1,22 @@
 import { UsersRound } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "@/components/layout/logo";
+import { KumpulMotif } from "@/components/shared/kumpul-motif";
 
 export default function AuthLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center bg-surface-secondary px-4 py-10">
-      <div className="w-full max-w-md">
+    <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-surface-secondary px-4 py-10">
+      <KumpulMotif className="absolute -top-24 -left-24 size-80 text-brand-800/5 dark:text-brand-300/10" />
+      <KumpulMotif className="absolute -right-28 -bottom-28 size-96 text-brand-800/5 dark:text-brand-300/10" />
+
+      <div className="relative w-full max-w-md">
         <div className="mb-8 flex flex-col items-center gap-3 animate-slide-up-far">
           <Logo />
           <p className="flex items-center gap-1.5 text-sm text-ink-secondary">
             <UsersRound className="size-4 text-brand-700" aria-hidden="true" />
-            One Platform. Endless Possibilities.
+            Satu akun untuk tools, artikel, komunitas, dan event.
           </p>
         </div>
 

@@ -19,7 +19,7 @@ async function BuatLowonganContent() {
       <div className="mb-6">
         <h1 className="text-2xl font-extrabold tracking-tight text-ink">Pasang Lowongan</h1>
         <p className="mt-1 text-sm text-ink-secondary">
-          Gratis. Lowongan tayang setelah disimpan — pastikan deskripsi jelas dan URL lamaran valid.
+          Gratis. Lowongan tayang setelah disimpan: pastikan deskripsi jelas dan URL lamaran valid.
         </p>
       </div>
       <JobForm />

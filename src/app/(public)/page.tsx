@@ -1,9 +1,16 @@
 import { Suspense } from "react";
-import { BookOpen, Compass, Users } from "lucide-react";
+import {
+  BookOpen,
+  Briefcase,
+  CalendarDays,
+  Users,
+  UsersRound,
+  Wrench,
+} from "lucide-react";
 import Link from "next/link";
 import { SearchInput } from "@/components/layout/search-input";
+import { KumpulMotif } from "@/components/shared/kumpul-motif";
 import { Reveal } from "@/components/shared/reveal";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
 import { CommunityCard } from "@/modules/community/components/community-card";
@@ -14,28 +21,16 @@ import { ToolCard } from "@/modules/tools/components/tool-card";
 import { listLatestArticles } from "@/modules/knowledge/services";
 import { listTopCommunities } from "@/modules/community/services";
 
-const pillars = [
-  {
-    icon: Compass,
-    title: "Tools",
-    caption: "Gratis digunakan",
-    description: `${TOOL_COUNT} tools praktis untuk kerja, belajar, dan bisnis — tanpa login.`,
-    href: "/tools",
-  },
-  {
-    icon: BookOpen,
-    title: "Pengetahuan",
-    caption: "Belajar bersama",
-    description: "Artikel dan tutorial pilihan untuk mengembangkan skill Anda.",
-    href: "/artikel",
-  },
-  {
-    icon: Users,
-    title: "Komunitas",
-    caption: "Terhubung bersama",
-    description: "Diskusi, berbagi ide, dan bangun jaringan dengan sesama.",
-    href: "/komunitas",
-  },
+/**
+ * Posisi chip pada cincin motif (r=96/256 = 37,5% dari kontainer): orbit
+ * "kumpul" di panel kanan hero. Semua tujuan adalah rute produk nyata.
+ */
+const orbitItems = [
+  { icon: Wrench, label: "Tools", href: "/tools", x: 50, y: 12.5 },
+  { icon: BookOpen, label: "Artikel", href: "/artikel", x: 85.7, y: 38.4 },
+  { icon: Users, label: "Komunitas", href: "/komunitas", x: 72, y: 80.3 },
+  { icon: CalendarDays, label: "Event", href: "/event", x: 28, y: 80.3 },
+  { icon: Briefcase, label: "Karier", href: "/karier", x: 14.3, y: 38.4 },
 ];
 
 async function LatestArticlesSection() {
@@ -118,76 +113,62 @@ export default function HomePage() {
       </Suspense>
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-brand-800 via-brand-700 to-accent-600">
-        {/* Ornamen latar — murni dekoratif */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-          <div className="absolute -top-24 -left-24 size-80 rounded-full bg-accent-400/25 blur-3xl animate-float" />
-          <div className="absolute -right-24 -bottom-32 size-96 rounded-full bg-brand-300/20 blur-3xl animate-float [animation-delay:-3.5s]" />
-        </div>
+      <section className="relative overflow-hidden bg-brand-950">
+        {/* Satu motif di kiri bawah; motif kedua adalah cincin orbit di panel kanan. */}
+        <KumpulMotif className="absolute -bottom-40 -left-32 size-96 text-brand-300/10" />
 
-        <div className="relative mx-auto max-w-5xl px-4 py-20 text-center sm:px-6 sm:py-24">
-          <div className="mb-5 flex flex-wrap items-center justify-center gap-2 animate-slide-up-far">
-            <Badge className="border border-white/20 bg-white/10 text-white transition-colors duration-300 hover:bg-white/20">
-              All-in-One Platform
-            </Badge>
-            <Badge className="border border-white/20 bg-white/10 text-white transition-colors duration-300 hover:bg-white/20">
-              Community Driven
-            </Badge>
-            <Badge className="border border-white/20 bg-white/10 text-white transition-colors duration-300 hover:bg-white/20">
-              Digital Ecosystem
-            </Badge>
+        <div className="relative mx-auto grid max-w-7xl gap-12 px-4 pt-16 pb-16 sm:px-6 sm:pt-20 sm:pb-20 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <div className="max-w-2xl">
+            <h1 className="text-balance text-4xl font-extrabold tracking-tight text-white animate-slide-up-far sm:text-5xl">
+              Semua yang kamu butuhkan, dalam satu{" "}
+              <span className="text-brand-300">ruang</span>.
+            </h1>
+            <p className="mt-4 max-w-xl text-pretty text-base leading-relaxed text-brand-100 animate-slide-up-far [animation-delay:80ms] sm:text-lg">
+              {siteConfig.description}
+            </p>
+
+            <div className="mt-8 animate-slide-up-far [animation-delay:160ms]">
+              <SearchInput className="[&_input]:h-14 [&_input]:rounded-card [&_input]:bg-white [&_input]:text-base [&_input]:shadow-lg [&_input]:transition-shadow [&_input]:duration-300 hover:[&_input]:shadow-xl focus-within:[&_input]:shadow-xl" />
+            </div>
+
+            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-brand-100 animate-slide-up-far [animation-delay:240ms]">
+              <Link href="/tools" className="underline-offset-4 transition-colors hover:text-white hover:underline">
+                {TOOL_COUNT} tools gratis
+              </Link>
+              <span aria-hidden="true" className="text-white/40">•</span>
+              <Link href="/artikel" className="underline-offset-4 transition-colors hover:text-white hover:underline">
+                Artikel &amp; tutorial
+              </Link>
+              <span aria-hidden="true" className="text-white/40">•</span>
+              <Link href="/komunitas" className="underline-offset-4 transition-colors hover:text-white hover:underline">
+                Komunitas aktif
+              </Link>
+            </div>
           </div>
 
-          <h1 className="text-balance text-4xl font-extrabold tracking-tight text-white sm:text-5xl animate-slide-up-far [animation-delay:80ms]">
-            Temukan semua yang kamu butuhkan.
-          </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-pretty text-base text-brand-100 sm:text-lg animate-slide-up-far [animation-delay:160ms]">
-            {siteConfig.description}
-          </p>
-
-          <div className="mx-auto mt-8 max-w-2xl animate-slide-up-far [animation-delay:240ms]">
-            <SearchInput className="[&_input]:h-14 [&_input]:rounded-2xl [&_input]:bg-white [&_input]:text-base [&_input]:shadow-lg [&_input]:transition-shadow [&_input]:duration-300 hover:[&_input]:shadow-xl focus-within:[&_input]:shadow-xl" />
+          {/* Orbit pilar: lingkaran pertemuan. Pusat = ruang; chip = tujuan nyata. */}
+          <div
+            aria-label="Jelajahi RuangKumpul"
+            className="relative mx-auto hidden aspect-square w-full max-w-[420px] lg:block"
+          >
+            <KumpulMotif className="absolute inset-0 size-full text-brand-300/30" />
+            <div className="absolute top-1/2 left-1/2 flex size-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-2xl bg-white text-brand-800 shadow-lift animate-scale-in">
+              <UsersRound className="size-8" aria-hidden="true" />
+            </div>
+            {orbitItems.map((item, i) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                style={{ left: `${item.x}%`, top: `${item.y}%`, animationDelay: `${200 + i * 80}ms` }}
+                className="group absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-card border border-white/10 bg-surface py-2 pr-3.5 pl-2 shadow-lift animate-pop-in transition-all duration-200 ease-out-expo hover:-translate-y-[52%] hover:border-brand-300"
+              >
+                <span className="flex size-7 items-center justify-center rounded-lg bg-brand-50 text-brand-800 transition-colors duration-200 group-hover:bg-brand-800 group-hover:text-white">
+                  <item.icon className="size-4" aria-hidden="true" />
+                </span>
+                <span className="text-sm font-bold text-ink">{item.label}</span>
+              </Link>
+            ))}
           </div>
-
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-brand-100 animate-slide-up-far [animation-delay:320ms]">
-            <Link href="/tools" className="underline-offset-4 transition-colors hover:text-white hover:underline">
-              {TOOL_COUNT} tools gratis
-            </Link>
-            <span aria-hidden="true" className="text-white/40">•</span>
-            <Link href="/artikel" className="underline-offset-4 transition-colors hover:text-white hover:underline">
-              Artikel &amp; tutorial
-            </Link>
-            <span aria-hidden="true" className="text-white/40">•</span>
-            <Link href="/komunitas" className="underline-offset-4 transition-colors hover:text-white hover:underline">
-              Komunitas aktif
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Pilar utama ──────────────────────────────────────────────────── */}
-      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6" aria-labelledby="pilar-utama">
-        <h2 id="pilar-utama" className="sr-only">Pilar utama</h2>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {pillars.map((pillar, i) => (
-            <Link
-              key={pillar.title}
-              href={pillar.href}
-              style={{ animationDelay: `${i * 90}ms` }}
-              className="group rounded-card border border-slate-200/80 bg-surface p-6 shadow-card transition-all duration-300 ease-out-expo animate-slide-up-far hover:-translate-y-1 hover:shadow-card-hover"
-            >
-              <span className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-brand-800 text-white transition-all duration-300 ease-out-expo group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-md group-hover:shadow-brand-800/25">
-                <pillar.icon className="size-6" aria-hidden="true" />
-              </span>
-              <p className="text-xs font-semibold tracking-wide text-brand-700 uppercase">
-                {pillar.caption}
-              </p>
-              <h3 className="mt-1 text-lg font-bold text-ink">{pillar.title}</h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-ink-secondary">
-                {pillar.description}
-              </p>
-            </Link>
-          ))}
         </div>
       </section>
 
@@ -220,7 +201,8 @@ export default function HomePage() {
       </section>
 
       {/* ── Artikel terbaru ──────────────────────────────────────────────── */}
-      <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6" aria-labelledby="artikel-terbaru">
+      <section className="border-y border-slate-200/60 bg-surface py-14" aria-labelledby="artikel-terbaru">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="mb-6 flex items-end justify-between gap-4">
           <div>
             <h2 id="artikel-terbaru" className="text-2xl font-extrabold tracking-tight text-ink">
@@ -237,6 +219,7 @@ export default function HomePage() {
         <Suspense fallback={<SectionSkeleton />}>
           <LatestArticlesSection />
         </Suspense>
+        </div>
       </section>
       {/* ── Komunitas aktif ──────────────────────────────────────────────── */}
       <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6" aria-labelledby="komunitas-aktif">
@@ -261,11 +244,9 @@ export default function HomePage() {
       {/* ── CTA ──────────────────────────────────────────────────────────── */}
       <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6">
         <Reveal variant="scale">
-          <div className="relative overflow-hidden rounded-card bg-gradient-to-br from-brand-800 to-accent-600 px-6 py-14 text-center sm:px-12">
-            <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-              <div className="absolute -top-20 right-10 size-56 rounded-full bg-white/10 blur-3xl animate-float" />
-              <div className="absolute -bottom-24 left-6 size-64 rounded-full bg-accent-300/20 blur-3xl animate-float [animation-delay:-3s]" />
-            </div>
+          <div className="relative overflow-hidden rounded-card bg-brand-900 px-6 py-14 text-center sm:px-12">
+            <KumpulMotif className="absolute -top-20 -right-16 size-64 text-brand-300/15" />
+            <KumpulMotif className="absolute -bottom-24 -left-16 size-72 text-brand-300/10" />
             <h2 className="relative text-balance text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
               Satu akun untuk semua kebutuhan digitalmu
             </h2>

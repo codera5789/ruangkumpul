@@ -115,7 +115,7 @@ export default function UuidGenerator() {
       </div>
 
       <p className="mt-3 text-xs text-ink-muted">
-        UUID v4 memakai 122 bit random — praktis mustahil duplikat. Dibuat oleh crypto API di
+        UUID v4 memakai 122 bit random, praktis mustahil duplikat. Dibuat oleh crypto API di
         browser Anda, tidak dikirim ke server.
       </p>
     </ToolPanel>

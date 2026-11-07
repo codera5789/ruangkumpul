@@ -27,7 +27,7 @@ export async function generateMetadata({
 
   const { community } = context;
   return {
-    title: `${community.name} — Komunitas`,
+    title: `${community.name} · Komunitas`,
     description: community.description ?? undefined,
     alternates: { canonical: `/komunitas/${community.slug}` },
     openGraph: {
@@ -75,7 +75,7 @@ async function CommunityDetailContent({ params }: CommunityDetailPageProps) {
                   className="size-16 rounded-2xl object-cover"
                 />
               ) : (
-                <span className="flex size-16 items-center justify-center rounded-2xl bg-accent-100 text-accent-700">
+                <span className="flex size-16 items-center justify-center rounded-2xl bg-brand-50 text-brand-700">
                   <Users className="size-8" aria-hidden="true" />
                 </span>
               )}

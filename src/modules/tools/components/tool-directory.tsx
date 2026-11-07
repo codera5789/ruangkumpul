@@ -42,7 +42,7 @@ export function ToolDirectory() {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Cari tool... mis. json, pdf, qr"
           aria-label="Cari tool"
-          className="[&_input]:h-12 [&_input]:pl-11"
+          className="h-12 pl-11"
         />
       </div>
 

@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Daftar",
-  description: "Buat akun RuangKumpul gratis — satu akun untuk semua kebutuhan digital.",
+  description: "Buat akun RuangKumpul gratis: satu akun untuk semua kebutuhan digital.",
 };
 
 function AuthFormSkeleton() {

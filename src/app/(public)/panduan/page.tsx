@@ -21,7 +21,7 @@ const sections = [
           halaman Tools
         </Link>
         , pilih tool yang dibutuhkan, dan langsung gunakan. Semua proses
-        berjalan di browser kamu — tidak ada data yang dikirim ke server.
+        berjalan di browser kamu: tidak ada data yang dikirim ke server.
       </>
     ),
   },
@@ -58,7 +58,7 @@ const sections = [
     body: (
       <>
         Gunakan fitur bookmark dari dashboard untuk menyimpan artikel dan
-        diskusi. Bookmark bersifat privat — hanya kamu yang bisa melihatnya.
+        diskusi. Bookmark bersifat privat, hanya kamu yang bisa melihatnya.
       </>
     ),
   },

@@ -36,7 +36,7 @@ export async function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-surface/90 backdrop-blur-md animate-slide-down">
+    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-surface">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6">
         <Logo />
 
@@ -74,7 +74,7 @@ export async function Header() {
             </>
           ) : (
             <>
-              <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+              <Button asChild variant="ghost" size="sm">
                 <Link href="/login">Masuk</Link>
               </Button>
               <Button asChild size="sm">

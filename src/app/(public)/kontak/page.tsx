@@ -43,7 +43,7 @@ export default function KontakPage() {
         <p className="mt-2 text-sm leading-relaxed text-ink-secondary">
           Punya ide tool yang seharusnya ada di RuangKumpul? Kirim ke email di
           atas dengan subjek <strong className="text-ink">[SARAN TOOL]</strong>{" "}
-          — tool dengan permintaan terbanyak akan diprioritaskan dibangun.
+          : tool dengan permintaan terbanyak akan diprioritaskan dibangun.
         </p>
       </div>
     </div>

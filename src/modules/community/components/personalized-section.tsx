@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Bell, MessageSquare, Sparkles, Users } from "lucide-react";
+import { ArrowRight, Bell, Inbox, MessageSquare, Users } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
@@ -84,10 +84,10 @@ export async function PersonalizedSection() {
 
   return (
     <section className="mx-auto max-w-7xl px-4 pt-10 sm:px-6" aria-labelledby="feed-saya">
-      <Card className="border-brand-200/60 bg-gradient-to-br from-brand-50/60 to-surface p-6">
+      <Card className="border-brand-200/60 bg-brand-50/60 p-6 dark:border-brand-800/60 dark:bg-brand-900/40">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 id="feed-saya" className="flex items-center gap-2 text-lg font-extrabold text-ink">
-            <Sparkles className="size-5 text-brand-700" aria-hidden="true" />
+            <Inbox className="size-5 text-brand-700" aria-hidden="true" />
             Halo {firstName}, kabar terbaru untukmu
           </h2>
           {(unreadCount ?? 0) > 0 ? (

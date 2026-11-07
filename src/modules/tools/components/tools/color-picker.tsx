@@ -91,7 +91,7 @@ function relativeLuminance({ r, g, b }: Rgb): number {
 function FormatRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center gap-3 rounded-xl border border-slate-200/80 bg-surface-muted px-3.5 py-2.5">
-      <span className="w-10 shrink-0 text-xs font-bold tracking-wide text-ink-muted uppercase">
+      <span className="w-10 shrink-0 text-xs font-bold text-ink-muted">
         {label}
       </span>
       <code className="min-w-0 flex-1 truncate font-mono text-sm text-ink">{value}</code>
