@@ -1,6 +1,6 @@
 -- ============================================================================
--- RuangKumpul — Migration 0006 (v2 — fix enum: p_statuses kini
---   community_member_status[], bukan text[])
+-- RuangKumpul — Migration 0006 (v4 — join privat via helper SECURITY DEFINER
+--   can_join_community; subquery langsung ke communities terfilter RLS)
 -- Perbaikan keamanan & bug:
 --   1. Komunitas privat yang benar-benar privat:
 --      a. post/komentar komunitas privat tidak lagi terbaca publik via URL
@@ -24,9 +24,11 @@
 -- ---------------------------------------------------------------------------
 
 -- Apakah auth.uid() anggota komunitas dengan salah satu status tertentu?
+-- p_statuses text[] + cast enum::text di dalam: literal array di pemanggil
+-- (array['pending', ...]) ter-resolve sebagai text[] — tidak butuh cast eksplisit.
 create or replace function public.is_community_member(
   p_community_id uuid,
-  p_statuses community_member_status[],
+  p_statuses text[],
   p_user_id uuid default auth.uid()
 )
 returns boolean
@@ -41,7 +43,7 @@ as $$
       select 1 from public.community_members m
       where m.community_id = p_community_id
         and m.user_id = p_user_id
-        and m.status = any (p_statuses)
+        and m.status::text = any (p_statuses)
     );
 $$;
 
@@ -83,6 +85,34 @@ as $$
   );
 $$;
 
+-- Apakah (status, role) yang diminta diizinkan untuk bergabung ke komunitas
+-- aktif tertentu? SECURITY DEFINER: subquery communities di sini TIDAK
+-- terfilter RLS communities_select — penting agar orang luar (dengan tautan
+-- undangan) bisa meminta gabung ke komunitas privat.
+create or replace function public.can_join_community(
+  p_community_id uuid,
+  p_member_status text,
+  p_member_role text
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.communities c
+    where c.id = p_community_id
+      and c.status = 'active'
+      and (
+        -- komunitas publik aktif: gabung langsung (approved)
+        (c.visibility = 'public' and p_member_status = 'approved')
+        -- komunitas privat aktif: hanya permintaan (pending, role member)
+        or (c.visibility = 'private' and p_member_status = 'pending' and p_member_role = 'member')
+      )
+  );
+$$;
+
 -- ---------------------------------------------------------------------------
 -- 1a. communities_select — anggota pending/approved boleh melihat komunitasnya
 -- ---------------------------------------------------------------------------
@@ -103,16 +133,11 @@ create policy "community_members_insert_self" on public.community_members
   for insert to authenticated with check (
     user_id = auth.uid()
     and (
-      exists (
-        select 1 from public.communities c
-        where c.id = community_members.community_id
-          and c.status = 'active'
-          and (
-            -- komunitas publik aktif: gabung langsung (approved)
-            (c.visibility = 'public' and community_members.status = 'approved')
-            -- komunitas privat aktif: hanya permintaan (pending, role member)
-            or (c.visibility = 'private' and community_members.status = 'pending' and community_members.role = 'member')
-          )
+      -- aturan join divalidasi helper SECURITY DEFINER (lihat catatan di atas)
+      public.can_join_community(
+        community_id,
+        community_members.status::text,
+        community_members.role::text
       )
       or public.is_admin()
     )

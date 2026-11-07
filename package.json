@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "test:sql": "node tests/sql-0006-private-community-smoke.mjs",
     "seed": "node --env-file=.env.local scripts/seed-content.mjs"
   },
   "dependencies": {
@@ -24,6 +25,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.15",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^24",
     "@types/qrcode": "^1.5.6",
