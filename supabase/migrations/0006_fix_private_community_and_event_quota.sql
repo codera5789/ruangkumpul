@@ -1,5 +1,6 @@
 -- ============================================================================
--- RuangKumpul — Migration 0006
+-- RuangKumpul — Migration 0006 (v2 — fix enum: p_statuses kini
+--   community_member_status[], bukan text[])
 -- Perbaikan keamanan & bug:
 --   1. Komunitas privat yang benar-benar privat:
 --      a. post/komentar komunitas privat tidak lagi terbaca publik via URL
@@ -25,7 +26,7 @@
 -- Apakah auth.uid() anggota komunitas dengan salah satu status tertentu?
 create or replace function public.is_community_member(
   p_community_id uuid,
-  p_statuses text[],
+  p_statuses community_member_status[],
   p_user_id uuid default auth.uid()
 )
 returns boolean
