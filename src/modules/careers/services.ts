@@ -37,6 +37,45 @@ export async function listPublishedJobs(limit = 30): Promise<JobWithPoster[]> {
   }
 }
 
+/** Lowongan published dengan pagination + filter tipe. */
+export async function listPublishedJobsPaginated({
+  page = 1,
+  pageSize = 12,
+  jobType,
+}: {
+  page?: number;
+  pageSize?: number;
+  jobType?: Tables<"job_listings">["job_type"];
+}): Promise<{ jobs: JobWithPoster[]; total: number }> {
+  try {
+    const { createClient } = await import("@/lib/supabase/server");
+    const supabase = await createClient();
+
+    let query = supabase
+      .from("job_listings")
+      .select(
+        `*,
+         profiles (username, full_name, avatar_url)`,
+        { count: "exact" },
+      )
+      .eq("status", "published")
+      .or(`expires_at.is.null,expires_at.gte.${new Date().toISOString()}`);
+
+    if (jobType) query = query.eq("job_type", jobType);
+
+    const from = (page - 1) * pageSize;
+    const { data, error, count } = await query
+      .order("created_at", { ascending: false })
+      .range(from, from + pageSize - 1);
+
+    if (error) throw error;
+    return { jobs: (data ?? []) as JobWithPoster[], total: count ?? 0 };
+  } catch (err) {
+    console.error("[careers] listPublishedJobsPaginated gagal:", err);
+    return { jobs: [], total: 0 };
+  }
+}
+
 export async function getJobBySlug(slug: string): Promise<JobWithPoster | null> {
   try {
     const { createClient } = await import("@/lib/supabase/server");

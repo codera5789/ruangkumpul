@@ -1139,6 +1139,10 @@ export type Database = {
         Args: { p_bucket: string; p_max_hits: number; p_window_seconds: number };
         Returns: boolean;
       };
+      register_event: {
+        Args: { p_event_id: string };
+        Returns: string;
+      };
     };
     Enums: {
       user_role: "user" | "contributor" | "moderator" | "admin" | "super_admin";

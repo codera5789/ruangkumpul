@@ -4,31 +4,68 @@ export type NotificationWithActor = Tables<"notifications"> & {
   actor: Pick<Tables<"profiles">, "username" | "full_name" | "avatar_url"> | null;
 };
 
-/** Konversi tipe + id notifikasi ke href tujuan. */
-export function notificationHref(n: Pick<NotificationWithActor, "type" | "resource_type" | "resource_id">): string | null {
-  if (!n.resource_type || !n.resource_id) return null;
-  return "/dashboard/notifikasi";
-}
-
 /** Daftar notifikasi milik pengguna (dengan aktor untuk avatar). */
 export async function listNotifications(limit = 50): Promise<NotificationWithActor[]> {
-  const { createClient } = await import("@/lib/supabase/server");
-  const supabase = await createClient();
+  try {
+    const { createClient } = await import("@/lib/supabase/server");
+    const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("notifications")
-    .select(
-      `*,
-       actor:profiles!notifications_actor_id_fkey (username, full_name, avatar_url)`,
-    )
-    .order("created_at", { ascending: false })
-    .limit(limit);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return [];
 
-  if (error) {
-    console.error("[notifications] listNotifications gagal:", error.message);
+    const { data, error } = await supabase
+      .from("notifications")
+      .select(
+        `*,
+         actor:profiles!notifications_actor_id_fkey (username, full_name, avatar_url)`,
+      )
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    return (data ?? []) as NotificationWithActor[];
+  } catch (err) {
+    console.error("[notifications] listNotifications gagal:", err);
     return [];
   }
-  return (data ?? []) as NotificationWithActor[];
+}
+
+/** Resolusi tipe+id resource menjadi href nyata (batch per tabel). */
+export async function resolveNotificationHrefs(
+  rows: Pick<NotificationWithActor, "resource_type" | "resource_id">[],
+): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+
+  try {
+    const { createClient } = await import("@/lib/supabase/server");
+    const supabase = await createClient();
+
+    const postIds = rows
+      .filter((r) => r.resource_type === "post" && r.resource_id)
+      .map((r) => r.resource_id!);
+    const articleIds = rows
+      .filter((r) => r.resource_type === "article" && r.resource_id)
+      .map((r) => r.resource_id!);
+
+    const [posts, articles] = await Promise.all([
+      postIds.length
+        ? supabase.from("posts").select("id, slug").in("id", postIds)
+        : Promise.resolve({ data: null as { id: string; slug: string }[] | null, error: null }),
+      articleIds.length
+        ? supabase.from("articles").select("id, slug").in("id", articleIds)
+        : Promise.resolve({ data: null as { id: string; slug: string }[] | null, error: null }),
+    ]);
+
+    for (const p of posts.data ?? []) map.set(`post:${p.id}`, `/diskusi/${p.slug}`);
+    for (const a of articles.data ?? []) map.set(`article:${a.id}`, `/artikel/${a.slug}`);
+  } catch (err) {
+    console.error("[notifications] resolveNotificationHrefs gagal:", err);
+  }
+
+  return map;
 }
 
 /** Jumlah notifikasi belum dibaca — untuk badge bell. */

@@ -109,9 +109,12 @@ export async function actionCreateCommunity(
 // Gabung / keluar komunitas
 // ---------------------------------------------------------------------------
 
-export async function actionJoinCommunity(formData: FormData): Promise<void> {
+export async function actionJoinCommunity(
+  _prev: CommunityActionState,
+  formData: FormData,
+): Promise<CommunityActionState> {
   const slug = String(formData.get("slug") || "");
-  if (!slug) return;
+  if (!slug) return { error: "Komunitas tidak valid.", success: null };
 
   const { supabase, user } = await requireUser();
   if (!user) redirect(`/login?next=/komunitas/${slug}`);
@@ -122,11 +125,31 @@ export async function actionJoinCommunity(formData: FormData): Promise<void> {
     .eq("slug", slug)
     .single();
 
-  if (!community || community.status !== "active") return;
+  if (!community || community.status !== "active") {
+    return { error: "Komunitas tidak ditemukan atau tidak aktif.", success: null };
+  }
+
+  // Cek keanggotaan existing agar status banned/pending terlihat jelas.
+  const { data: membership } = await supabase
+    .from("community_members")
+    .select("status")
+    .eq("community_id", community.id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (membership?.status === "banned") {
+    return { error: "Kamu tidak bisa bergabung ke komunitas ini.", success: null };
+  }
+  if (membership?.status === "pending") {
+    return { error: null, success: "Permintaan gabung sudah dikirim — menunggu persetujuan." };
+  }
+  if (membership?.status === "approved") {
+    return { error: null, success: "Kamu sudah menjadi anggota komunitas ini." };
+  }
 
   const status = community.visibility === "public" ? "approved" : "pending";
 
-  await supabase.from("community_members").upsert(
+  const { error } = await supabase.from("community_members").upsert(
     {
       community_id: community.id,
       user_id: user.id,
@@ -136,15 +159,30 @@ export async function actionJoinCommunity(formData: FormData): Promise<void> {
     { onConflict: "community_id,user_id" },
   );
 
+  if (error) {
+    console.error("[community] gagal bergabung:", error.message);
+    return { error: "Gagal bergabung ke komunitas. Coba lagi.", success: null };
+  }
+
   revalidatePath(`/komunitas/${slug}`);
+  return {
+    error: null,
+    success:
+      status === "approved"
+        ? "Berhasil bergabung! Selamat datang."
+        : "Permintaan gabung dikirim — menunggu persetujuan pemilik.",
+  };
 }
 
-export async function actionLeaveCommunity(formData: FormData): Promise<void> {
+export async function actionLeaveCommunity(
+  _prev: CommunityActionState,
+  formData: FormData,
+): Promise<CommunityActionState> {
   const slug = String(formData.get("slug") || "");
-  if (!slug) return;
+  if (!slug) return { error: "Komunitas tidak valid.", success: null };
 
   const { supabase, user } = await requireUser();
-  if (!user) return;
+  if (!user) redirect(`/login?next=/komunitas/${slug}`);
 
   const { data: community } = await supabase
     .from("communities")
@@ -152,15 +190,24 @@ export async function actionLeaveCommunity(formData: FormData): Promise<void> {
     .eq("slug", slug)
     .single();
 
-  if (!community || community.owner_id === user.id) return; // owner tidak bisa keluar
+  if (!community) return { error: "Komunitas tidak ditemukan.", success: null };
+  if (community.owner_id === user.id) {
+    return { error: "Pemilik tidak bisa keluar dari komunitasnya sendiri.", success: null };
+  }
 
-  await supabase
+  const { error } = await supabase
     .from("community_members")
     .delete()
     .eq("community_id", community.id)
     .eq("user_id", user.id);
 
+  if (error) {
+    console.error("[community] gagal keluar komunitas:", error.message);
+    return { error: "Gagal keluar dari komunitas. Coba lagi.", success: null };
+  }
+
   revalidatePath(`/komunitas/${slug}`);
+  return { error: null, success: "Kamu telah keluar dari komunitas." };
 }
 
 // ---------------------------------------------------------------------------
@@ -300,9 +347,12 @@ export async function actionAddPostComment(
 // Suka / batal suka diskusi
 // ---------------------------------------------------------------------------
 
-export async function actionTogglePostLike(formData: FormData): Promise<void> {
+export async function actionTogglePostLike(
+  _prev: CommunityActionState,
+  formData: FormData,
+): Promise<CommunityActionState> {
   const postSlug = String(formData.get("postSlug") || "");
-  if (!postSlug) return;
+  if (!postSlug) return { error: "Diskusi tidak valid.", success: null };
 
   const { supabase, user } = await requireUser();
   if (!user) redirect(`/login?next=/diskusi/${postSlug}`);
@@ -312,7 +362,7 @@ export async function actionTogglePostLike(formData: FormData): Promise<void> {
     .select("id")
     .eq("slug", postSlug)
     .single();
-  if (!post) return;
+  if (!post) return { error: "Diskusi tidak ditemukan.", success: null };
 
   const { data: existing } = await supabase
     .from("reactions")
@@ -324,14 +374,23 @@ export async function actionTogglePostLike(formData: FormData): Promise<void> {
     .single();
 
   if (existing) {
-    await supabase.from("reactions").delete().eq("id", existing.id);
+    const { error } = await supabase.from("reactions").delete().eq("id", existing.id);
+    if (error) {
+      console.error("[community] gagal batal suka:", error.message);
+      return { error: "Gagal menghapus suka. Coba lagi.", success: null };
+    }
   } else {
-    await supabase
+    const { error } = await supabase
       .from("reactions")
       .insert({ user_id: user.id, target_type: "post", target_id: post.id, reaction_type: "like" });
+    if (error) {
+      console.error("[community] gagal menyukai:", error.message);
+      return { error: "Gagal menyukai diskusi. Coba lagi.", success: null };
+    }
   }
 
   revalidatePath(`/diskusi/${postSlug}`);
+  return { error: null, success: null };
 }
 
 // ---------------------------------------------------------------------------

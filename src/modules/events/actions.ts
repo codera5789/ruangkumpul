@@ -120,19 +120,24 @@ export async function actionCreateEvent(
   redirect(`/event/${event.slug}`);
 }
 
-export async function actionToggleEventRegistration(formData: FormData): Promise<void> {
+export async function actionToggleEventRegistration(
+  _prev: EventActionState,
+  formData: FormData,
+): Promise<EventActionState> {
   const eventSlug = String(formData.get("eventSlug") || "");
-  if (!eventSlug) return;
+  if (!eventSlug) return { error: "Event tidak valid.", success: null };
 
   const { supabase, user } = await requireUser();
   if (!user) redirect(`/login?next=/event/${eventSlug}`);
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, status, max_participants, participant_count")
+    .select("id, status")
     .eq("slug", eventSlug)
     .single();
-  if (!event || event.status !== "published") return;
+  if (!event || event.status !== "published") {
+    return { error: "Event tidak tersedia untuk pendaftaran.", success: null };
+  }
 
   const { data: existing } = await supabase
     .from("event_registrations")
@@ -142,20 +147,76 @@ export async function actionToggleEventRegistration(formData: FormData): Promise
     .maybeSingle();
 
   if (existing) {
-    await supabase.from("event_registrations").delete().eq("id", existing.id);
-  } else {
-    if (
-      event.max_participants !== null &&
-      event.participant_count >= event.max_participants
-    ) {
-      return; // penuh
-    }
-    await supabase
+    const { error } = await supabase
       .from("event_registrations")
-      .insert({ event_id: event.id, user_id: user.id });
+      .delete()
+      .eq("id", existing.id);
+    if (error) {
+      console.error("[events] gagal membatalkan pendaftaran:", error.message);
+      return { error: "Gagal membatalkan pendaftaran. Coba lagi.", success: null };
+    }
+    revalidatePath(`/event/${eventSlug}`);
+    return { error: null, success: "Pendaftaran dibatalkan." };
+  }
+
+  // RPC atomik: cek kuota + insert dalam satu transaksi (anti race kuota).
+  const { data: result, error } = await supabase.rpc("register_event", {
+    p_event_id: event.id,
+  });
+
+  if (error) {
+    // Fallback untuk kondisi migration 0006 belum dijalankan di database.
+    if (error.code === "42883") {
+      console.warn("[events] RPC register_event belum ada — memakai jalur legacy.");
+      return registerEventLegacy(supabase, user.id, event.id, eventSlug);
+    }
+    console.error("[events] register_event gagal:", error.message);
+    return { error: "Gagal mendaftar. Coba lagi.", success: null };
   }
 
   revalidatePath(`/event/${eventSlug}`);
+  switch (result) {
+    case "ok":
+      return { error: null, success: "Berhasil mendaftar! Sampai jumpa di event." };
+    case "already":
+      return { error: null, success: "Kamu sudah terdaftar di event ini." };
+    case "full":
+      return { error: "Maaf, kuota event sudah penuh.", success: null };
+    case "ended":
+      return { error: "Event ini sudah dimulai atau berakhir.", success: null };
+    default:
+      return { error: "Event tidak tersedia untuk pendaftaran.", success: null };
+  }
+}
+
+/** Jalur lama (sebelum migration 0006): cek kuota di aplikasi, rentan race. */
+async function registerEventLegacy(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  eventId: string,
+  eventSlug: string,
+): Promise<EventActionState> {
+  const { data: event } = await supabase
+    .from("events")
+    .select("max_participants, participant_count")
+    .eq("id", eventId)
+    .single();
+
+  if (event?.max_participants != null && event.participant_count >= event.max_participants) {
+    return { error: "Maaf, kuota event sudah penuh.", success: null };
+  }
+
+  const { error } = await supabase
+    .from("event_registrations")
+    .insert({ event_id: eventId, user_id: userId });
+
+  if (error) {
+    console.error("[events] gagal mendaftar (legacy):", error.message);
+    return { error: "Gagal mendaftar. Coba lagi.", success: null };
+  }
+
+  revalidatePath(`/event/${eventSlug}`);
+  return { error: null, success: "Berhasil mendaftar! Sampai jumpa di event." };
 }
 
 export async function actionDeleteEvent(formData: FormData): Promise<void> {

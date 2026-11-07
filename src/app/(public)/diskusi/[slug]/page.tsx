@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BookOpen, ChevronRight, Eye, Flag, MessageSquare, ThumbsUp } from "lucide-react";
+import { BookOpen, ChevronRight, Eye, Flag, MessageSquare } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { BookmarkButton } from "@/components/shared/bookmark-button";
@@ -11,14 +11,12 @@ import { Card } from "@/components/ui/card";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { formatCompactId, timeAgoId } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
+import { LikePostButton } from "@/modules/community/components/like-post-button";
 import { PostCommentForm } from "@/modules/community/components/post-comment-form";
 import { PostOwnerActions } from "@/modules/community/components/post-owner-actions";
 import { PostViewTracker } from "@/modules/community/components/post-view-tracker";
 import { CommentItem } from "@/modules/community/components/comment-item";
-import {
-  actionReportContent,
-  actionTogglePostLike,
-} from "@/modules/community/actions";
+import { actionReportContent } from "@/modules/community/actions";
 import { getPostBySlug, listPostComments } from "@/modules/community/queries";
 
 interface DiskusiDetailPageProps {
@@ -140,18 +138,7 @@ async function DiskusiDetailContent({ params }: DiskusiDetailPageProps) {
           ) : null}
 
           <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4">
-            <form action={actionTogglePostLike}>
-              <input type="hidden" name="postSlug" value={post.slug} />
-              <Button
-                type="submit"
-                variant={liked ? "secondary" : "outline"}
-                size="sm"
-                aria-pressed={liked}
-              >
-                <ThumbsUp className="size-4" aria-hidden="true" />
-                {post.reaction_count ?? 0} suka
-              </Button>
-            </form>
+            <LikePostButton postSlug={post.slug} liked={liked} count={post.reaction_count ?? 0} />
 
             <span className="inline-flex items-center gap-1.5 text-sm text-ink-muted">
               <MessageSquare className="size-4" aria-hidden="true" />

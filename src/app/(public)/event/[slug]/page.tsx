@@ -21,8 +21,8 @@ import { createClient } from "@/lib/supabase/server";
 import { formatDateId, formatCompactId } from "@/lib/utils";
 import {
   actionDeleteEvent,
-  actionToggleEventRegistration,
 } from "@/modules/events/actions";
+import { RegisterEventButton } from "@/modules/events/components/register-event-button";
 import { getEventBySlug } from "@/modules/events/services";
 
 interface EventDetailPageProps {
@@ -217,22 +217,7 @@ async function EventDetailContent({ params }: EventDetailPageProps) {
 
           {/* CTA */}
           {!isOrganizer && !isPast ? (
-            <form action={actionToggleEventRegistration} className="mt-5 border-t border-slate-100 pt-5">
-              <input type="hidden" name="eventSlug" value={event.slug} />
-              <Button
-                type="submit"
-                size="lg"
-                variant={registered ? "outline" : undefined}
-                disabled={!registered && isFull}
-                className="w-full"
-              >
-                {registered
-                  ? "Batalkan pendaftaran"
-                  : isFull
-                    ? "Kuota penuh"
-                    : "Daftar Sekarang — Gratis"}
-              </Button>
-            </form>
+            <RegisterEventButton eventSlug={event.slug} registered={registered} isFull={isFull} />
           ) : isOrganizer ? (
             <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-5">
               <p className="text-sm text-ink-secondary">Kamu penyelenggara event ini.</p>

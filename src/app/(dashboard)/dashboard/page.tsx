@@ -12,6 +12,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import { timeAgoId } from "@/lib/utils";
+import { TOOL_COUNT } from "@/modules/tools/tools-registry/registry";
 
 export const metadata = { title: "Dashboard" };
 
@@ -58,7 +59,7 @@ export default async function DashboardPage() {
     { label: "Bookmark", value: bookmarkCount ?? 0, icon: Bookmark, href: "/dashboard/bookmark" },
     { label: "Notifikasi belum dibaca", value: unreadCount ?? 0, icon: Bell, href: "/dashboard/notifikasi" },
     { label: "Komunitas diikuti", value: memberCount ?? 0, icon: Users, href: "/komunitas" },
-    { label: "Tools tersedia", value: 21, icon: Wrench, href: "/tools" },
+    { label: "Tools tersedia", value: TOOL_COUNT, icon: Wrench, href: "/tools" },
   ];
 
   return (

@@ -9,7 +9,7 @@ import { siteConfig } from "@/config/site";
 import { CommunityCard } from "@/modules/community/components/community-card";
 import { PersonalizedSection } from "@/modules/community/components/personalized-section";
 import { ArticleCard } from "@/modules/knowledge/components/article-card";
-import { FEATURED_TOOL_SLUGS, getToolBySlug } from "@/modules/tools/tools-registry/registry";
+import { FEATURED_TOOL_SLUGS, getToolBySlug, TOOL_COUNT } from "@/modules/tools/tools-registry/registry";
 import { ToolCard } from "@/modules/tools/components/tool-card";
 import { listLatestArticles } from "@/modules/knowledge/services";
 import { listTopCommunities } from "@/modules/community/services";
@@ -19,7 +19,7 @@ const pillars = [
     icon: Compass,
     title: "Tools",
     caption: "Gratis digunakan",
-    description: "21 tools praktis untuk kerja, belajar, dan bisnis — tanpa login.",
+    description: `${TOOL_COUNT} tools praktis untuk kerja, belajar, dan bisnis — tanpa login.`,
     href: "/tools",
   },
   {
@@ -151,7 +151,7 @@ export default function HomePage() {
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-brand-100 animate-slide-up-far [animation-delay:320ms]">
             <Link href="/tools" className="underline-offset-4 transition-colors hover:text-white hover:underline">
-              21 tools gratis
+              {TOOL_COUNT} tools gratis
             </Link>
             <span aria-hidden="true" className="text-white/40">•</span>
             <Link href="/artikel" className="underline-offset-4 transition-colors hover:text-white hover:underline">

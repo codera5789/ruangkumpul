@@ -12,7 +12,6 @@ import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { formatCompactId, timeAgoId } from "@/lib/utils";
 import { CreatePostForm } from "@/modules/community/components/create-post-form";
 import { JoinLeaveButtons } from "@/modules/community/components/join-leave-buttons";
-import { actionJoinCommunity, actionLeaveCommunity } from "@/modules/community/actions";
 import { getCommunityBySlug, listCommunityPosts } from "@/modules/community/queries";
 
 interface CommunityDetailPageProps {
@@ -99,14 +98,12 @@ async function CommunityDetailContent({ params }: CommunityDetailPageProps) {
             </div>
 
             {!isOwner ? (
-              <form action={isApprovedMember ? actionLeaveCommunity : actionJoinCommunity}>
-                <input type="hidden" name="slug" value={community.slug} />
-                <JoinLeaveButtons
-                  isMember={isApprovedMember}
-                  isPending={isPending}
-                  isPrivate={community.visibility === "private"}
-                />
-              </form>
+              <JoinLeaveButtons
+                slug={community.slug}
+                isMember={isApprovedMember}
+                isPending={isPending}
+                isPrivate={community.visibility === "private"}
+              />
             ) : (
               <div className="flex flex-col items-stretch gap-2">
                 <Badge variant="brand">Kamu pemilik komunitas ini</Badge>

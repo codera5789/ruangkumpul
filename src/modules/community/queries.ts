@@ -3,7 +3,7 @@ import type { CommunitySummary } from "@/modules/community/services";
 
 export type PostWithAuthor = Tables<"posts"> & {
   profiles: Pick<Tables<"profiles">, "username" | "full_name" | "avatar_url"> | null;
-  communities: Pick<Tables<"communities">, "name" | "slug"> | null;
+  communities: Pick<Tables<"communities">, "name" | "slug" | "visibility"> | null;
   reaction_count?: number;
   comment_count?: number;
   liked?: boolean;
@@ -116,7 +116,7 @@ export async function listCommunityPosts(
   }
 }
 
-/** Detail diskusi berdasarkan slug. */
+/** Detail diskusi berdasarkan slug. Diskusi komunitas privat hanya untuk anggota approved. */
 export async function getPostBySlug(slug: string): Promise<PostWithAuthor | null> {
   try {
     const { createClient } = await import("@/lib/supabase/server");
@@ -127,7 +127,7 @@ export async function getPostBySlug(slug: string): Promise<PostWithAuthor | null
       .select(
         `*,
          profiles (username, full_name, avatar_url),
-         communities (name, slug)`,
+         communities (name, slug, visibility)`,
       )
       .eq("slug", slug)
       .eq("status", "published")
@@ -136,6 +136,29 @@ export async function getPostBySlug(slug: string): Promise<PostWithAuthor | null
     if (error || !data) return null;
 
     const post = data as PostWithAuthor;
+
+    // App-level gate untuk komunitas privat (RLS juga memvalidasi).
+    if (post.communities?.visibility === "private") {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      let allowed = Boolean(user && post.author_id === user.id);
+      if (!allowed && user) {
+        const [{ data: membership }, { data: moderator }] = await Promise.all([
+          supabase
+            .from("community_members")
+            .select("id")
+            .eq("community_id", post.community_id!)
+            .eq("user_id", user.id)
+            .eq("status", "approved")
+            .maybeSingle(),
+          supabase.rpc("is_moderator"),
+        ]);
+        allowed = Boolean(membership) || Boolean(moderator);
+      }
+      if (!allowed) return null;
+    }
 
     const [{ count: likeCount }, { count: commentCount }] = await Promise.all([
       supabase.from("reactions").select("*", { count: "exact", head: true }).eq("target_type", "post").eq("target_id", post.id),
