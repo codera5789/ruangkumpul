@@ -2,9 +2,10 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight, Lock, MessageSquare, ThumbsUp, Users } from "lucide-react";
+import { ChevronRight, Lock, MessageSquare, ShieldCheck, ThumbsUp, Users } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Card } from "@/components/ui/card";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
@@ -53,7 +54,7 @@ async function CommunityDetailContent({ params }: CommunityDetailPageProps) {
   const canPost = isApprovedMember || isOwner;
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-slide-up-far">
       {/* Header komunitas */}
       <section className="border-b border-slate-200/80 bg-surface">
         <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
@@ -107,7 +108,15 @@ async function CommunityDetailContent({ params }: CommunityDetailPageProps) {
                 />
               </form>
             ) : (
-              <Badge variant="brand">Kamu pemilik komunitas ini</Badge>
+              <div className="flex flex-col items-stretch gap-2">
+                <Badge variant="brand">Kamu pemilik komunitas ini</Badge>
+                <Button asChild variant="outline" size="sm">
+                  <Link href={`/komunitas/${community.slug}/anggota`}>
+                    <ShieldCheck className="size-4" aria-hidden="true" />
+                    Kelola Anggota
+                  </Link>
+                </Button>
+              </div>
             )}
           </div>
 

@@ -24,11 +24,11 @@ export function EmptyState({
       )}
     >
       {Icon ? (
-        <div className="flex size-12 items-center justify-center rounded-full bg-brand-50 text-brand-700">
+        <div className="flex size-12 items-center justify-center rounded-full bg-brand-50 text-brand-700 animate-pop-in">
           <Icon className="size-6" aria-hidden="true" />
         </div>
       ) : null}
-      <div className="space-y-1">
+      <div className="space-y-1 animate-slide-up">
         <p className="font-semibold text-ink">{title}</p>
         {description ? (
           <p className="mx-auto max-w-sm text-sm text-ink-secondary">

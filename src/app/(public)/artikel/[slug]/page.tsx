@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { ChevronRight, Eye, Tag } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { BookmarkButton } from "@/components/shared/bookmark-button";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { siteConfig } from "@/config/site";
 import { formatDateId, formatCompactId } from "@/lib/utils";
@@ -67,6 +68,19 @@ async function ArticleDetailContent({ params }: ArticleDetailPageProps) {
   const {
     data: { user },
   } = await supabaseSession.auth.getUser();
+
+  // Status bookmark artikel untuk pengguna saat ini.
+  let saved = false;
+  if (user) {
+    const { data: bookmark } = await supabaseSession
+      .from("bookmarks")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("resource_type", "article")
+      .eq("resource_id", article.id)
+      .maybeSingle();
+    saved = Boolean(bookmark);
+  }
 
   const authorName =
     article.profiles?.full_name || article.profiles?.username || "Tim RuangKumpul";
@@ -133,7 +147,7 @@ async function ArticleDetailContent({ params }: ArticleDetailPageProps) {
 
       <article className="mx-auto max-w-3xl px-4 pt-4 pb-10 sm:px-6">
         {/* Header */}
-        <header className="space-y-4">
+        <header className="space-y-4 animate-slide-up-far">
           {article.article_categories ? (
             <Link href={`/artikel?kategori=${article.article_categories.slug}`}>
               <Badge variant="brand">{article.article_categories.name}</Badge>
@@ -168,6 +182,14 @@ async function ArticleDetailContent({ params }: ArticleDetailPageProps) {
                   </span>
                 </p>
               </div>
+            </div>
+            <div className="ml-auto">
+              <BookmarkButton
+                resourceType="article"
+                resourceId={article.id}
+                initialSaved={saved}
+                isLoggedIn={Boolean(user)}
+              />
             </div>
           </div>
         </header>

@@ -48,8 +48,15 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="id" className={`${jakarta.variable} h-full antialiased`}>
+    <html lang="id" className={`${jakarta.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="flex min-h-full flex-col bg-surface-secondary text-ink">
+        <script
+          // Terapkan tema tersimpan sebelum paint untuk mencegah kedipan (FOUC).
+          // Class "js" membuka gate reveal-animations (fallback aman bila JS mati).
+          dangerouslySetInnerHTML={{
+            __html: `(function(){document.documentElement.classList.add("js");try{var t=localStorage.getItem("rk-theme")||"system";var d=t==="dark"||(t==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);}catch(e){}})();`,
+          }}
+        />
         {children}
       </body>
     </html>

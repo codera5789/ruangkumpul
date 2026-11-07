@@ -1,12 +1,12 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FileText, SearchX, Users, Wrench } from "lucide-react";
+import { FileText, MessageSquare, SearchX, Users, Wrench } from "lucide-react";
 import { SearchInput } from "@/components/layout/search-input";
+import { Pagination } from "@/components/ui/pagination";
 import { Card } from "@/components/ui/card";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
-import { listTopCommunities } from "@/modules/community/services";
-import { listPublishedArticles } from "@/modules/knowledge/services";
+import { createClient } from "@/lib/supabase/server";
 import { TOOLS } from "@/modules/tools/tools-registry/registry";
 
 export const metadata: Metadata = {
@@ -15,81 +15,115 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
+const PAGE_SIZE = 20;
+
+type ResultType = "tool" | "article" | "community" | "post";
+
 interface SearchResult {
-  type: "tool" | "article" | "community";
+  type: ResultType;
   title: string;
   description: string;
   href: string;
 }
 
+async function searchDatabase(supabase: Awaited<ReturnType<typeof createClient>>, q: string) {
+  const pattern = `%${q.replace(/[%_]/g, (m) => `\\${m}`)}%`;
+
+  const [articles, communities, posts] = await Promise.all([
+    supabase
+      .from("articles")
+      .select("title, slug, excerpt")
+      .eq("status", "published")
+      .or(`title.ilike.${pattern},excerpt.ilike.${pattern}`)
+      .order("published_at", { ascending: false, nullsFirst: false })
+      .limit(25),
+    supabase
+      .from("communities")
+      .select("name, slug, description")
+      .eq("visibility", "public")
+      .eq("status", "active")
+      .or(`name.ilike.${pattern},description.ilike.${pattern}`)
+      .order("member_count", { ascending: false })
+      .limit(25),
+    supabase
+      .from("posts")
+      .select("title, slug, content")
+      .eq("status", "published")
+      .or(`title.ilike.${pattern},content.ilike.${pattern}`)
+      .order("created_at", { ascending: false })
+      .limit(25),
+  ]);
+
+  return { articles: articles.data ?? [], communities: communities.data ?? [], posts: posts.data ?? [] };
+}
+
 async function SearchContent({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; page?: string }>;
 }) {
-  const { q } = await searchParams;
-  const query = (q ?? "").trim();
-  const results: SearchResult[] = [];
+  const { q: rawQ, page: rawPage } = await searchParams;
+  const query = (rawQ ?? "").trim();
+  const page = Math.max(1, Math.min(50, Number(rawPage) || 1));
+
+  let results: SearchResult[] = [];
+  let totalAvailable = 0;
 
   if (query.length >= 2) {
     const lower = query.toLowerCase();
 
-    // Tools dicari dari registry (statis, cepat).
-    for (const tool of TOOLS) {
-      if (
+    // Tools dari registry statis (instan).
+    const toolHits = TOOLS.filter(
+      (tool) =>
         tool.name.toLowerCase().includes(lower) ||
         tool.description.toLowerCase().includes(lower) ||
-        tool.keywords.some((k) => k.toLowerCase().includes(lower))
-      ) {
-        results.push({
-          type: "tool",
-          title: tool.name,
-          description: tool.description,
-          href: tool.route,
-        });
-      }
-    }
+        tool.keywords.some((k) => k.toLowerCase().includes(lower)),
+    );
 
-    // Artikel & komunitas dari database (ILIKE search).
-    const [{ articles }, communities] = await Promise.all([
-      listPublishedArticles({ page: 1, pageSize: 50 }),
-      listTopCommunities(50),
-    ]);
+    // Konten dinamis dari database — ILIKE memanfaatkan index GIN pg_trgm.
+    const supabase = await createClient();
+    const { articles, communities, posts } = await searchDatabase(supabase, query);
 
-    for (const article of articles) {
-      if (
-        article.title.toLowerCase().includes(lower) ||
-        (article.excerpt ?? "").toLowerCase().includes(lower)
-      ) {
-        results.push({
-          type: "article",
-          title: article.title,
-          description: article.excerpt ?? "",
-          href: `/artikel/${article.slug}`,
-        });
-      }
-    }
+    results = [
+      ...toolHits.map((tool) => ({
+        type: "tool" as const,
+        title: tool.name,
+        description: tool.description,
+        href: tool.route,
+      })),
+      ...articles.map((a) => ({
+        type: "article" as const,
+        title: a.title,
+        description: a.excerpt ?? "",
+        href: `/artikel/${a.slug}`,
+      })),
+      ...communities.map((c) => ({
+        type: "community" as const,
+        title: c.name,
+        description: c.description ?? "",
+        href: `/komunitas/${c.slug}`,
+      })),
+      ...posts.map((p) => ({
+        type: "post" as const,
+        title: p.title,
+        description: p.content.slice(0, 140),
+        href: `/diskusi/${p.slug}`,
+      })),
+    ];
 
-    for (const community of communities) {
-      if (
-        community.name.toLowerCase().includes(lower) ||
-        (community.description ?? "").toLowerCase().includes(lower)
-      ) {
-        results.push({
-          type: "community",
-          title: community.name,
-          description: community.description ?? "",
-          href: `/komunitas/${community.slug}`,
-        });
-      }
-    }
+    totalAvailable = results.length;
+    const from = (page - 1) * PAGE_SIZE;
+    results = results.slice(from, from + PAGE_SIZE);
   }
 
   const typeMeta = {
     tool: { label: "Tool", icon: Wrench, color: "bg-brand-50 text-brand-700" },
     article: { label: "Artikel", icon: FileText, color: "bg-accent-50 text-accent-700" },
     community: { label: "Komunitas", icon: Users, color: "bg-emerald-50 text-emerald-700" },
+    post: { label: "Diskusi", icon: MessageSquare, color: "bg-amber-50 text-amber-700" },
   } as const;
+
+  const totalPages = Math.ceil(totalAvailable / PAGE_SIZE);
 
   return (
     <div className="animate-fade-in">
@@ -103,14 +137,14 @@ async function SearchContent({
         {query.length < 2 ? (
           <div className="mt-10">
             <p className="text-center text-sm text-ink-secondary">
-              Ketik minimal 2 karakter untuk mencari tools, artikel, dan komunitas.
+              Ketik minimal 2 karakter untuk mencari tools, artikel, komunitas, dan diskusi.
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-2">
               {["json", "pdf", "qr code", "password", "kalkulator"].map((suggestion) => (
                 <Link
                   key={suggestion}
                   href={`/search?q=${encodeURIComponent(suggestion)}`}
-                  className="rounded-full border border-slate-200 bg-surface px-4 py-1.5 text-sm font-medium text-ink-secondary transition-colors hover:border-brand-300 hover:text-brand-800"
+                  className="rounded-full border border-slate-200 bg-surface px-4 py-1.5 text-sm font-medium text-ink-secondary transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:text-brand-800 hover:shadow-sm active:translate-y-0 active:scale-95"
                 >
                   {suggestion}
                 </Link>
@@ -120,18 +154,22 @@ async function SearchContent({
         ) : results.length > 0 ? (
           <>
             <p className="mt-8 text-sm text-ink-secondary" aria-live="polite">
-              <strong className="text-ink">{results.length}</strong> hasil untuk{" "}
+              <strong className="text-ink">{totalAvailable}</strong> hasil untuk{" "}
               <strong className="text-ink">“{query}”</strong>
             </p>
             <ul className="mt-4 space-y-3">
-              {results.slice(0, 30).map((result, i) => {
+              {results.map((result, i) => {
                 const meta = typeMeta[result.type];
                 return (
-                  <li key={`${result.href}-${i}`}>
-                    <Card className="p-4 transition-shadow hover:shadow-card-hover">
+                  <li
+                    key={`${result.href}-${i}`}
+                    style={{ animationDelay: `${Math.min(i, 10) * 50}ms` }}
+                    className="animate-slide-up-far"
+                  >
+                    <Card className="p-4 transition-all duration-300 ease-out-expo hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-card-hover">
                       <Link href={result.href} className="flex items-start gap-3.5">
                         <span
-                          className={`mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl ${meta.color}`}
+                          className={`mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl transition-transform duration-300 ease-out-expo group-hover:scale-110 ${meta.color}`}
                         >
                           <meta.icon className="size-5" aria-hidden="true" />
                         </span>
@@ -152,10 +190,16 @@ async function SearchContent({
                 );
               })}
             </ul>
+
+            {totalPages > 1 ? (
+              <div className="mt-8">
+                <Pagination page={page} totalPages={totalPages} basePath="/search" query={{ q: query }} />
+              </div>
+            ) : null}
           </>
         ) : (
-          <div className="mt-10 flex flex-col items-center gap-3 text-center">
-            <div className="flex size-12 items-center justify-center rounded-full bg-surface-muted">
+          <div className="mt-10 flex flex-col items-center gap-3 text-center animate-slide-up-far">
+            <div className="flex size-12 items-center justify-center rounded-full bg-surface-muted animate-pop-in">
               <SearchX className="size-6 text-ink-muted" aria-hidden="true" />
             </div>
             <div>
@@ -180,7 +224,7 @@ async function SearchContent({
 export default function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; page?: string }>;
 }) {
   return (
     <Suspense fallback={<PageSkeleton cards={2} />}>

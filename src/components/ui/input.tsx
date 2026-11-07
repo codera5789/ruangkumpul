@@ -10,11 +10,11 @@ export function Input({ className, error, ...props }: InputProps) {
     <div className="w-full">
       <input
         className={cn(
-          "h-11 w-full rounded-xl border bg-surface px-3.5 text-sm text-ink transition-colors",
+          "h-11 w-full rounded-xl border bg-surface px-3.5 text-sm text-ink transition-all duration-200",
           "placeholder:text-ink-muted",
           error
-            ? "border-red-400 focus:border-red-500"
-            : "border-slate-200 hover:border-slate-300 focus:border-brand-500",
+            ? "border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+            : "border-slate-200 hover:border-slate-300 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10",
           "focus:outline-hidden",
           className,
         )}
@@ -35,11 +35,11 @@ export function Textarea({ className, error, ...props }: TextareaProps) {
     <div className="w-full">
       <textarea
         className={cn(
-          "min-h-24 w-full rounded-xl border bg-surface px-3.5 py-2.5 text-sm text-ink transition-colors",
+          "min-h-24 w-full rounded-xl border bg-surface px-3.5 py-2.5 text-sm text-ink transition-all duration-200",
           "placeholder:text-ink-muted",
           error
-            ? "border-red-400 focus:border-red-500"
-            : "border-slate-200 hover:border-slate-300 focus:border-brand-500",
+            ? "border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+            : "border-slate-200 hover:border-slate-300 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10",
           "focus:outline-hidden",
           className,
         )}

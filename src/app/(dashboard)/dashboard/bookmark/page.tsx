@@ -1,10 +1,18 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { BookOpen, Wrench, MessageSquare, Bookmark as BookmarkIcon } from "lucide-react";
+import {
+  BookOpen,
+  CalendarDays,
+  Briefcase,
+  Wrench,
+  MessageSquare,
+  Bookmark as BookmarkIcon,
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import { timeAgoId } from "@/lib/utils";
+import { getToolBySlug } from "@/modules/tools/tools-registry/registry";
 
 export const metadata: Metadata = { title: "Bookmark" };
 
@@ -25,6 +33,16 @@ const typeIcons = {
   tool: Wrench,
   article: BookOpen,
   post: MessageSquare,
+  event: CalendarDays,
+  job: Briefcase,
+} as const;
+
+const typeLabels = {
+  tool: "Tool",
+  article: "Artikel",
+  post: "Diskusi",
+  event: "Event",
+  job: "Loker",
 } as const;
 
 export default async function BookmarkPage() {
@@ -40,7 +58,7 @@ export default async function BookmarkPage() {
     .select("*")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
-    .limit(100);
+    .limit(200);
 
   const rows = (bookmarks ?? []) as BookmarkRow[];
 
@@ -49,8 +67,10 @@ export default async function BookmarkPage() {
 
   const articleIds = rows.filter((r) => r.resource_type === "article").map((r) => r.resource_id);
   const postIds = rows.filter((r) => r.resource_type === "post").map((r) => r.resource_id);
+  const eventIds = rows.filter((r) => r.resource_type === "event").map((r) => r.resource_id);
+  const jobIds = rows.filter((r) => r.resource_type === "job").map((r) => r.resource_id);
 
-  const [articleMap, postMap] = await Promise.all([
+  const [articleMap, postMap, eventMap, jobMap] = await Promise.all([
     articleIds.length > 0
       ? supabase
           .from("articles")
@@ -65,6 +85,20 @@ export default async function BookmarkPage() {
           .in("id", postIds)
           .then(({ data }) => new Map((data ?? []).map((p) => [p.id, p])))
       : Promise.resolve(new Map()),
+    eventIds.length > 0
+      ? supabase
+          .from("events")
+          .select("id, title, slug")
+          .in("id", eventIds)
+          .then(({ data }) => new Map((data ?? []).map((e) => [e.id, e])))
+      : Promise.resolve(new Map()),
+    jobIds.length > 0
+      ? supabase
+          .from("job_listings")
+          .select("id, title, slug")
+          .in("id", jobIds)
+          .then(({ data }) => new Map((data ?? []).map((j) => [j.id, j])))
+      : Promise.resolve(new Map()),
   ]);
 
   for (const row of rows) {
@@ -75,7 +109,7 @@ export default async function BookmarkPage() {
           ...row,
           title: a.title,
           href: `/artikel/${a.slug}`,
-          meta: "Artikel",
+          meta: typeLabels.article,
         });
       }
     } else if (row.resource_type === "post") {
@@ -85,16 +119,40 @@ export default async function BookmarkPage() {
           ...row,
           title: p.title,
           href: `/diskusi/${p.slug}`,
-          meta: "Diskusi",
+          meta: typeLabels.post,
+        });
+      }
+    } else if (row.resource_type === "event") {
+      const e = eventMap.get(row.resource_id);
+      if (e) {
+        resolved.push({
+          ...row,
+          title: e.title,
+          href: `/event/${e.slug}`,
+          meta: typeLabels.event,
+        });
+      }
+    } else if (row.resource_type === "job") {
+      const j = jobMap.get(row.resource_id);
+      if (j) {
+        resolved.push({
+          ...row,
+          title: j.title,
+          href: `/karier/${j.slug}`,
+          meta: typeLabels.job,
         });
       }
     } else if (row.resource_type === "tool") {
-      resolved.push({
-        ...row,
-        title: "Tool",
-        href: row.resource_id.startsWith("/") ? row.resource_id : "/tools",
-        meta: "Tool",
-      });
+      // Tool disimpan sebagai slug dari registry statis.
+      const tool = getToolBySlug(row.resource_id);
+      if (tool) {
+        resolved.push({
+          ...row,
+          title: tool.name,
+          href: tool.route,
+          meta: typeLabels.tool,
+        });
+      }
     }
   }
 

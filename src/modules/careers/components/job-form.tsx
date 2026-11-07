@@ -1,0 +1,112 @@
+"use client";
+
+import { useActionState } from "react";
+import { Input, Textarea } from "@/components/ui/input";
+import { SubmitButton } from "@/modules/auth/components/submit-button";
+import { actionCreateJob, type JobActionState } from "@/modules/careers/actions";
+
+const initialState: JobActionState = { error: null, success: null };
+
+const inputCls =
+  "w-full rounded-xl border border-slate-200 bg-surface px-3.5 py-2.5 text-sm text-ink focus:outline-hidden";
+
+/** Form pasang lowongan kerja. */
+export function JobForm() {
+  const [state, formAction] = useActionState(actionCreateJob, initialState);
+
+  return (
+    <form action={formAction} className="space-y-5">
+      {state.error ? (
+        <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+          {state.error}
+        </p>
+      ) : null}
+
+      <div className="grid gap-5 lg:grid-cols-3">
+        <div className="space-y-4 lg:col-span-2">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="companyName" className="mb-1.5 block text-sm font-semibold text-ink">
+                Nama perusahaan *
+              </label>
+              <Input id="companyName" name="companyName" required maxLength={120} placeholder="PT Maju Bersama" />
+            </div>
+            <div>
+              <label htmlFor="title" className="mb-1.5 block text-sm font-semibold text-ink">
+                Posisi *
+              </label>
+              <Input id="title" name="title" required minLength={5} maxLength={200} placeholder="Frontend Developer" />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="description" className="mb-1.5 block text-sm font-semibold text-ink">
+              Deskripsi * <span className="font-normal text-ink-muted">(tanggung jawab, kualifikasi, benefit)</span>
+            </label>
+            <Textarea id="description" name="description" required rows={12} minLength={30} maxLength={10000} />
+          </div>
+
+          <div>
+            <label htmlFor="applyUrl" className="mb-1.5 block text-sm font-semibold text-ink">
+              URL lamaran * <span className="font-normal text-ink-muted">(email/hr portal — pelamar diarahkan ke sini)</span>
+            </label>
+            <Input id="applyUrl" name="applyUrl" type="url" required placeholder="https://karier.perusahaan.com/loker-frontend" />
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="rounded-card border border-slate-200/80 bg-surface p-4">
+            <label htmlFor="jobType" className="mb-1.5 block text-xs font-semibold text-ink-secondary">
+              Tipe pekerjaan *
+            </label>
+            <select id="jobType" name="jobType" defaultValue="full_time" className={inputCls}>
+              <option value="full_time">Full-time</option>
+              <option value="part_time">Part-time</option>
+              <option value="contract">Kontrak</option>
+              <option value="freelance">Freelance</option>
+              <option value="internship">Magang</option>
+            </select>
+
+            <label htmlFor="location" className="mb-1.5 mt-3 block text-xs font-semibold text-ink-secondary">
+              Lokasi
+            </label>
+            <Input id="location" name="location" maxLength={120} placeholder="mis. Bandung" />
+
+            <label className="mt-3 flex cursor-pointer items-center gap-2.5">
+              <input
+                type="checkbox"
+                name="isRemote"
+                className="size-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+              />
+              <span className="text-sm font-semibold text-ink">Bekerja remote</span>
+            </label>
+          </div>
+
+          <div className="rounded-card border border-slate-200/80 bg-surface p-4">
+            <p className="mb-3 text-xs font-semibold text-ink-secondary">Rentang gaji (opsional)</p>
+            <div className="grid grid-cols-2 gap-2">
+              <Input name="salaryMin" inputMode="numeric" placeholder="4.000.000" aria-label="Gaji minimal" />
+              <Input name="salaryMax" inputMode="numeric" placeholder="8.000.000" aria-label="Gaji maksimal" />
+            </div>
+            <select name="salaryPeriod" defaultValue="bulan" className={`${inputCls} mt-2`} aria-label="Periode gaji">
+              <option value="bulan">per bulan</option>
+              <option value="tahun">per tahun</option>
+              <option value="proyek">per proyek</option>
+              <option value="jam">per jam</option>
+            </select>
+          </div>
+
+          {state.fieldErrors ? (
+            <ul className="space-y-1 text-sm text-red-600">
+              {Object.entries(state.fieldErrors).map(([field, msg]) => (
+                <li key={field}>• {msg}</li>
+              ))}
+            </ul>
+          ) : null}
+
+          <SubmitButton pendingText="Menyimpan...">Pasang Lowongan</SubmitButton>
+        </div>
+      </div>
+    </form>
+  );
+}

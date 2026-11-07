@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { AvatarUploadForm } from "@/modules/users/components/avatar-upload-form";
 import { ProfileForm } from "@/modules/users/components/profile-form";
 import { createClient } from "@/lib/supabase/server";
 
@@ -15,7 +16,7 @@ export default async function ProfilPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("username, full_name, bio, website_url, location")
+    .select("username, full_name, avatar_url, bio, website_url, location")
     .eq("id", user.id)
     .single();
 
@@ -31,6 +32,10 @@ export default async function ProfilPage() {
       </div>
 
       <div className="rounded-card border border-slate-200/80 bg-surface p-6 shadow-card sm:p-8">
+        <AvatarUploadForm currentUrl={profile.avatar_url} name={profile.full_name || profile.username} />
+      </div>
+
+      <div className="rounded-card border border-slate-200/80 bg-surface p-6 shadow-card sm:p-8">
         <ProfileForm
           defaults={{
             username: profile.username,
@@ -43,7 +48,11 @@ export default async function ProfilPage() {
       </div>
 
       <p className="text-xs text-ink-muted">
-        Email akun: {user.email} — perubahan email akan tersedia di Pengaturan.
+        Email akun: {user.email} — perubahan email tersedia di{" "}
+        <a href="/dashboard/pengaturan" className="font-semibold text-brand-700 hover:underline">
+          Pengaturan
+        </a>
+        .
       </p>
     </div>
   );

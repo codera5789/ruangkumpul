@@ -15,16 +15,22 @@ export default function ToolsDirectoryPage() {
   return (
     <div className="animate-fade-in">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-brand-800 to-accent-600">
-        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
-          <p className="text-sm font-semibold text-brand-200">Ruang Tools</p>
-          <h1 className="mt-1 text-balance text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-            {TOOL_COUNT}+ tools gratis, langsung pakai.
-          </h1>
-          <p className="mt-3 max-w-2xl text-pretty text-brand-100">
-            Tidak perlu daftar, tidak perlu install. Semua tool berjalan
-            langsung di browser kamu — cepat dan 100% privat.
-          </p>
+      <section className="relative overflow-hidden bg-gradient-to-br from-brand-800 to-accent-600">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+          <div className="absolute -top-20 -left-16 size-72 rounded-full bg-accent-400/25 blur-3xl animate-float" />
+          <div className="absolute -right-12 -bottom-24 size-80 rounded-full bg-brand-300/20 blur-3xl animate-float [animation-delay:-3.5s]" />
+        </div>
+        <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6">
+          <div className="animate-slide-up-far">
+            <p className="text-sm font-semibold text-brand-200">Ruang Tools</p>
+            <h1 className="mt-1 text-balance text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+              {TOOL_COUNT}+ tools gratis, langsung pakai.
+            </h1>
+            <p className="mt-3 max-w-2xl text-pretty text-brand-100">
+              Tidak perlu daftar, tidak perlu install. Semua tool berjalan
+              langsung di browser kamu — cepat dan 100% privat.
+            </p>
+          </div>
         </div>
       </section>
 

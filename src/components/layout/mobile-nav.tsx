@@ -1,15 +1,15 @@
 "use client";
 
-import { Compass, Home, Users, Wrench, PenLine } from "lucide-react";
+import { Compass, Home, CalendarDays, Users, Wrench } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const items = [
   { href: "/", label: "Beranda", icon: Home },
-  { href: "/jelajahi", label: "Jelajahi", icon: Compass },
   { href: "/tools", label: "Tools", icon: Wrench },
-  { href: "/artikel", label: "Artikel", icon: PenLine },
+  { href: "/jelajahi", label: "Jelajahi", icon: Compass },
+  { href: "/event", label: "Event", icon: CalendarDays },
   { href: "/komunitas", label: "Komunitas", icon: Users },
 ];
 
@@ -34,12 +34,15 @@ export function MobileNav() {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors",
+                  "flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-all duration-200 active:scale-90",
                   active ? "text-brand-800" : "text-ink-secondary",
                 )}
               >
                 <item.icon
-                  className="size-5"
+                  className={cn(
+                    "size-5 transition-transform duration-300 ease-out-expo",
+                    active ? "-translate-y-0.5 scale-110" : "scale-100",
+                  )}
                   aria-hidden="true"
                   strokeWidth={active ? 2.4 : 2}
                 />

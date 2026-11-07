@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { FileText, Flag, Users, Wrench } from "lucide-react";
+import { CalendarDays, FileText, Flag, Mail, Users, Wrench } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import { formatCompactId, timeAgoId } from "@/lib/utils";
@@ -17,6 +17,9 @@ export default async function AdminDashboardPage() {
     { count: communityCount },
     { count: postCount },
     { count: pendingReports },
+    { count: eventCount },
+    { count: jobCount },
+    { count: newsletterCount },
     { data: recentUsers },
   ] = await Promise.all([
     supabase.from("profiles").select("*", { count: "exact", head: true }),
@@ -28,6 +31,18 @@ export default async function AdminDashboardPage() {
       .from("reports")
       .select("*", { count: "exact", head: true })
       .eq("status", "pending"),
+    supabase
+      .from("events")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "published"),
+    supabase
+      .from("job_listings")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "published"),
+    supabase
+      .from("newsletter_subscribers")
+      .select("*", { count: "exact", head: true })
+      .eq("is_active", true),
     supabase
       .from("profiles")
       .select("id, username, full_name, created_at")
@@ -42,6 +57,9 @@ export default async function AdminDashboardPage() {
     { label: "Komunitas", value: communityCount ?? 0, icon: Users, href: "/admin/moderation" },
     { label: "Diskusi", value: postCount ?? 0, icon: FileText, href: "/admin/moderation" },
     { label: "Laporan pending", value: pendingReports ?? 0, icon: Flag, href: "/admin/moderation" },
+    { label: "Event aktif", value: eventCount ?? 0, icon: CalendarDays, href: "/admin/moderation" },
+    { label: "Lowongan aktif", value: jobCount ?? 0, icon: Wrench, href: "/admin/moderation" },
+    { label: "Pelanggan newsletter", value: newsletterCount ?? 0, icon: Mail, href: "/admin/users" },
   ];
 
   return (

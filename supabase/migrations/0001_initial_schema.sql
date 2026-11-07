@@ -10,8 +10,19 @@
 create extension if not exists pg_trgm;
 
 -- ---------------------------------------------------------------------------
--- Enums
+-- Enums (drop-guard agar aman dijalankan ulang bila run sebelumnya parsial)
 -- ---------------------------------------------------------------------------
+drop type if exists public.user_role cascade;
+drop type if exists public.community_visibility cascade;
+drop type if exists public.community_status cascade;
+drop type if exists public.community_member_role cascade;
+drop type if exists public.community_member_status cascade;
+drop type if exists public.post_type cascade;
+drop type if exists public.post_status cascade;
+drop type if exists public.article_status cascade;
+drop type if exists public.tool_status cascade;
+drop type if exists public.report_status cascade;
+
 create type public.user_role as enum ('user', 'contributor', 'moderator', 'admin', 'super_admin');
 create type public.community_visibility as enum ('public', 'private');
 create type public.community_status as enum ('active', 'suspended', 'archived');
@@ -24,7 +35,7 @@ create type public.tool_status as enum ('active', 'inactive');
 create type public.report_status as enum ('pending', 'reviewing', 'resolved', 'rejected');
 
 -- ---------------------------------------------------------------------------
--- Helper functions
+-- Helper functions (yang TIDAK bergantung tabel — aman dibuat lebih dulu)
 -- ---------------------------------------------------------------------------
 
 -- updated_at maintenance
@@ -38,43 +49,8 @@ begin
 end;
 $$;
 
--- Role checks (SECURITY DEFINER to avoid recursive RLS on user_roles)
-create or replace function public.has_any_role(roles public.user_role[])
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select exists (
-    select 1 from public.user_roles
-    where user_id = auth.uid() and role = any(roles)
-  );
-$$;
-
-create or replace function public.is_admin()
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select public.has_any_role(array['admin', 'super_admin']::public.user_role[]);
-$$;
-
-create or replace function public.is_moderator()
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select public.has_any_role(array['moderator', 'admin', 'super_admin']::public.user_role[]);
-$$;
-
-grant execute on function public.has_any_role(public.user_role[]) to anon, authenticated;
-grant execute on function public.is_admin() to anon, authenticated;
-grant execute on function public.is_moderator() to anon, authenticated;
+-- Catatan: has_any_role/is_admin/is_moderator (LANGUAGE sql) dibuat SETELAH
+-- tabel user_roles, karena PostgreSQL memvalidasi body fungsi sql saat create.
 
 -- Auto-create profile on signup
 create or replace function public.handle_new_user()
@@ -132,6 +108,45 @@ create table public.user_roles (
 );
 
 create index user_roles_user_id_idx on public.user_roles (user_id);
+
+-- Role checks (SECURITY DEFINER untuk hindari recursive RLS di user_roles).
+-- Dibuat di sini — SETELAH tabel user_roles ada (validasi body fungsi sql).
+create or replace function public.has_any_role(roles public.user_role[])
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.user_roles
+    where user_id = auth.uid() and role = any(roles)
+  );
+$$;
+
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select public.has_any_role(array['admin', 'super_admin']::public.user_role[]);
+$$;
+
+create or replace function public.is_moderator()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select public.has_any_role(array['moderator', 'admin', 'super_admin']::public.user_role[]);
+$$;
+
+grant execute on function public.has_any_role(public.user_role[]) to anon, authenticated;
+grant execute on function public.is_admin() to anon, authenticated;
+grant execute on function public.is_moderator() to anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- Community domain

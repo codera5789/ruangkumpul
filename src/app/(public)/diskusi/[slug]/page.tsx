@@ -2,15 +2,19 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight, Flag, MessageSquare, ThumbsUp } from "lucide-react";
+import { BookOpen, ChevronRight, Eye, Flag, MessageSquare, ThumbsUp } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { BookmarkButton } from "@/components/shared/bookmark-button";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
-import { timeAgoId } from "@/lib/utils";
+import { formatCompactId, timeAgoId } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
 import { PostCommentForm } from "@/modules/community/components/post-comment-form";
+import { PostOwnerActions } from "@/modules/community/components/post-owner-actions";
+import { PostViewTracker } from "@/modules/community/components/post-view-tracker";
+import { CommentItem } from "@/modules/community/components/comment-item";
 import {
   actionReportContent,
   actionTogglePostLike,
@@ -56,12 +60,33 @@ async function DiskusiDetailContent({ params }: DiskusiDetailPageProps) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Bookmark state + status moderator (untuk aksi moderasi lokal).
+  let saved = false;
+  let isModerator = false;
+  if (user) {
+    const [{ data: bookmark }, { data: roles }] = await Promise.all([
+      supabase
+        .from("bookmarks")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("resource_type", "post")
+        .eq("resource_id", post.id)
+        .maybeSingle(),
+      supabase.rpc("is_moderator"),
+    ]);
+    saved = Boolean(bookmark);
+    isModerator = Boolean(roles);
+  }
+
   const authorName =
     post.profiles?.full_name || post.profiles?.username || "Pengguna";
   const liked = Boolean(post.liked);
+  const isOwner = Boolean(user && post.author_id === user.id);
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-slide-up-far">
+      <PostViewTracker slug={post.slug} />
+
       <nav
         aria-label="Breadcrumb"
         className="mx-auto flex max-w-3xl items-center gap-1.5 px-4 pt-6 text-sm text-ink-secondary sm:px-6"
@@ -105,6 +130,15 @@ async function DiskusiDetailContent({ params }: DiskusiDetailPageProps) {
             {post.content}
           </div>
 
+          {/* Aksi edit/hapus pemilik */}
+          {isOwner ? (
+            <PostOwnerActions
+              postSlug={post.slug}
+              title={post.title}
+              content={post.content}
+            />
+          ) : null}
+
           <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4">
             <form action={actionTogglePostLike}>
               <input type="hidden" name="postSlug" value={post.slug} />
@@ -124,21 +158,43 @@ async function DiskusiDetailContent({ params }: DiskusiDetailPageProps) {
               {post.comment_count ?? 0} komentar
             </span>
 
-            <form action={actionReportContent} className="ml-auto">
-              <input type="hidden" name="targetType" value="post" />
-              <input type="hidden" name="targetId" value={post.id} />
-              <input type="hidden" name="reason" value="konten_tidak_pantas" />
-              <input type="hidden" name="redirectTo" value={`/diskusi/${post.slug}`} />
-              <Button
-                type="submit"
-                variant="ghost"
-                size="sm"
-                className="text-ink-muted hover:text-red-600"
+            <span className="inline-flex items-center gap-1.5 text-sm text-ink-muted">
+              <Eye className="size-4" aria-hidden="true" />
+              {formatCompactId(post.view_count)} dibaca
+            </span>
+
+            <BookmarkButton
+              resourceType="post"
+              resourceId={post.id}
+              initialSaved={saved}
+              isLoggedIn={Boolean(user)}
+            />
+
+            {!isOwner ? (
+              <form action={actionReportContent} className="ml-auto">
+                <input type="hidden" name="targetType" value="post" />
+                <input type="hidden" name="targetId" value={post.id} />
+                <input type="hidden" name="reason" value="konten_tidak_pantas" />
+                <input type="hidden" name="redirectTo" value={`/diskusi/${post.slug}`} />
+                <Button
+                  type="submit"
+                  variant="ghost"
+                  size="sm"
+                  className="text-ink-muted hover:text-red-600"
+                >
+                  <Flag className="size-4" aria-hidden="true" />
+                  Lapor
+                </Button>
+              </form>
+            ) : (
+              <Link
+                href="/panduan"
+                className="ml-auto inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink"
               >
-                <Flag className="size-4" aria-hidden="true" />
-                Lapor
-              </Button>
-            </form>
+                <BookOpen className="size-4" aria-hidden="true" />
+                Panduan
+              </Link>
+            )}
           </div>
         </Card>
 
@@ -154,26 +210,15 @@ async function DiskusiDetailContent({ params }: DiskusiDetailPageProps) {
 
           {comments.length > 0 ? (
             <div className="mt-4 divide-y divide-slate-100 rounded-card border border-slate-200/80 bg-surface px-5">
-              {comments.map((comment) => {
-                const cAuthor =
-                  comment.profiles?.full_name || comment.profiles?.username || "Pengguna";
-                return (
-                  <div key={comment.id} className="flex gap-3 py-4">
-                    <Avatar src={comment.profiles?.avatar_url} name={cAuthor} className="size-9" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm">
-                        <span className="font-bold text-ink">{cAuthor}</span>{" "}
-                        <span className="text-xs text-ink-muted">
-                          · {timeAgoId(comment.created_at)}
-                        </span>
-                      </p>
-                      <p className="mt-1 text-sm leading-relaxed break-words whitespace-pre-wrap text-ink-secondary">
-                        {comment.content}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
+              {comments.map((comment) => (
+                <CommentItem
+                  key={comment.id}
+                  comment={comment}
+                  postSlug={post.slug}
+                  currentUserId={user?.id ?? null}
+                  isModerator={isModerator}
+                />
+              ))}
             </div>
           ) : (
             <p className="mt-4 text-sm text-ink-muted">

@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { Enums, Json } from "@/types/database";
 
@@ -26,6 +25,14 @@ async function requireAdmin() {
   return user;
 }
 
+/**
+ * Semua operasi admin di modul ini berjalan lewat client biasa + RLS
+ * (policy is_admin tersedia di setiap tabel admin) — tidak butuh service role.
+ */
+async function getAdminDb() {
+  return createClient();
+}
+
 async function writeAudit(
   actorId: string,
   action: string,
@@ -34,8 +41,8 @@ async function writeAudit(
   metadata: Record<string, unknown> = {},
 ) {
   try {
-    const admin = createAdminClient();
-    await admin.from("audit_logs").insert({
+    const db = await getAdminDb();
+    await db.from("audit_logs").insert({
       actor_id: actorId,
       action,
       resource_type: resourceType,
@@ -89,7 +96,7 @@ export async function actionSetUserRole(
     return { error: "Tidak bisa mengubah role akun sendiri.", success: null };
   }
 
-  const admin = createAdminClient();
+  const admin = await getAdminDb();
 
   if (parsed.data.action === "add") {
     const { error } = await admin
@@ -134,7 +141,7 @@ export async function actionUpdateReportStatus(formData: FormData): Promise<void
 
   if (!reportId || !["pending", "reviewing", "resolved", "rejected"].includes(status)) return;
 
-  const admin = createAdminClient();
+  const admin = await getAdminDb();
   await admin
     .from("reports")
     .update({ status, reviewed_by: actor.id })
@@ -158,7 +165,7 @@ export async function actionToggleToolStatus(formData: FormData): Promise<void> 
 
   const nextStatus = rawStatus as Enums["tool_status"];
 
-  const admin = createAdminClient();
+  const admin = await getAdminDb();
   await admin.from("tools").update({ status: nextStatus }).eq("id", toolId);
 
   await writeAudit(actor.id, "tool_status_update", "tool", toolId, { status: nextStatus });
@@ -175,7 +182,7 @@ export async function actionSetArticleStatus(formData: FormData): Promise<void> 
 
   const nextStatus = rawStatus as Enums["article_status"];
 
-  const admin = createAdminClient();
+  const admin = await getAdminDb();
 
   const updates =
     nextStatus === "published" ? { published_at: new Date().toISOString() } : {};

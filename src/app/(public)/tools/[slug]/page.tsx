@@ -3,8 +3,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { siteConfig } from "@/config/site";
+import { BookmarkButton } from "@/components/shared/bookmark-button";
 import { ToolCard } from "@/modules/tools/components/tool-card";
 import { ToolRenderer } from "@/modules/tools/components/tool-renderer";
+import { ToolFavoriteButton } from "@/modules/tools/components/tool-favorite-button";
+import { ToolUsageLogger } from "@/modules/tools/components/tool-usage-logger";
 import {
   TOOL_CATEGORIES,
   TOOLS,
@@ -122,23 +125,32 @@ export default async function ToolPage({ params }: ToolPageProps) {
       </nav>
 
       {/* Header tool */}
-      <header className="mx-auto max-w-5xl px-4 pt-4 pb-8 sm:px-6">
-        <h1 className="text-balance text-3xl font-extrabold tracking-tight text-ink">
-          {tool.name}
-        </h1>
-        <p className="mt-2 max-w-3xl text-pretty text-ink-secondary">
-          {tool.description}
-        </p>
-        {category ? (
-          <p className="mt-3 text-sm">
-            Kategori:{" "}
-            <span className="font-semibold text-brand-800">{category.name}</span>
-          </p>
-        ) : null}
+      <header className="mx-auto max-w-5xl px-4 pt-4 pb-8 sm:px-6 animate-slide-up-far">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-balance text-3xl font-extrabold tracking-tight text-ink">
+              {tool.name}
+            </h1>
+            <p className="mt-2 max-w-3xl text-pretty text-ink-secondary">
+              {tool.description}
+            </p>
+            {category ? (
+              <p className="mt-3 text-sm">
+                Kategori:{" "}
+                <span className="font-semibold text-brand-800">{category.name}</span>
+              </p>
+            ) : null}
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <ToolFavoriteButton toolSlug={tool.slug} />
+            <BookmarkButton resourceType="tool" resourceId={tool.slug} />
+          </div>
+        </div>
       </header>
 
       {/* Antarmuka tool */}
-      <div className="mx-auto max-w-5xl px-4 sm:px-6">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 animate-scale-in">
+        <ToolUsageLogger slug={tool.slug} />
         <ToolRenderer slug={tool.slug} />
       </div>
 

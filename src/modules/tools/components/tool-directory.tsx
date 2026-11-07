@@ -67,14 +67,20 @@ export function ToolDirectory() {
             Menampilkan <strong className="text-ink">{filtered.length}</strong> tool
           </p>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filtered.map((tool) => (
-              <ToolCard key={tool.slug} tool={tool} />
+            {filtered.map((tool, i) => (
+              <div
+                key={tool.slug}
+                style={{ animationDelay: `${Math.min(i, 8) * 45}ms` }}
+                className="animate-slide-up-far"
+              >
+                <ToolCard tool={tool} />
+              </div>
             ))}
           </div>
         </>
       ) : (
-        <div className="flex flex-col items-center gap-3 rounded-card border border-dashed border-slate-300 bg-surface px-6 py-16 text-center">
-          <div className="flex size-12 items-center justify-center rounded-full bg-surface-muted">
+        <div className="flex flex-col items-center gap-3 rounded-card border border-dashed border-slate-300 bg-surface px-6 py-16 text-center animate-slide-up-far">
+          <div className="flex size-12 items-center justify-center rounded-full bg-surface-muted animate-pop-in">
             <SearchX className="size-6 text-ink-muted" aria-hidden="true" />
           </div>
           <div>
@@ -115,10 +121,10 @@ function CategoryChip({
       aria-selected={active}
       onClick={onClick}
       className={cn(
-        "shrink-0 rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors",
+        "shrink-0 rounded-full border px-4 py-1.5 text-sm font-semibold transition-all duration-200 active:scale-95",
         active
-          ? "border-brand-800 bg-brand-800 text-white"
-          : "border-slate-200 bg-surface text-ink-secondary hover:border-brand-300 hover:text-brand-800",
+          ? "border-brand-800 bg-brand-800 text-white shadow-sm shadow-brand-900/20"
+          : "border-slate-200 bg-surface text-ink-secondary hover:-translate-y-0.5 hover:border-brand-300 hover:text-brand-800 hover:shadow-sm",
       )}
     >
       {children}

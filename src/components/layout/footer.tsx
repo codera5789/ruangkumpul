@@ -1,5 +1,7 @@
 import { UsersRound } from "lucide-react";
 import Link from "next/link";
+import { NewsletterForm } from "@/modules/newsletter/components/newsletter-form";
+import { Reveal } from "@/components/shared/reveal";
 
 const columns = [
   {
@@ -8,6 +10,8 @@ const columns = [
       { href: "/tools", label: "Tools" },
       { href: "/artikel", label: "Artikel" },
       { href: "/komunitas", label: "Komunitas" },
+      { href: "/event", label: "Event" },
+      { href: "/karier", label: "Karier" },
       { href: "/jelajahi", label: "Jelajahi" },
     ],
   },
@@ -31,7 +35,7 @@ const columns = [
 export function Footer() {
   return (
     <footer className="border-t border-slate-200/80 bg-surface">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+      <Reveal className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
         <div className="grid gap-10 md:grid-cols-[1.5fr_repeat(3,1fr)]">
           <div className="space-y-3">
             <div className="flex items-center gap-2">
@@ -46,6 +50,13 @@ export function Footer() {
               Satu tempat untuk menemukan tools, informasi, komunitas, dan
               peluang digital — gratis untuk semua orang Indonesia.
             </p>
+            <div className="max-w-xs space-y-2 pt-2">
+              <p className="text-sm font-bold text-ink">Kabar RuangKumpul</p>
+              <p className="text-xs leading-relaxed text-ink-secondary">
+                Fitur baru dan konten pilihan, sebulan sekali. Tanpa spam.
+              </p>
+              <NewsletterForm />
+            </div>
           </div>
 
           {columns.map((col) => (
@@ -56,7 +67,7 @@ export function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-ink-secondary transition-colors hover:text-brand-800"
+                      className="inline-block text-sm text-ink-secondary transition-all duration-200 hover:translate-x-1 hover:text-brand-800"
                     >
                       {link.label}
                     </Link>
@@ -73,7 +84,7 @@ export function Footer() {
           </p>
           <p className="text-xs text-ink-muted">ruangkumpul.my.id</p>
         </div>
-      </div>
+      </Reveal>
     </footer>
   );
 }

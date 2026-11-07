@@ -7,7 +7,7 @@ export function CommunityCard({ community }: { community: CommunitySummary }) {
   return (
     <Link
       href={`/komunitas/${community.slug}`}
-      className="group flex flex-col gap-3 rounded-card border border-slate-200/80 bg-surface p-5 shadow-card transition-all hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-card-hover"
+      className="group flex flex-col gap-3 rounded-card border border-slate-200/80 bg-surface p-5 shadow-card transition-all duration-300 ease-out-expo hover:-translate-y-1 hover:border-brand-200 hover:shadow-card-hover"
     >
       <div className="flex items-center gap-3">
         {community.icon_url ? (
@@ -15,11 +15,11 @@ export function CommunityCard({ community }: { community: CommunitySummary }) {
           <img
             src={community.icon_url}
             alt=""
-            className="size-11 rounded-xl object-cover"
+            className="size-11 rounded-xl object-cover transition-transform duration-300 ease-out-expo group-hover:scale-110"
             loading="lazy"
           />
         ) : (
-          <span className="flex size-11 items-center justify-center rounded-xl bg-accent-100 text-accent-700">
+          <span className="flex size-11 items-center justify-center rounded-xl bg-accent-100 text-accent-700 transition-all duration-300 ease-out-expo group-hover:scale-110 group-hover:bg-accent-600 group-hover:text-white">
             <Users className="size-5" aria-hidden="true" />
           </span>
         )}

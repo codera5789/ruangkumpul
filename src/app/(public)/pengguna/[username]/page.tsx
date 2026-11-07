@@ -67,7 +67,7 @@ async function ProfilContent({ params }: ProfilPublikPageProps) {
     .eq("user_id", profile.id);
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-slide-up-far">
       <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
         {/* Kartu profil */}
         <Card className="p-6 sm:p-8">

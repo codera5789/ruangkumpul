@@ -64,13 +64,13 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* Sambutan */}
-      <section className="flex flex-wrap items-center gap-4">
+      <section className="flex flex-wrap items-center gap-4 animate-slide-up-far">
         <Avatar
           src={profile.avatar_url}
           name={profile.full_name || profile.username}
-          className="size-16"
+          className="size-16 animate-pop-in"
         />
-        <div className="min-w-0">
+        <div className="min-w-0 animate-slide-up-far [animation-delay:100ms]">
           <h1 className="text-2xl font-extrabold tracking-tight text-ink">
             Halo, {profile.full_name || profile.username} 👋
           </h1>
@@ -84,18 +84,19 @@ export default async function DashboardPage() {
       {/* Statistik */}
       <section aria-label="Statistik aktivitas">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat) => (
+          {stats.map((stat, i) => (
             <Link
               key={stat.label}
               href={stat.href}
-              className="group rounded-card border border-slate-200/80 bg-surface p-5 shadow-card transition-all hover:-translate-y-0.5 hover:shadow-card-hover"
+              style={{ animationDelay: `${i * 80}ms` }}
+              className="group rounded-card border border-slate-200/80 bg-surface p-5 shadow-card transition-all duration-300 ease-out-expo animate-slide-up-far hover:-translate-y-1 hover:border-brand-200 hover:shadow-card-hover"
             >
               <div className="flex items-center justify-between">
-                <span className="flex size-10 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+                <span className="flex size-10 items-center justify-center rounded-xl bg-brand-50 text-brand-700 transition-all duration-300 ease-out-expo group-hover:scale-110 group-hover:bg-brand-800 group-hover:text-white">
                   <stat.icon className="size-5" aria-hidden="true" />
                 </span>
                 <ArrowRight
-                  className="size-4 text-ink-muted opacity-0 transition-opacity group-hover:opacity-100"
+                  className="size-4 -translate-x-1 text-ink-muted opacity-0 transition-all duration-300 ease-out-expo group-hover:translate-x-0 group-hover:text-brand-700 group-hover:opacity-100"
                   aria-hidden="true"
                 />
               </div>
@@ -107,7 +108,7 @@ export default async function DashboardPage() {
       </section>
 
       {/* Notifikasi terbaru */}
-      <section aria-labelledby="notif-terbaru">
+      <section aria-labelledby="notif-terbaru" className="animate-slide-up-far [animation-delay:250ms]">
         <div className="mb-3 flex items-center justify-between">
           <h2 id="notif-terbaru" className="text-lg font-extrabold text-ink">
             Notifikasi terbaru
@@ -123,8 +124,12 @@ export default async function DashboardPage() {
         {notifications && notifications.length > 0 ? (
           <Card>
             <ul className="divide-y divide-slate-100">
-              {notifications.map((notif) => (
-                <li key={notif.id} className="flex items-start gap-3 p-4">
+              {notifications.map((notif, i) => (
+                <li
+                  key={notif.id}
+                  style={{ animationDelay: `${i * 60}ms` }}
+                  className="flex items-start gap-3 p-4 animate-fade-in transition-colors hover:bg-surface-secondary"
+                >
                   <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
                     <MessageSquare className="size-4" aria-hidden="true" />
                   </span>

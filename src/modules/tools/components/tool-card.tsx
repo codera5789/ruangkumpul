@@ -16,12 +16,12 @@ export function ToolCard({ tool, className }: { tool: ToolDefinition; className?
     <Link
       href={tool.route}
       className={cn(
-        "group flex flex-col gap-3 rounded-card border border-slate-200/80 bg-surface p-5 shadow-card transition-all",
-        "hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-card-hover focus-visible:-translate-y-0.5",
+        "group flex flex-col gap-3 rounded-card border border-slate-200/80 bg-surface p-5 shadow-card transition-all duration-300 ease-out-expo",
+        "hover:-translate-y-1 hover:border-brand-200 hover:shadow-card-hover focus-visible:-translate-y-1",
         className,
       )}
     >
-      <span className="flex size-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700 transition-colors group-hover:bg-brand-800 group-hover:text-white">
+      <span className="flex size-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700 transition-all duration-300 ease-out-expo group-hover:scale-110 group-hover:bg-brand-800 group-hover:text-white group-hover:shadow-md group-hover:shadow-brand-800/25">
         <ToolIcon name={tool.icon} className="size-5.5" />
       </span>
       <div className="space-y-1">

@@ -1,15 +1,20 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Compass, Users, Wrench } from "lucide-react";
+import { ArrowRight, BookOpen, CalendarDays, Briefcase, Compass, Users, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { Reveal } from "@/components/shared/reveal";
 import { CommunityCard } from "@/modules/community/components/community-card";
 import { ArticleCard } from "@/modules/knowledge/components/article-card";
 import { ToolCard } from "@/modules/tools/components/tool-card";
+import { EventCard } from "@/modules/events/components/event-card";
+import { JobCard } from "@/modules/careers/components/job-card";
 import { TOOL_CATEGORIES, TOOLS } from "@/modules/tools/tools-registry/registry";
 import { listTopCommunities } from "@/modules/community/services";
 import { listPublishedArticles } from "@/modules/knowledge/services";
+import { listUpcomingEvents } from "@/modules/events/services";
+import { listPublishedJobs } from "@/modules/careers/services";
 
 export const metadata: Metadata = {
   title: "Jelajahi Semua Konten RuangKumpul",
@@ -61,43 +66,103 @@ async function CommunitiesSection() {
   );
 }
 
+async function EventsSection() {
+  const events = await listUpcomingEvents(3);
+
+  if (events.length === 0) {
+    return (
+      <p className="rounded-card border border-dashed border-slate-300 bg-surface px-6 py-10 text-center text-sm text-ink-secondary">
+        Belum ada event mendatang.{" "}
+        <Link href="/event/buat" className="font-semibold text-brand-700 hover:underline">
+          Adakan yang pertama →
+        </Link>
+      </p>
+    );
+  }
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {events.map((event) => (
+        <EventCard key={event.id} event={event} />
+      ))}
+    </div>
+  );
+}
+
+async function JobsSection() {
+  const jobs = await listPublishedJobs(4);
+
+  if (jobs.length === 0) {
+    return (
+      <p className="rounded-card border border-dashed border-slate-300 bg-surface px-6 py-10 text-center text-sm text-ink-secondary">
+        Belum ada lowongan.{" "}
+        <Link href="/karier/buat" className="font-semibold text-brand-700 hover:underline">
+          Pasang yang pertama →
+        </Link>
+      </p>
+    );
+  }
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      {jobs.map((job) => (
+        <JobCard key={job.id} job={job} />
+      ))}
+    </div>
+  );
+}
+
 export default function JelajahiPage() {
   const popularTools = TOOLS.slice(0, 8);
 
   return (
     <div className="animate-fade-in">
-      <section className="bg-gradient-to-br from-brand-800 to-accent-600">
-        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
-          <p className="flex items-center gap-2 text-sm font-semibold text-brand-200">
-            <Compass className="size-4" aria-hidden="true" /> Jelajahi
-          </p>
-          <h1 className="mt-1 text-balance text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-            Semua yang RuangKumpul punya, dalam satu halaman.
-          </h1>
+      <section className="relative overflow-hidden bg-gradient-to-br from-brand-800 to-accent-600">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+          <div className="absolute -top-20 -left-16 size-72 rounded-full bg-accent-400/25 blur-3xl animate-float" />
+          <div className="absolute -right-12 -bottom-24 size-80 rounded-full bg-brand-300/20 blur-3xl animate-float [animation-delay:-3.5s]" />
+        </div>
+        <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6">
+          <div className="animate-slide-up-far">
+            <p className="flex items-center gap-2 text-sm font-semibold text-brand-200">
+              <Compass className="size-4" aria-hidden="true" /> Jelajahi
+            </p>
+            <h1 className="mt-1 text-balance text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+              Semua yang RuangKumpul punya, dalam satu halaman.
+            </h1>
+          </div>
         </div>
       </section>
 
       <div className="mx-auto max-w-7xl space-y-14 px-4 py-12 sm:px-6">
         {/* Tools */}
         <section aria-labelledby="jelajahi-tools">
-          <div className="mb-5 flex items-end justify-between gap-4">
-            <div>
-              <h2 id="jelajahi-tools" className="flex items-center gap-2 text-xl font-extrabold text-ink">
-                <Wrench className="size-5 text-brand-800" aria-hidden="true" /> Tools
-              </h2>
-              <p className="mt-1 text-sm text-ink-secondary">
-                {TOOLS.length} tools gratis dalam {TOOL_CATEGORIES.length} kategori.
-              </p>
+          <Reveal>
+            <div className="mb-5 flex items-end justify-between gap-4">
+              <div>
+                <h2 id="jelajahi-tools" className="flex items-center gap-2 text-xl font-extrabold text-ink">
+                  <Wrench className="size-5 text-brand-800" aria-hidden="true" /> Tools
+                </h2>
+                <p className="mt-1 text-sm text-ink-secondary">
+                  {TOOLS.length} tools gratis dalam {TOOL_CATEGORIES.length} kategori.
+                </p>
+              </div>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/tools">Semua tools</Link>
+              </Button>
             </div>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/tools">Semua tools</Link>
-            </Button>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {popularTools.map((tool) => (
-              <ToolCard key={tool.slug} tool={tool} />
-            ))}
-          </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {popularTools.map((tool, i) => (
+                <div
+                  key={tool.slug}
+                  style={{ animationDelay: `${i * 60}ms` }}
+                  className="animate-slide-up-far"
+                >
+                  <ToolCard tool={tool} />
+                </div>
+              ))}
+            </div>
+          </Reveal>
         </section>
 
         {/* Artikel */}
@@ -141,6 +206,50 @@ export default function JelajahiPage() {
           </div>
           <Suspense fallback={<PageSkeleton cards={3} />}>
             <CommunitiesSection />
+          </Suspense>
+        </section>
+
+        {/* Event */}
+        <section aria-labelledby="jelajahi-event">
+          <div className="mb-5 flex items-end justify-between gap-4">
+            <div>
+              <h2 id="jelajahi-event" className="flex items-center gap-2 text-xl font-extrabold text-ink">
+                <CalendarDays className="size-5 text-brand-800" aria-hidden="true" /> Event
+              </h2>
+              <p className="mt-1 text-sm text-ink-secondary">
+                Webinar dan workshop mendatang.
+              </p>
+            </div>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/event">
+                Semua event <ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
+            </Button>
+          </div>
+          <Suspense fallback={<PageSkeleton cards={3} />}>
+            <EventsSection />
+          </Suspense>
+        </section>
+
+        {/* Karier */}
+        <section aria-labelledby="jelajahi-karier">
+          <div className="mb-5 flex items-end justify-between gap-4">
+            <div>
+              <h2 id="jelajahi-karier" className="flex items-center gap-2 text-xl font-extrabold text-ink">
+                <Briefcase className="size-5 text-accent-600" aria-hidden="true" /> Lowongan
+              </h2>
+              <p className="mt-1 text-sm text-ink-secondary">
+                Peluang kerja dan freelance terbaru.
+              </p>
+            </div>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/karier">
+                Semua lowongan <ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
+            </Button>
+          </div>
+          <Suspense fallback={<PageSkeleton cards={2} />}>
+            <JobsSection />
           </Suspense>
         </section>
       </div>

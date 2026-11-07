@@ -10,18 +10,18 @@ export function ArticleCard({ article }: { article: ArticleWithAuthor }) {
     article.profiles?.full_name || article.profiles?.username || "Anonim";
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-card border border-slate-200/80 bg-surface shadow-card transition-all hover:-translate-y-0.5 hover:shadow-card-hover">
+    <article className="group flex flex-col overflow-hidden rounded-card border border-slate-200/80 bg-surface shadow-card transition-all duration-300 ease-out-expo hover:-translate-y-1 hover:shadow-card-hover">
       <Link href={`/artikel/${article.slug}`} className="flex h-full flex-col">
         {article.featured_image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={article.featured_image}
             alt={article.title}
-            className="aspect-16/9 w-full object-cover"
+            className="aspect-16/9 w-full object-cover transition-transform duration-500 ease-out-expo group-hover:scale-105"
             loading="lazy"
           />
         ) : (
-          <div className="aspect-16/9 w-full bg-gradient-to-br from-brand-100 to-accent-100" />
+          <div className="aspect-16/9 w-full bg-gradient-to-br from-brand-100 to-accent-100 transition-transform duration-500 ease-out-expo group-hover:scale-105" />
         )}
 
         <div className="flex flex-1 flex-col gap-3 p-5">

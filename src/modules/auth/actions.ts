@@ -36,6 +36,7 @@ function translateAuthError(message: string): string {
     [/password should be at least/i, "Password terlalu lemah. Gunakan minimal 8 karakter."],
     [/signup requires a valid password/i, "Password terlalu lemah. Gunakan minimal 8 karakter."],
     [/valid email is required/i, "Format email tidak valid."],
+    [/email_address_invalid|email address .* is invalid/i, "Email tidak diterima. Gunakan alamat email yang valid dan aktif."],
   ];
   for (const [pattern, text] of map) {
     if (pattern.test(message)) return text;

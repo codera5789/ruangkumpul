@@ -5,6 +5,8 @@
    Primary: Indigo #3730A3 · Accent: Violet #7C3AED · Ink: Slate #0F172A
    ========================================================================== */
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   /* Brand */
   --color-brand-50: #eef2ff;
@@ -48,10 +50,23 @@
   /* Shadows */
   --shadow-card: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.06);
   --shadow-card-hover: 0 4px 12px -2px rgb(15 23 42 / 0.08), 0 2px 6px -2px rgb(15 23 42 / 0.08);
+  --shadow-lift: 0 16px 32px -12px rgb(15 23 42 / 0.14), 0 4px 10px -4px rgb(15 23 42 / 0.08);
+
+  /* Easing — gerak terasa punya massa, bukan linear/ease-in-out bawaan */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
   /* Animations */
   --animate-fade-in: fade-in 0.3s ease-out both;
   --animate-slide-up: slide-up 0.35s ease-out both;
+  --animate-slide-up-far: slide-up-far 0.6s var(--ease-out-expo) both;
+  --animate-scale-in: scale-in 0.45s var(--ease-out-expo) both;
+  --animate-pop-in: pop-in 0.5s var(--ease-spring) both;
+  --animate-blur-in: blur-in 0.7s var(--ease-out-expo) both;
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-pulse-soft: pulse-soft 2.4s ease-in-out infinite;
+  --animate-shimmer: shimmer-x 1.6s ease-in-out infinite;
+  --animate-slide-down: slide-down 0.45s var(--ease-out-expo) both;
 
   @keyframes fade-in {
     from { opacity: 0; }
@@ -61,6 +76,39 @@
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
+  @keyframes slide-up-far {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes pop-in {
+    0% { opacity: 0; transform: scale(0.85); }
+    60% { opacity: 1; transform: scale(1.02); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  @keyframes blur-in {
+    from { opacity: 0; transform: translateY(10px); filter: blur(10px); }
+    to { opacity: 1; transform: translateY(0); filter: blur(0); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
+  @keyframes shimmer-x {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(100%); }
+  }
+  @keyframes slide-down {
+    from { opacity: 0; transform: translateY(-12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 }
 
 body {
@@ -68,6 +116,45 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
 }
+
+/* ==========================================================================
+   Dark mode — strategi: override variabel semantik + skala slate terang.
+   Semua utility Tailwind (bg-surface, text-ink, border-slate-200, dst.)
+   ter compiled ke var(--color-*) sehingga otomatis ikut berubah.
+   Skala gelap (slate-700+) tidak diubah — dipakai badge/blok kode gelap.
+   ========================================================================== */
+.dark {
+  color-scheme: dark;
+
+  --color-surface: #0f172a;
+  --color-surface-secondary: #0b1120;
+  --color-surface-muted: #1e293b;
+  --color-ink: #f1f5f9;
+  --color-ink-secondary: #94a3b8;
+  --color-ink-muted: #64748b;
+
+  --color-slate-50: #1e293b;
+  --color-slate-100: #1e293b;
+  --color-slate-200: #293548;
+  --color-slate-300: #334155;
+  --color-slate-600: #94a3b8;
+
+  --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.3), 0 1px 3px 0 rgb(0 0 0 / 0.25);
+  --shadow-card-hover: 0 4px 12px -2px rgb(0 0 0 / 0.4), 0 2px 6px -2px rgb(0 0 0 / 0.35);
+  --shadow-lift: 0 16px 32px -12px rgb(0 0 0 / 0.5), 0 4px 10px -4px rgb(0 0 0 / 0.35);
+}
+
+/* Permukaan brand/accent yang terang jadi semi transparan agar menyatu gelap. */
+.dark .bg-brand-50 { background-color: rgb(99 102 241 / 0.12) !important; }
+.dark .bg-accent-100 { background-color: rgb(139 92 246 / 0.16) !important; }
+.dark .bg-amber-100 { background-color: rgb(245 158 11 / 0.15) !important; }
+.dark .bg-emerald-100 { background-color: rgb(16 185 129 / 0.15) !important; }
+.dark .bg-red-50 { background-color: rgb(239 68 68 / 0.12) !important; }
+.dark .bg-red-50\/40 { background-color: rgb(239 68 68 / 0.08) !important; }
+.dark .bg-emerald-50 { background-color: rgb(16 185 129 / 0.12) !important; }
+.dark .bg-brand-50\/40 { background-color: rgb(99 102 241 / 0.08) !important; }
+.dark .bg-brand-50\/50 { background-color: rgb(99 102 241 / 0.08) !important; }
+.dark .bg-emerald-50\/40 { background-color: rgb(16 185 129 / 0.08) !important; }
 
 /* Fokus yang terlihat jelas untuk aksesibilitas */
 *:focus-visible {
@@ -91,4 +178,39 @@ body {
 ::selection {
   background: var(--color-brand-100);
   color: var(--color-brand-900);
+}
+
+/* ==========================================================================
+   Scroll-reveal system — elemen [data-reveal] muncul saat masuk viewport.
+   Di-drive oleh <Reveal /> (IntersectionObserver, src/components/shared/reveal.tsx).
+   Aman tanpa JS: state tersembunyi hanya aktif bila <html> punya class "js".
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  html.js [data-reveal] {
+    opacity: 0;
+    transform: translateY(18px);
+    transition:
+      opacity 0.65s var(--ease-out-expo),
+      transform 0.65s var(--ease-out-expo);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  html.js [data-reveal="scale"] { transform: scale(0.94); }
+  html.js [data-reveal="left"] { transform: translateX(-20px); }
+  html.js [data-reveal="right"] { transform: translateX(20px); }
+  html.js [data-reveal].is-revealed {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Hormati preferensi pengguna: semua motion collapse ke instant. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -786,13 +786,327 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: "site_settings_updated_by_fkey";
-            columns: ["updated_by"];
+            foreignKeyName: "site_settings_updated_by_fkey",
+            columns: ["updated_by"],
+            isOneToOne: false,
+            referencedRelation: "profiles",
+            referencedColumns: ["id"],
+          },
+        ];
+      };
+      user_settings: {
+        Row: {
+          user_id: string;
+          notify_comments: boolean;
+          notify_likes: boolean;
+          notify_mentions: boolean;
+          notify_product: boolean;
+          theme: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          notify_comments?: boolean;
+          notify_likes?: boolean;
+          notify_mentions?: boolean;
+          notify_product?: boolean;
+          theme?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          notify_comments?: boolean;
+          notify_likes?: boolean;
+          notify_mentions?: boolean;
+          notify_product?: boolean;
+          theme?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_settings_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      rate_limit_hits: {
+        Row: {
+          id: number;
+          bucket: string;
+          hit_at: string;
+        };
+        Insert: {
+          id?: never;
+          bucket: string;
+          hit_at?: string;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      events: {
+        Row: {
+          id: string;
+          organizer_id: string;
+          title: string;
+          slug: string;
+          description: string;
+          format: Enums["event_format"];
+          location: string | null;
+          online_url: string | null;
+          starts_at: string;
+          ends_at: string | null;
+          category: string | null;
+          cover_url: string | null;
+          status: Enums["event_status"];
+          max_participants: number | null;
+          participant_count: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organizer_id: string;
+          title: string;
+          slug: string;
+          description: string;
+          format?: Enums["event_format"];
+          location?: string | null;
+          online_url?: string | null;
+          starts_at: string;
+          ends_at?: string | null;
+          category?: string | null;
+          cover_url?: string | null;
+          status?: Enums["event_status"];
+          max_participants?: number | null;
+          participant_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          title?: string;
+          slug?: string;
+          description?: string;
+          format?: Enums["event_format"];
+          location?: string | null;
+          online_url?: string | null;
+          starts_at?: string;
+          ends_at?: string | null;
+          category?: string | null;
+          cover_url?: string | null;
+          status?: Enums["event_status"];
+          max_participants?: number | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "events_organizer_id_fkey";
+            columns: ["organizer_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];
+      };
+      event_registrations: {
+        Row: {
+          id: string;
+          event_id: string;
+          user_id: string;
+          registered_at: string;
+        };
+        Insert: {
+          id?: string;
+          event_id: string;
+          user_id: string;
+          registered_at?: string;
+        };
+        Update: Record<string, never>;
+        Relationships: [
+          {
+            foreignKeyName: "event_registrations_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: false;
+            referencedRelation: "events";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "event_registrations_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      job_listings: {
+        Row: {
+          id: string;
+          posted_by: string;
+          company_name: string;
+          title: string;
+          slug: string;
+          description: string;
+          job_type: Enums["job_type"];
+          location: string | null;
+          is_remote: boolean;
+          salary_min: number | null;
+          salary_max: number | null;
+          salary_period: string;
+          apply_url: string;
+          status: Enums["job_status"];
+          expires_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          posted_by: string;
+          company_name: string;
+          title: string;
+          slug: string;
+          description: string;
+          job_type?: Enums["job_type"];
+          location?: string | null;
+          is_remote?: boolean;
+          salary_min?: number | null;
+          salary_max?: number | null;
+          salary_period?: string;
+          apply_url: string;
+          status?: Enums["job_status"];
+          expires_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          company_name?: string;
+          title?: string;
+          slug?: string;
+          description?: string;
+          job_type?: Enums["job_type"];
+          location?: string | null;
+          is_remote?: boolean;
+          salary_min?: number | null;
+          salary_max?: number | null;
+          salary_period?: string;
+          apply_url?: string;
+          status?: Enums["job_status"];
+          expires_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "job_listings_posted_by_fkey";
+            columns: ["posted_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      notes: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          content: string;
+          pinned: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title?: string;
+          content?: string;
+          pinned?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          title?: string;
+          content?: string;
+          pinned?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notes_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      tasks: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          status: Enums["task_status"];
+          due_date: string | null;
+          position: number;
+          completed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          status?: Enums["task_status"];
+          due_date?: string | null;
+          position?: number;
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          title?: string;
+          status?: Enums["task_status"];
+          due_date?: string | null;
+          position?: number;
+          completed_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tasks_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      newsletter_subscribers: {
+        Row: {
+          id: string;
+          email: string;
+          source: string;
+          is_active: boolean;
+          subscribed_at: string;
+          unsubscribed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          email: string;
+          source?: string;
+          is_active?: boolean;
+          subscribed_at?: string;
+          unsubscribed_at?: string | null;
+        };
+        Update: {
+          email?: string;
+          source?: string;
+          is_active?: boolean;
+          unsubscribed_at?: string | null;
+        };
+        Relationships: [];
       };
     };
     Views: Record<string, never>;
@@ -813,6 +1127,18 @@ export type Database = {
         Args: { article: string };
         Returns: undefined;
       };
+      increment_post_view: {
+        Args: { p_post: string };
+        Returns: undefined;
+      };
+      increment_tool_usage: {
+        Args: { p_tool: string };
+        Returns: undefined;
+      };
+      check_rate_limit: {
+        Args: { p_bucket: string; p_max_hits: number; p_window_seconds: number };
+        Returns: boolean;
+      };
     };
     Enums: {
       user_role: "user" | "contributor" | "moderator" | "admin" | "super_admin";
@@ -825,6 +1151,11 @@ export type Database = {
       article_status: "draft" | "review" | "published" | "archived";
       tool_status: "active" | "inactive";
       report_status: "pending" | "reviewing" | "resolved" | "rejected";
+      event_format: "online" | "offline" | "hybrid";
+      event_status: "published" | "cancelled" | "archived";
+      job_type: "full_time" | "part_time" | "contract" | "freelance" | "internship";
+      job_status: "published" | "closed";
+      task_status: "todo" | "doing" | "done";
     };
     CompositeTypes: Record<string, never>;
   };
