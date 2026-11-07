@@ -1,19 +1,39 @@
+<div align="center">
+
 # RuangKumpul
 
-**One Platform. Endless Possibilities.** — All-in-One Digital Super App untuk Indonesia: tools gratis, ruang pengetahuan, komunitas, event, karier, dan produktivitas dalam satu akun.
+**One Platform. Endless Possibilities.**
 
-🌐 Domain produksi: [ruangkumpul.my.id](https://ruangkumpul.my.id)
+All-in-One Digital Super App untuk Indonesia: tools gratis, ruang pengetahuan, komunitas, event, karier, dan produktivitas — dalam satu akun.
 
-## Stack Teknologi
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs&logoColor=white)](https://nextjs.org)
+[![React](https://img.shields.io/badge/React-19-20232a?logo=react&logoColor=61DAFB)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL%20%2B%20Auth%20%2B%20RLS-3FCF8E?logo=supabase&logoColor=white)](https://supabase.com)
+[![Vercel](https://img.shields.io/badge/Hosted_on-Vercel-black?logo=vercel&logoColor=white)](https://vercel.com)
 
-| Layer | Teknologi |
-|---|---|
-| Frontend | Next.js 16 (App Router, Cache Components), React 19, Tailwind CSS v4, TypeScript |
-| Backend | Supabase (PostgreSQL + Auth + Storage + RLS) |
-| Icons & util | lucide-react, zod, @supabase/ssr |
-| Tools browser | qrcode, pdf-lib (100% client-side) |
-| Testing | Vitest (unit) + skrip smoke test RLS |
-| Hosting | Vercel |
+🌐 **Live:** [ruangkumpul.my.id](https://ruangkumpul.my.id)
+
+<img src="docs/screenshots/beranda.png" alt="Beranda RuangKumpul — hero dengan pencarian global" width="860">
+
+</div>
+
+## Tangkapan Layar
+
+<table>
+  <tr>
+    <td width="50%" align="center"><img src="docs/screenshots/tools.png" alt="Ruang Tools — katalog 21+ tools gratis"><br><b>Ruang Tools</b> — 21+ tools gratis, tanpa login</td>
+    <td width="50%" align="center"><img src="docs/screenshots/pengetahuan.png" alt="Ruang Pengetahuan — artikel dan tutorial"><br><b>Ruang Pengetahuan</b> — artikel &amp; tutorial pilihan</td>
+  </tr>
+  <tr>
+    <td width="50%" align="center"><img src="docs/screenshots/komunitas.png" alt="Ruang Komunitas — daftar komunitas"><br><b>Ruang Komunitas</b> — diskusi &amp; jaringan</td>
+    <td width="50%" align="center"><img src="docs/screenshots/event.png" alt="Ruang Event — daftar event"><br><b>Ruang Event</b> — webinar, workshop, meetup</td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><img src="docs/screenshots/karier.png" alt="Ruang Karier — daftar lowongan kerja"><br><b>Ruang Karier</b> — lowongan kerja, freelance, &amp; magang</td>
+  </tr>
+</table>
 
 ## Fitur
 
@@ -29,6 +49,17 @@
 - **Pencarian global** — DB-backed (ILIKE + index trigram) lintas artikel, komunitas, dan diskusi, dengan autocomplete.
 - **Lainnya** — dark mode, pagination, rate limiting berbasis database, newsletter, beranda terpersonalisasi.
 
+## Stack Teknologi
+
+| Layer | Teknologi |
+|---|---|
+| Frontend | Next.js 16 (App Router, Cache Components), React 19, Tailwind CSS v4, TypeScript |
+| Backend | Supabase (PostgreSQL + Auth + Storage + RLS) |
+| Icons & util | lucide-react, zod, @supabase/ssr |
+| Tools browser | qrcode, pdf-lib (100% client-side) |
+| Testing | Vitest (unit) + skrip smoke test RLS |
+| Hosting | Vercel |
+
 ## Mulai Cepat (Lokal)
 
 1. **Install dependensi**
@@ -37,9 +68,10 @@
    npm install
    ```
 
-2. **Siapkan environment** — salin `.env.example` menjadi `.env.local`, lalu isi `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (atau `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`), dan opsional `SUPABASE_SERVICE_ROLE_KEY` dari Supabase Dashboard → Project Settings → API keys.
+2. **Siapkan environment** — salin `.env.example` menjadi `.env.local`, lalu isi `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, dan opsional `SUPABASE_SERVICE_ROLE_KEY` dari Supabase Dashboard → Project Settings → API keys.
 
 3. **Jalankan migrasi database** — buka Supabase Dashboard → SQL Editor, jalankan isi file **secara berurutan**:
+
    - `supabase/migrations/0001_initial_schema.sql`
    - `supabase/migrations/0002_article_comments.sql`
    - `supabase/migrations/0003_platform_features.sql`
@@ -48,7 +80,7 @@
 
    Lalu (opsional, disarankan) jalankan `docs/rls-tests.sql` untuk smoke test RLS.
 
-3. **Isi konten awal (opsional)** — seeder mengisi persona penulis, komunitas, artikel, diskusi, event, dan lowongan agar situs tidak kosong saat pertama dibuka:
+4. **Isi konten awal (opsional)** — seeder mengisi persona penulis, komunitas, artikel, diskusi, event, dan lowongan agar situs tidak kosong saat pertama dibuka:
 
    ```bash
    npm run seed
@@ -56,9 +88,9 @@
 
    Idempoten — aman dijalankan berulang. Semua persona memakai email `@ruangkumpul.my.id` dan bisa dihapus dari dashboard bila tidak diinginkan.
 
-4. **Aktifkan Google OAuth** (opsional) — Supabase Dashboard → Authentication → Providers → Google. Redirect URI: `https://<project-ref>.supabase.co/auth/v1/callback`.
+5. **Aktifkan Google OAuth** (opsional) — Supabase Dashboard → Authentication → Providers → Google. Redirect URI: `https://<project-ref>.supabase.co/auth/v1/callback`.
 
-5. **Jalankan**
+6. **Jalankan**
 
    ```bash
    npm run dev
@@ -92,6 +124,7 @@ src/
 └── config/               # Konfigurasi situs
 supabase/migrations/      # SQL migration 0001–0005 (schema + RLS + trigger + seed)
 docs/rls-tests.sql        # Smoke test RLS (jalankan di SQL Editor)
+docs/screenshots/         # Screenshot tampilan aplikasi (dipakai README ini)
 tests/unit/               # Unit tests (vitest)
 ```
 
