@@ -48,7 +48,8 @@ async function getOrigin(): Promise<string> {
   const headerList = await headers();
   const proto = headerList.get("x-forwarded-proto") ?? "http";
   const host = headerList.get("host") ?? "localhost:3000";
-  return process.env.NEXT_PUBLIC_SITE_URL || `${proto}://${host}`;
+  // Normalisasi: buang trailing slash agar tidak menghasilkan `//auth/callback`
+  return (process.env.NEXT_PUBLIC_SITE_URL || `${proto}://${host}`).replace(/\/+$/, "");
 }
 
 export async function actionSignIn(
