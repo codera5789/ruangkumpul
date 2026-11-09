@@ -357,6 +357,12 @@ export async function actionTogglePostLike(
   const { supabase, user } = await requireUser();
   if (!user) redirect(`/login?next=/diskusi/${postSlug}`);
 
+  try {
+    await enforceRateLimit(`like:${user.id}`, 30, 60);
+  } catch {
+    return { error: "Terlalu banyak aksi suka. Tunggu sebentar.", success: null };
+  }
+
   const { data: post } = await supabase
     .from("posts")
     .select("id")
@@ -402,7 +408,6 @@ const updatePostSchema = z.object({
   title: z.string().trim().min(5, "Judul minimal 5 karakter").max(200, "Judul maksimal 200 karakter"),
   content: z.string().trim().min(10, "Isi diskusi minimal 10 karakter").max(20000, "Terlalu panjang"),
 });
-
 export async function actionUpdatePost(
   _prev: CommunityActionState,
   formData: FormData,
@@ -421,17 +426,22 @@ export async function actionUpdatePost(
   if (!user) return { error: "Sesi berakhir. Masuk kembali.", success: null };
 
   // RLS: hanya penulis atau moderator yang boleh update.
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("posts")
     .update({
       title: parsed.data.title,
       content: parsed.data.content,
     })
-    .eq("slug", parsed.data.postSlug);
+    .eq("slug", parsed.data.postSlug)
+    .select("id");
 
   if (error) {
     console.error("[community] gagal mengedit diskusi:", error.message);
     return { error: "Gagal menyimpan perubahan.", success: null };
+  }
+
+  if (!updated || updated.length === 0) {
+    return { error: "Kamu tidak punya izin mengedit diskusi ini.", success: null };
   }
 
   revalidatePath(`/diskusi/${parsed.data.postSlug}`);
@@ -475,9 +485,14 @@ export async function actionUpdatePostComment(
   const parsed = z
     .object({
       commentId: z.string().uuid(),
+      postSlug: z.string().trim().min(1),
       content: z.string().trim().min(3, "Komentar minimal 3 karakter").max(5000, "Komentar terlalu panjang"),
     })
-    .safeParse({ commentId: formData.get("commentId"), content: formData.get("content") });
+    .safeParse({
+      commentId: formData.get("commentId"),
+      postSlug: formData.get("postSlug"),
+      content: formData.get("content"),
+    });
 
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Input tidak valid", success: null };
@@ -486,16 +501,22 @@ export async function actionUpdatePostComment(
   const { supabase, user } = await requireUser();
   if (!user) return { error: "Sesi berakhir. Masuk kembali.", success: null };
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("comments")
     .update({ content: parsed.data.content })
-    .eq("id", parsed.data.commentId);
+    .eq("id", parsed.data.commentId)
+    .select("id");
 
   if (error) {
     console.error("[community] gagal mengedit komentar:", error.message);
     return { error: "Gagal menyimpan komentar.", success: null };
   }
 
+  if (!updated || updated.length === 0) {
+    return { error: "Kamu tidak punya izin mengedit komentar ini.", success: null };
+  }
+
+  revalidatePath(`/diskusi/${parsed.data.postSlug}`);
   return { error: null, success: "Komentar diperbarui." };
 }
 
@@ -653,6 +674,12 @@ export async function actionReportContent(formData: FormData): Promise<void> {
   const { supabase, user } = await requireUser();
   if (!user) redirect(`/login?next=${encodeURIComponent(redirectTo)}`);
 
+  try {
+    await enforceRateLimit(`report:${user.id}`, 10, 3600);
+  } catch {
+    return;
+  }
+
   // 1) Target harus benar-benar ada (anti sampah data).
   const { data: target } = await supabase
     .from(REPORT_TARGET_TABLES[targetType])
@@ -676,5 +703,5 @@ export async function actionReportContent(formData: FormData): Promise<void> {
     }
   }
 
-  revalidatePath(redirectTo);
+  if (redirectTo.startsWith("/")) revalidatePath(redirectTo);
 }

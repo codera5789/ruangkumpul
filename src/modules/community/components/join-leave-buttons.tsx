@@ -58,7 +58,14 @@ export function JoinLeaveButtons({
   if (isMember) {
     return (
       <div className="flex flex-col items-stretch gap-1.5">
-        <form action={leaveAction}>
+        <form
+          action={leaveAction}
+          onSubmit={(event) => {
+            if (!window.confirm("Keluar dari komunitas ini? Untuk komunitas privat kamu perlu disetujui lagi untuk bergabung.")) {
+              event.preventDefault();
+            }
+          }}
+        >
           <input type="hidden" name="slug" value={slug} />
           <Button type="submit" variant="outline" disabled={leavePending}>
             {leavePending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}

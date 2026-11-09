@@ -22,8 +22,13 @@ Supabase Dashboard → **SQL Editor** → jalankan berurutan:
 
 1. Isi `supabase/migrations/0001_initial_schema.sql` → **Run**
 2. Isi `supabase/migrations/0002_article_comments.sql` → **Run**
+3. Isi `supabase/migrations/0003_platform_features.sql` → **Run**
+4. Isi `supabase/migrations/0004_new_modules.sql` → **Run**
+5. Isi `supabase/migrations/0005_seed_tools.sql` → **Run**
+6. Isi `supabase/migrations/0006_fix_private_community_and_event_quota.sql` → **Run**
+7. Isi `supabase/migrations/0007_audit_fixes.sql` → **Run**
 
-Verifikasi: Database → Tables — harus muncul 21 tabel + enum + seed kategori tools.
+Verifikasi: Database → Tables — harus muncul 29 tabel + enum + seed kategori/tools.
 
 ## 3. Ambil Kredensial API
 

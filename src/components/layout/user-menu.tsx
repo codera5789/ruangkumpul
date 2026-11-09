@@ -63,7 +63,7 @@ export function UserMenu({ user }: UserMenuProps) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        aria-haspopup="menu"
+        aria-label="Buka menu akun"
         className="rounded-full transition-opacity hover:opacity-80"
       >
         <Avatar
@@ -74,10 +74,7 @@ export function UserMenu({ user }: UserMenuProps) {
       </button>
 
       {open ? (
-        <div
-          role="menu"
-          className="animate-slide-up absolute right-0 z-50 mt-2 w-60 overflow-hidden rounded-card border border-slate-200 bg-surface shadow-lg"
-        >
+        <div className="animate-slide-up absolute right-0 z-50 mt-2 w-60 overflow-hidden rounded-card border border-slate-200 bg-surface shadow-lg">
           <div className="border-b border-slate-100 px-4 py-3">
             <p className="truncate text-sm font-semibold text-ink">
               {user.fullName || user.username}
@@ -89,7 +86,6 @@ export function UserMenu({ user }: UserMenuProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                role="menuitem"
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-ink-secondary transition-colors hover:bg-surface-muted hover:text-ink"
               >
@@ -99,7 +95,6 @@ export function UserMenu({ user }: UserMenuProps) {
             ))}
             <button
               type="button"
-              role="menuitem"
               onClick={handleSignOut}
               disabled={signingOut}
               className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"

@@ -77,8 +77,11 @@ All-in-One Digital Super App untuk Indonesia: tools gratis, ruang pengetahuan, k
    - `supabase/migrations/0003_platform_features.sql`
    - `supabase/migrations/0004_new_modules.sql`
    - `supabase/migrations/0005_seed_tools.sql`
+   - `supabase/migrations/0006_fix_private_community_and_event_quota.sql`
+   - `supabase/migrations/0007_audit_fixes.sql`
 
-   Lalu (opsional, disarankan) jalankan `docs/rls-tests.sql` untuk smoke test RLS.
+   Lalu jalankan `npm run test:sql` untuk smoke test migrasi + RLS di Postgres
+   (PGlite). `docs/rls-tests.sql` tetap tersedia untuk uji manual di SQL Editor.
 
 4. **Isi konten awal (opsional)** — seeder mengisi persona penulis, komunitas, artikel, diskusi, event, dan lowongan agar situs tidak kosong saat pertama dibuka:
 
@@ -103,7 +106,8 @@ npm run dev      # server development (Turbopack)
 npm run build    # build produksi
 npm run start    # jalankan hasil build
 npm run lint     # eslint
-npm test         # unit tests (vitest)
+npm test         # unit tests (vitest) + smoke test migrasi/RLS
+npm run test:sql # smoke test migrasi + RLS saja (PGlite)
 npm run seed     # isi konten awal (persona, artikel, komunitas, event, loker)
 npx tsc --noEmit # cek tipe TypeScript
 ```
@@ -122,7 +126,7 @@ src/
 ├── lib/                  # supabase/ (client, server, admin, proxy) + rate-limit + utils
 ├── types/                # Tipe Database Supabase
 └── config/               # Konfigurasi situs
-supabase/migrations/      # SQL migration 0001–0005 (schema + RLS + trigger + seed)
+supabase/migrations/      # SQL migration 0001–0007 (schema + RLS + trigger + seed)
 docs/rls-tests.sql        # Smoke test RLS (jalankan di SQL Editor)
 docs/screenshots/         # Screenshot tampilan aplikasi (dipakai README ini)
 tests/unit/               # Unit tests (vitest)

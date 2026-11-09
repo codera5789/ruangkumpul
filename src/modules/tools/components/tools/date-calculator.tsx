@@ -237,8 +237,8 @@ export default function DateCalculator() {
                     {numberFormatter.format(difference.weeks)} minggu{" "}
                     {difference.remainingDays > 0
                       ? `${numberFormatter.format(difference.remainingDays)} hari`
-                      : "persis"}{" "}
-                   , sekitar {numberFormatter.format(difference.months)} bulan
+                      : "persis"}
+                    , sekitar {numberFormatter.format(difference.months)} bulan
                   </p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">

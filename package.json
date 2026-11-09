@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run",
-    "test:sql": "node tests/sql-0006-private-community-smoke.mjs",
+    "test": "vitest run && node tests/sql-security-smoke.mjs",
+    "test:sql": "node tests/sql-security-smoke.mjs",
     "seed": "node --env-file=.env.local scripts/seed-content.mjs"
   },
   "dependencies": {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { actionDeletePost, actionUpdatePost, type CommunityActionState } from "@/modules/community/actions";
@@ -19,8 +19,12 @@ export function PostOwnerActions({ postSlug, title, content }: PostOwnerActionsP
   const [state, formAction, pending] = useActionState(actionUpdatePost, initialState);
   const formRef = useRef<HTMLFormElement>(null);
 
-  // Form tertutup otomatis saat simpan berhasil (state.success turun dari action).
-  const showForm = editing && !state.success;
+  // Form tertutup sekali saat simpan berhasil; edit ulang tetap bisa dibuka.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- menutup form setelah aksi server sukses
+    if (state.success) setEditing(false);
+  }, [state]);
+  const showForm = editing;
 
   if (showForm) {
     return (

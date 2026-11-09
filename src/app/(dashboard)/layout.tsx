@@ -55,7 +55,7 @@ async function DashboardShell({
           <DashboardSidebar />
         </aside>
 
-        <main className="min-w-0 flex-1 pb-16 animate-fade-in md:pb-0">
+        <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 pb-16 animate-fade-in md:pb-0">
           <DashboardMobileNav />
           {children}
         </main>

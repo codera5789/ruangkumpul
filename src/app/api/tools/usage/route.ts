@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
+import { visitorKey } from "@/lib/visitor";
 import { logToolUsage } from "@/modules/tools/actions";
 
 const bodySchema = z.object({ slug: z.string().trim().min(1).max(100) });
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    await logToolUsage(parsed.data.slug);
+    await logToolUsage(parsed.data.slug, visitorKey(request.headers));
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[api/tools/usage] error:", err);

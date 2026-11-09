@@ -139,19 +139,27 @@ export function ArticleEditorForm({
                       );
                     })}
               </div>
-            ) : (
-              <textarea
-                id="content"
-                name="content"
-                defaultValue={defaults?.markdown}
-                onChange={(e) => setMarkdown(e.target.value)}
-                required
-                minLength={50}
-                rows={20}
-                placeholder={"Tulis artikel di sini...\n\n## Judul bagian\n\nParagraf biasa.\n\n- Butir list\n- Butir lain\n\n> Kutipan\n\n```js\nconsole.log('kode');\n```"}
-                className={cn(inputCls, "font-mono text-[13px] leading-relaxed")}
-              />
-            )}
+            ) : null}
+
+            {/* Textarea selalu ter-mount agar nilai `content` tetap ikut terkirim
+                saat pengguna menyimpan dari mode pratinjau. */}
+            <textarea
+              id="content"
+              name="content"
+              defaultValue={defaults?.markdown}
+              onChange={(e) => setMarkdown(e.target.value)}
+              required={!showPreview}
+              minLength={showPreview ? undefined : 50}
+              rows={20}
+              aria-hidden={showPreview || undefined}
+              tabIndex={showPreview ? -1 : undefined}
+              placeholder={"Tulis artikel di sini...\n\n## Judul bagian\n\nParagraf biasa.\n\n- Butir list\n- Butir lain\n\n> Kutipan\n\n```js\nconsole.log('kode');\n```"}
+              className={cn(
+                inputCls,
+                "font-mono text-[13px] leading-relaxed",
+                showPreview && "hidden",
+              )}
+            />
             <p className="mt-1.5 text-xs text-ink-muted">
               Didukung: <code>## Judul</code>, <code>- list</code>, <code>&gt; kutipan</code>, blok kode{" "}
               <code>```</code>. Baris kosong memisahkan paragraf.

@@ -1,4 +1,5 @@
 import { ArrowLeft, ArrowRight, CalendarDays, Plus, Trash2 } from "lucide-react";
+import { ConfirmForm } from "@/components/shared/confirm-form";
 import { formatDateId } from "@/lib/utils";
 import type { Enums, Tables } from "@/types/database";
 import {
@@ -110,7 +111,7 @@ export function TasksBoard({ tasks }: { tasks: Task[] }) {
                       </p>
                     ) : null}
 
-                    <div className="mt-2 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                    <div className="mt-2 flex items-center gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
                       {prevStatus(task.status) ? (
                         <form action={actionMoveTask}>
                           <input type="hidden" name="id" value={task.id} />
@@ -137,8 +138,12 @@ export function TasksBoard({ tasks }: { tasks: Task[] }) {
                           </button>
                         </form>
                       ) : null}
-                      <form action={actionDeleteTask} className="ml-auto">
-                        <input type="hidden" name="id" value={task.id} />
+                      <ConfirmForm
+                        action={actionDeleteTask}
+                        fields={{ id: task.id }}
+                        message="Hapus tugas ini?"
+                        className="ml-auto"
+                      >
                         <button
                           type="submit"
                           aria-label="Hapus tugas"
@@ -146,7 +151,7 @@ export function TasksBoard({ tasks }: { tasks: Task[] }) {
                         >
                           <Trash2 className="size-3.5" aria-hidden="true" />
                         </button>
-                      </form>
+                      </ConfirmForm>
                     </div>
                   </li>
                 ))}

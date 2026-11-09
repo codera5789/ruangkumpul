@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateId } from "@/lib/utils";
+import { ConfirmForm } from "@/components/shared/confirm-form";
 import { actionDeleteArticle } from "@/modules/knowledge/actions";
 
 export const metadata: Metadata = { title: "Artikel Saya" };
@@ -132,15 +133,18 @@ export default async function ArtikelSayaPage({
                     >
                       Edit
                     </Link>
-                    <form action={actionDeleteArticle}>
-                      <input type="hidden" name="articleId" value={a.id} />
+                    <ConfirmForm
+                      action={actionDeleteArticle}
+                      fields={{ articleId: a.id }}
+                      message={`Hapus artikel "${a.title}"? Tindakan ini tidak bisa dibatalkan.`}
+                    >
                       <button
                         type="submit"
                         className="text-xs font-semibold text-ink-muted transition-colors hover:text-red-600"
                       >
                         Hapus
                       </button>
-                    </form>
+                    </ConfirmForm>
                   </div>
                 </li>
               );

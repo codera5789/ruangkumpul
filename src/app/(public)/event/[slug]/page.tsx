@@ -14,11 +14,12 @@ import {
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { BookmarkButton } from "@/components/shared/bookmark-button";
+import { ConfirmForm } from "@/components/shared/confirm-form";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { createClient } from "@/lib/supabase/server";
-import { formatDateId, formatCompactId } from "@/lib/utils";
+import { formatDateId, formatCompactId, toJsonLd } from "@/lib/utils";
 import {
   actionDeleteEvent,
 } from "@/modules/events/actions";
@@ -80,6 +81,23 @@ async function EventDetailContent({ params }: EventDetailPageProps) {
   const organizerName =
     event.profiles?.full_name || event.profiles?.username || "Penyelenggara";
 
+  // JSON-LD harus valid: VirtualLocation wajib punya url, Place sebaiknya
+  // punya address. Jangan emit properti yang tidak bisa divalidasi Google.
+  const eventLocation =
+    event.format !== "offline" && event.online_url
+      ? { "@type": "VirtualLocation", url: event.online_url }
+      : event.location
+        ? {
+            "@type": "Place",
+            name: event.location,
+            address: {
+              "@type": "PostalAddress",
+              addressLocality: event.location,
+              addressCountry: "ID",
+            },
+          }
+        : undefined;
+
   const eventJsonLd = {
     "@context": "https://schema.org",
     "@type": "Event",
@@ -87,16 +105,17 @@ async function EventDetailContent({ params }: EventDetailPageProps) {
     description: event.description.slice(0, 300),
     startDate: event.starts_at,
     endDate: event.ends_at ?? undefined,
+    eventStatus:
+      event.status === "cancelled"
+        ? "https://schema.org/EventCancelled"
+        : "https://schema.org/EventScheduled",
     eventAttendanceMode:
       event.format === "online"
         ? "https://schema.org/OnlineEventAttendanceMode"
         : event.format === "hybrid"
           ? "https://schema.org/MixedEventAttendanceMode"
           : "https://schema.org/OfflineEventAttendanceMode",
-    location:
-      event.format === "online"
-        ? { "@type": "VirtualLocation", url: event.online_url ?? undefined }
-        : { "@type": "Place", name: event.location ?? "" },
+    location: eventLocation,
     organizer: { "@type": "Person", name: organizerName },
   };
 
@@ -104,7 +123,7 @@ async function EventDetailContent({ params }: EventDetailPageProps) {
     <div className="animate-slide-up-far">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(eventJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: toJsonLd(eventJsonLd) }}
       />
 
       <nav
@@ -221,13 +240,16 @@ async function EventDetailContent({ params }: EventDetailPageProps) {
           ) : isOrganizer ? (
             <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-5">
               <p className="text-sm text-ink-secondary">Kamu penyelenggara event ini.</p>
-              <form action={actionDeleteEvent}>
-                <input type="hidden" name="eventSlug" value={event.slug} />
+              <ConfirmForm
+                action={actionDeleteEvent}
+                fields={{ eventSlug: event.slug }}
+                message={`Hapus event "${event.title}" beserta semua pendaftarannya? Tindakan ini tidak bisa dibatalkan.`}
+              >
                 <Button type="submit" variant="outline" size="sm" className="border-red-200 text-red-600 hover:bg-red-50">
                   <Trash2 className="size-4" aria-hidden="true" />
                   Hapus
                 </Button>
-              </form>
+              </ConfirmForm>
             </div>
           ) : null}
         </Card>

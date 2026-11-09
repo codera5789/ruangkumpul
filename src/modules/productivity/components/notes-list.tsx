@@ -1,4 +1,5 @@
 import { Plus, Pin, PinOff, Trash2 } from "lucide-react";
+import { ConfirmForm } from "@/components/shared/confirm-form";
 import { formatCompactId } from "@/lib/utils";
 import type { Tables } from "@/types/database";
 import {
@@ -125,8 +126,12 @@ export function NotesList({ notes }: { notes: Note[] }) {
                       )}
                     </button>
                   </form>
-                  <form action={actionDeleteNote} className="ml-auto">
-                    <input type="hidden" name="id" value={note.id} />
+                  <ConfirmForm
+                    action={actionDeleteNote}
+                    fields={{ id: note.id }}
+                    message="Hapus catatan ini? Tindakan ini tidak bisa dibatalkan."
+                    className="ml-auto"
+                  >
                     <button
                       type="submit"
                       className="inline-flex items-center gap-1 text-xs text-ink-muted transition-colors hover:text-red-600"
@@ -134,7 +139,7 @@ export function NotesList({ notes }: { notes: Note[] }) {
                       <Trash2 className="size-3.5" aria-hidden="true" />
                       Hapus
                     </button>
-                  </form>
+                  </ConfirmForm>
                   <span className="text-[11px] text-ink-muted">
                     {formatCompactId(note.content.length)} karakter
                   </span>

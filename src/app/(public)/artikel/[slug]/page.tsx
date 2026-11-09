@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { BookmarkButton } from "@/components/shared/bookmark-button";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { siteConfig } from "@/config/site";
-import { formatDateId, formatCompactId } from "@/lib/utils";
+import { formatDateId, formatCompactId, toJsonLd } from "@/lib/utils";
 import { ArticleCard } from "@/modules/knowledge/components/article-card";
 import { ArticleContent } from "@/modules/knowledge/components/article-content";
 import {
@@ -90,9 +90,14 @@ async function ArticleDetailContent({ params }: ArticleDetailPageProps) {
     "@type": "Article",
     headline: article.title,
     description: article.excerpt ?? undefined,
-    image: article.featured_image ?? undefined,
+    // `image` wajib untuk Article rich result; pakai OG default bila kosong.
+    image: [
+      article.featured_image
+        ? new URL(article.featured_image, siteConfig.url).toString()
+        : `${siteConfig.url}${siteConfig.ogImage}`,
+    ],
     datePublished: article.published_at ?? undefined,
-    dateModified: article.updated_at,
+    dateModified: article.updated_at ?? article.published_at ?? undefined,
     author: {
       "@type": "Person",
       name: authorName,
@@ -102,6 +107,10 @@ async function ArticleDetailContent({ params }: ArticleDetailPageProps) {
       "@type": "Organization",
       name: siteConfig.name,
       url: siteConfig.url,
+      logo: {
+        "@type": "ImageObject",
+        url: `${siteConfig.url}/icon-512.png`,
+      },
     },
     mainEntityOfPage: `${siteConfig.url}/artikel/${article.slug}`,
   };
@@ -125,11 +134,11 @@ async function ArticleDetailContent({ params }: ArticleDetailPageProps) {
     <div className="animate-fade-in">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: toJsonLd(articleJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: toJsonLd(breadcrumbJsonLd) }}
       />
       <ArticleViewTracker slug={article.slug} />
 

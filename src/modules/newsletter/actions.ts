@@ -35,32 +35,20 @@ export async function actionSubscribeNewsletter(
 
   const supabase = await createClient();
 
-  // Re-subscribe mengaktifkan kembali baris lama (index unik lower(email)).
-  const { data: existing } = await supabase
-    .from("newsletter_subscribers")
-    .select("id, is_active")
-    .ilike("email", parsed.data.email)
-    .maybeSingle();
-
-  if (existing) {
-    if (existing.is_active) {
-      return { error: null, success: "Email ini sudah terdaftar. Terima kasih!" };
-    }
-    await supabase
-      .from("newsletter_subscribers")
-      .update({ is_active: true, unsubscribed_at: null })
-      .eq("id", existing.id);
-    return { error: null, success: "Berhasil berlangganan kembali. Sampai jumpa di inbox!" };
-  }
-
-  const { error } = await supabase.from("newsletter_subscribers").insert({
-    email: parsed.data.email,
-    source: parsed.data.source,
+  // RPC SECURITY DEFINER: insert atau aktifkan kembali tanpa perlu SELECT tabel
+  // (tabel newsletter hanya bisa dibaca admin lewat RLS).
+  const { data, error } = await supabase.rpc("subscribe_newsletter", {
+    p_email: parsed.data.email,
+    p_source: parsed.data.source,
   });
 
   if (error) {
     console.error("[newsletter] gagal berlangganan:", error.message);
     return { error: "Gagal berlangganan. Coba lagi.", success: null };
+  }
+
+  if (data === "invalid") {
+    return { error: "Email tidak valid.", success: null };
   }
 
   return {

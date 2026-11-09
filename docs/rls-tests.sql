@@ -1,6 +1,6 @@
 -- ============================================================================
 -- RuangKumpul — RLS Smoke Tests
--- Jalankan di Supabase SQL Editor SETELAH semua migrasi (0001–0005).
+-- Jalankan di Supabase SQL Editor SETELAH semua migrasi (0001–0007).
 -- Setiap blok memverifikasi bahwa RLS memblokir/mengizinkan seperti mestinya.
 -- Hasil ditampilkan sebagai tabel; semua baris "pass" harus bernilai true.
 -- ============================================================================

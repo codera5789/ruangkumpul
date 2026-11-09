@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import type { Tables } from "@/types/database";
 
 export type EventWithOrganizer = Tables<"events"> & {
@@ -24,6 +25,7 @@ export async function listUpcomingEvents(limit = 24): Promise<EventWithOrganizer
     if (error) throw error;
     return (data ?? []) as EventWithOrganizer[];
   } catch (err) {
+    unstable_rethrow(err);
     console.error("[events] listUpcomingEvents gagal:", err);
     return [];
   }
@@ -63,6 +65,7 @@ export async function listUpcomingEventsPaginated({
     if (error) throw error;
     return { events: (data ?? []) as EventWithOrganizer[], total: count ?? 0 };
   } catch (err) {
+    unstable_rethrow(err);
     console.error("[events] listUpcomingEventsPaginated gagal:", err);
     return { events: [], total: 0 };
   }
@@ -85,6 +88,7 @@ export async function getEventBySlug(slug: string): Promise<EventWithOrganizer |
     if (error || !data) return null;
     return data as EventWithOrganizer;
   } catch (err) {
+    unstable_rethrow(err);
     console.error("[events] getEventBySlug gagal:", err);
     return null;
   }

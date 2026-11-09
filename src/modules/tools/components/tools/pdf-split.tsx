@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils";
 type SplitMode = "rentang" | "halaman";
 
 const MAX_PAGE_BUTTONS = 50;
+const MAX_PDF_BYTES = 50 * 1024 * 1024; // 50 MB
+const MAX_PAGES = 500;
 
 interface LoadedPdf {
   name: string;
@@ -105,6 +107,11 @@ export default function PdfSplit() {
       setError("File bukan PDF. Pilih file dengan format .pdf.");
       return;
     }
+    if (file.size > MAX_PDF_BYTES) {
+      setLoaded(null);
+      setError("Ukuran PDF maksimal 50 MB agar browser tidak kehabisan memori.");
+      return;
+    }
     setLoadingDoc(true);
     setError(null);
     setRangeError(null);
@@ -112,6 +119,11 @@ export default function PdfSplit() {
     try {
       const bytes = await file.arrayBuffer();
       const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
+      if (doc.getPageCount() > MAX_PAGES) {
+        setLoaded(null);
+        setError(`PDF maksimal ${MAX_PAGES} halaman. Pecah file besar terlebih dahulu.`);
+        return;
+      }
       setLoaded({ name: file.name, size: file.size, pageCount: doc.getPageCount(), doc });
     } catch (err) {
       setLoaded(null);

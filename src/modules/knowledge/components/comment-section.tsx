@@ -46,7 +46,10 @@ export function CommentForm({
     return (
       <div className="rounded-card border border-slate-200/80 bg-surface-muted px-5 py-6 text-center">
         <p className="text-sm text-ink-secondary">
-          <Link href="/login?next=/artikel" className="font-semibold text-brand-700 hover:underline">
+          <Link
+            href={`/login?next=${encodeURIComponent(`/artikel/${slug}`)}`}
+            className="font-semibold text-brand-700 hover:underline"
+          >
             Masuk
           </Link>{" "}
           untuk ikut berdiskusi di kolom komentar.

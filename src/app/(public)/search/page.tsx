@@ -7,6 +7,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { Card } from "@/components/ui/card";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { createClient } from "@/lib/supabase/server";
+import { postgrestIlikePattern } from "@/lib/utils";
 import { TOOLS } from "@/modules/tools/tools-registry/registry";
 
 export const metadata: Metadata = {
@@ -27,7 +28,7 @@ interface SearchResult {
 }
 
 async function searchDatabase(supabase: Awaited<ReturnType<typeof createClient>>, q: string) {
-  const pattern = `%${q.replace(/[%_]/g, (m) => `\\${m}`)}%`;
+  const pattern = postgrestIlikePattern(q);
 
   const [articles, communities, posts] = await Promise.all([
     supabase
@@ -53,6 +54,10 @@ async function searchDatabase(supabase: Awaited<ReturnType<typeof createClient>>
       .order("created_at", { ascending: false })
       .limit(25),
   ]);
+
+  if (articles.error) console.error("[search] artikel gagal:", articles.error.message);
+  if (communities.error) console.error("[search] komunitas gagal:", communities.error.message);
+  if (posts.error) console.error("[search] diskusi gagal:", posts.error.message);
 
   return { articles: articles.data ?? [], communities: communities.data ?? [], posts: posts.data ?? [] };
 }

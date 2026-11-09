@@ -9,6 +9,8 @@ import { SubmitButton } from "@/modules/auth/components/submit-button";
 
 const initialState: AuthActionState = { error: null, success: null };
 
+const OAUTH_DISABLED = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_ENABLED === "false";
+
 export function RegisterForm() {
   const [state, formAction] = useActionState(actionSignUp, initialState);
 
@@ -21,15 +23,19 @@ export function RegisterForm() {
         </p>
       </div>
 
-      <form action={actionSignInWithGoogle}>
-        <GoogleButton label="Daftar dengan Google" />
-      </form>
+      {!OAUTH_DISABLED ? (
+        <>
+          <form action={actionSignInWithGoogle}>
+            <GoogleButton label="Daftar dengan Google" />
+          </form>
 
-      <div className="flex items-center gap-3 text-xs text-ink-muted">
-        <span className="h-px flex-1 bg-slate-200" />
-        atau dengan email
-        <span className="h-px flex-1 bg-slate-200" />
-      </div>
+          <div className="flex items-center gap-3 text-xs text-ink-muted">
+            <span className="h-px flex-1 bg-slate-200" />
+            atau dengan email
+            <span className="h-px flex-1 bg-slate-200" />
+          </div>
+        </>
+      ) : null}
 
       <form action={formAction} className="space-y-4">
         {state.error ? (

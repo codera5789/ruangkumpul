@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { FileText, MessageSquare, Search, Users, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -35,6 +36,7 @@ export function SearchInput({
   const [value, setValue] = useState(defaultValue ?? "");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -57,6 +59,7 @@ export function SearchInput({
         if (!res.ok) return;
         const data = (await res.json()) as { results: Suggestion[] };
         setSuggestions(data.results ?? []);
+        setActiveIndex(-1);
         setOpen(true);
       } catch {
         // dibatalkan/gagal — abaikan
@@ -89,7 +92,24 @@ export function SearchInput({
 
   function go(href: string) {
     setOpen(false);
+    setActiveIndex(-1);
     router.push(href);
+  }
+
+  function onInputKeyDown(event: ReactKeyboardEvent<HTMLInputElement>) {
+    if (!open || suggestions.length === 0) return;
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setActiveIndex((index) => (index + 1) % suggestions.length);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setActiveIndex((index) => (index <= 0 ? suggestions.length - 1 : index - 1));
+    } else if (event.key === "Enter" && activeIndex >= 0) {
+      event.preventDefault();
+      const suggestion = suggestions[activeIndex];
+      if (suggestion) go(suggestion.href);
+    }
   }
 
   return (
@@ -104,11 +124,16 @@ export function SearchInput({
           name="q"
           value={value}
           onChange={(e) => setValue(e.target.value)}
+          onKeyDown={onInputKeyDown}
           onFocus={() => suggestions.length > 0 && setOpen(true)}
           autoFocus={autoFocus}
           placeholder={placeholder}
           aria-label="Cari di RuangKumpul"
           aria-expanded={open}
+          aria-autocomplete="list"
+          aria-activedescendant={
+            open && activeIndex >= 0 ? `search-option-${activeIndex}` : undefined
+          }
           role="combobox"
           aria-controls="search-suggestions"
           className="h-11 w-full rounded-xl border border-slate-200 bg-surface pr-4 pl-10 text-sm text-ink transition-colors placeholder:text-ink-muted hover:border-slate-300 focus:border-brand-500 focus:outline-hidden"
@@ -121,16 +146,18 @@ export function SearchInput({
           role="listbox"
           className="animate-slide-up absolute inset-x-0 top-full z-50 mt-2 max-h-80 overflow-auto rounded-card border border-slate-200 bg-surface py-1.5 shadow-lg"
         >
-          {suggestions.map((s) => {
+          {suggestions.map((s, index) => {
             const Icon = typeIcons[s.type];
             return (
               <li key={`${s.type}-${s.href}`}>
                 <button
+                  id={`search-option-${index}`}
                   type="button"
                   role="option"
-                  aria-selected="false"
+                  aria-selected={index === activeIndex}
+                  onMouseEnter={() => setActiveIndex(index)}
                   onClick={() => go(s.href)}
-                  className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors hover:bg-surface-muted"
+                  className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors hover:bg-surface-muted aria-selected:bg-surface-muted"
                 >
                   <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
                     <Icon className="size-3.5" aria-hidden="true" />

@@ -63,3 +63,44 @@ export function truncate(text: string, length: number): string {
   if (text.length <= length) return text;
   return text.slice(0, length).trimEnd() + "…";
 }
+
+/**
+ * Serialisasi JSON untuk `<script type="application/ld+json">`.
+ * `JSON.stringify` tidak meng-escape `<`, sehingga judul/deskripsi yang
+ * mengandung `</script>` bisa keluar dari tag dan menjadi stored XSS.
+ * Escape `<` (cukup untuk mencegah breakout) agar aman dipakai dengan
+ * `dangerouslySetInnerHTML`.
+ */
+export function toJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}
+
+/**
+ * Bangun nilai filter PostgREST `ILIKE` yang aman untuk `.or(...)`.
+ * Nilai dibungkus tanda kutip ganda agar koma/tanda kurung dari input pengguna
+ * tidak memecah logika filter, dan `%`/`_`/`\` di-escape sebagai literal.
+ */
+export function postgrestIlikePattern(input: string): string {
+  const escaped = input
+    .replace(/\\/g, "\\\\")
+    .replace(/[%_]/g, (match) => `\\${match}`)
+    .replace(/"/g, '\\"');
+  return `"%${escaped}%"`;
+}
+
+/**
+ * Sanitasi parameter `next` untuk redirect internal.
+ * Menolak URL absolut, protocol-relative (`//evil.com`), dan trik
+ * backslash (`/\evil.com`) yang dinormalisasi browser menjadi host lain.
+ */
+export function safeNext(value: string | null | undefined, fallback = "/dashboard"): string {
+  if (typeof value !== "string" || !value.startsWith("/")) return fallback;
+  try {
+    const base = "https://ruangkumpul.internal";
+    const url = new URL(value, base);
+    if (url.origin !== base) return fallback;
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return fallback;
+  }
+}

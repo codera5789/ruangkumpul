@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import type { Tables } from "@/types/database";
 import type { CommunitySummary } from "@/modules/community/services";
 
@@ -55,6 +56,7 @@ export async function getCommunityBySlug(
       isOwner: Boolean(user && community.owner_id === user.id),
     };
   } catch (err) {
+    unstable_rethrow(err);
     console.error("[community] getCommunityBySlug gagal:", err);
     return null;
   }
@@ -111,6 +113,7 @@ export async function listCommunityPosts(
 
     return posts;
   } catch (err) {
+    unstable_rethrow(err);
     console.error("[community] listCommunityPosts gagal:", err);
     return [];
   }
@@ -137,12 +140,13 @@ export async function getPostBySlug(slug: string): Promise<PostWithAuthor | null
 
     const post = data as PostWithAuthor;
 
+    // Satu kali getUser dipakai untuk gate privat dan status suka.
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     // App-level gate untuk komunitas privat (RLS juga memvalidasi).
     if (post.communities?.visibility === "private") {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
       let allowed = Boolean(user && post.author_id === user.id);
       if (!allowed && user) {
         const [{ data: membership }, { data: moderator }] = await Promise.all([
@@ -160,33 +164,29 @@ export async function getPostBySlug(slug: string): Promise<PostWithAuthor | null
       if (!allowed) return null;
     }
 
-    const [{ count: likeCount }, { count: commentCount }] = await Promise.all([
-      supabase.from("reactions").select("*", { count: "exact", head: true }).eq("target_type", "post").eq("target_id", post.id),
-      supabase.from("comments").select("*", { count: "exact", head: true }).eq("post_id", post.id),
-    ]);
-
-    let liked = false;
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) {
-      const { data: existingLike } = await supabase
-        .from("reactions")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("target_type", "post")
-        .eq("target_id", post.id)
-        .eq("reaction_type", "like")
-        .maybeSingle();
-      liked = Boolean(existingLike);
-    }
+    const [{ count: likeCount }, { count: commentCount }, { data: existingLike }] =
+      await Promise.all([
+        supabase.from("reactions").select("*", { count: "exact", head: true }).eq("target_type", "post").eq("target_id", post.id),
+        supabase.from("comments").select("*", { count: "exact", head: true }).eq("post_id", post.id),
+        user
+          ? supabase
+              .from("reactions")
+              .select("id")
+              .eq("user_id", user.id)
+              .eq("target_type", "post")
+              .eq("target_id", post.id)
+              .eq("reaction_type", "like")
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+      ]);
 
     post.reaction_count = likeCount ?? 0;
     post.comment_count = commentCount ?? 0;
-    post.liked = liked;
+    post.liked = Boolean(existingLike);
 
     return post;
   } catch (err) {
+    unstable_rethrow(err);
     console.error("[community] getPostBySlug gagal:", err);
     return null;
   }
@@ -218,6 +218,7 @@ export async function listPostComments(
     if (error) throw error;
     return (data ?? []) as PostCommentWithAuthor[];
   } catch (err) {
+    unstable_rethrow(err);
     console.error("[community] listPostComments gagal:", err);
     return [];
   }

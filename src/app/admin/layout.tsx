@@ -54,7 +54,7 @@ async function AdminShell({ children }: Readonly<{ children: React.ReactNode }>)
 
         <AdminMobileNav />
 
-        <main className="min-w-0 flex-1 pb-24 animate-fade-in md:pb-0">{children}</main>
+        <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 pb-24 animate-fade-in md:pb-0">{children}</main>
       </div>
     </>
   );

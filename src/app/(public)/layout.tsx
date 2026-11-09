@@ -13,7 +13,7 @@ export default function PublicLayout({
       <Suspense fallback={<HeaderSkeleton />}>
         <Header />
       </Suspense>
-      <main className="flex-1 pb-20 md:pb-0">{children}</main>
+      <main id="main-content" tabIndex={-1} className="flex-1 pb-20 md:pb-0">{children}</main>
       <Footer />
       {/* MobileNav membaca usePathname (runtime) — aman setelah shell statis. */}
       <Suspense fallback={null}>

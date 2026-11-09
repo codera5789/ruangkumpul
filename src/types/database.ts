@@ -1,6 +1,6 @@
 /**
  * Tipe database Supabase untuk RuangKumpul.
- * Disesuaikan dengan supabase/migrations/0001_initial_schema.sql + 0002_article_comments.sql.
+ * Disesuaikan dengan supabase/migrations/0001–0007 (schema, RPC, dan enum).
  * Regenerasi otomatis (opsional): npx supabase gen types typescript --project-id <ref> > src/types/database.ts
  */
 
@@ -1141,6 +1141,10 @@ export type Database = {
       };
       register_event: {
         Args: { p_event_id: string };
+        Returns: string;
+      };
+      subscribe_newsletter: {
+        Args: { p_email: string; p_source?: string };
         Returns: string;
       };
     };

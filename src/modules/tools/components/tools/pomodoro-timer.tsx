@@ -39,6 +39,11 @@ export default function PomodoroTimer() {
     baseTitleRef.current = document.title;
     return () => {
       if (baseTitleRef.current !== null) document.title = baseTitleRef.current;
+      // Tutup AudioContext agar tidak menumpuk saat pengguna berpindah halaman.
+      if (audioCtxRef.current) {
+        void audioCtxRef.current.close().catch(() => {});
+        audioCtxRef.current = null;
+      }
     };
   }, []);
 

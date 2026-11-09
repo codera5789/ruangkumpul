@@ -13,7 +13,7 @@ export function NewsletterForm({ source = "footer" }: { source?: string }) {
   return (
     <div>
       {state.success ? (
-        <p className="text-sm font-semibold text-emerald-400" role="status">
+        <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400" role="status">
           {state.success}
         </p>
       ) : (
@@ -26,20 +26,20 @@ export function NewsletterForm({ source = "footer" }: { source?: string }) {
             maxLength={255}
             placeholder="email@kamu.com"
             aria-label="Alamat email"
-            className="h-10 min-w-0 flex-1 rounded-xl border border-white/20 bg-white/10 px-3.5 text-sm text-white placeholder:text-white/50 focus:border-white/50 focus:outline-hidden"
+            className="h-10 min-w-0 flex-1 rounded-xl border border-slate-200 bg-surface px-3.5 text-sm text-ink placeholder:text-ink-muted focus:border-brand-500 focus:outline-hidden"
           />
           <button
             type="submit"
             disabled={pending}
             aria-label="Berlangganan"
-            className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-brand-800 transition-colors hover:bg-brand-50 disabled:opacity-60"
+            className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-800 text-white transition-colors hover:bg-brand-700 disabled:opacity-60"
           >
             <Send className="size-4" aria-hidden="true" />
           </button>
         </form>
       )}
       {state.error ? (
-        <p className="mt-1.5 text-xs text-red-300" role="alert">
+        <p className="mt-1.5 text-xs text-red-600 dark:text-red-400" role="alert">
           {state.error}
         </p>
       ) : null}

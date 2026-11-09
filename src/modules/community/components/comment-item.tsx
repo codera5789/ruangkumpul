@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -29,8 +29,12 @@ export function CommentItem({ comment, postSlug, currentUserId, isModerator }: C
   const authorName =
     comment.profiles?.full_name || comment.profiles?.username || "Pengguna";
   const canManage = Boolean(currentUserId) && (comment.author_id === currentUserId || isModerator);
-  // Form edit tertutup otomatis setelah simpan berhasil.
-  const showForm = editing && !state.success;
+  // Tutup form sekali setelah simpan berhasil; state tidak menghalangi edit ulang.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- menutup form setelah aksi server sukses
+    if (state.success) setEditing(false);
+  }, [state]);
+  const showForm = editing;
 
   return (
     <div className="flex gap-3 py-4">
@@ -46,7 +50,12 @@ export function CommentItem({ comment, postSlug, currentUserId, isModerator }: C
         {showForm ? (
           <form action={formAction} className="mt-2 space-y-2">
             <input type="hidden" name="commentId" value={comment.id} />
+            <input type="hidden" name="postSlug" value={postSlug} />
+            <label htmlFor={`edit-comment-${comment.id}`} className="sr-only">
+              Edit komentar
+            </label>
             <textarea
+              id={`edit-comment-${comment.id}`}
               name="content"
               defaultValue={comment.content}
               required

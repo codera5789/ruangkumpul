@@ -28,7 +28,8 @@ type MemberRow = {
   profiles: { username: string; full_name: string | null; avatar_url: string | null } | null;
 };
 
-async function AnggotaContent({ slug }: { slug: string }) {  const supabase = await createClient();
+async function AnggotaContent({ slug }: { slug: string }) {
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

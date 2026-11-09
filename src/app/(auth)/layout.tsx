@@ -7,7 +7,7 @@ export default function AuthLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-surface-secondary px-4 py-10">
+    <main id="main-content" tabIndex={-1} className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-surface-secondary px-4 py-10">
       <KumpulMotif className="absolute -top-24 -left-24 size-80 text-brand-800/5 dark:text-brand-300/10" />
       <KumpulMotif className="absolute -right-28 -bottom-28 size-96 text-brand-800/5 dark:text-brand-300/10" />
 

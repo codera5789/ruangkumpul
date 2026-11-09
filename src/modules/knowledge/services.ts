@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import type { Tables } from "@/types/database";
 
 export type ArticleWithAuthor = Tables<"articles"> & {
@@ -16,11 +17,7 @@ export async function listLatestArticles(limit = 6): Promise<ArticleWithAuthor[]
 
     const { data, error } = await supabase
       .from("articles")
-      .select(
-        `*,
-         profiles (username, full_name, avatar_url),
-         article_categories (name, slug)`,
-      )
+      .select(ARTICLE_CARD_SELECT)
       .eq("status", "published")
       .order("published_at", { ascending: false, nullsFirst: false })
       .limit(limit);
@@ -28,10 +25,20 @@ export async function listLatestArticles(limit = 6): Promise<ArticleWithAuthor[]
     if (error) throw error;
     return (data ?? []) as ArticleWithAuthor[];
   } catch (err) {
+    unstable_rethrow(err);
     console.error("[knowledge] listLatestArticles gagal:", err);
     return [];
   }
 }
+
+/**
+ * Kolom ringkas untuk kartu/listing — tanpa kolom `content` (JSONB besar)
+ * yang tidak pernah dirender di kartu.
+ */
+const ARTICLE_CARD_SELECT = `id, title, slug, excerpt, featured_image, published_at,
+  view_count, category_id, author_id, created_at, updated_at,
+  profiles (username, full_name, avatar_url),
+  article_categories (name, slug)` as const;
 
 const ARTICLE_SELECT = `*,
   profiles (username, full_name, avatar_url),
@@ -64,7 +71,7 @@ export async function listPublishedArticles({
 
     let query = supabase
       .from("articles")
-      .select(ARTICLE_SELECT, { count: "exact" })
+      .select(ARTICLE_CARD_SELECT, { count: "exact" })
       .eq("status", "published");
 
     if (categoryId) query = query.eq("category_id", categoryId);
@@ -77,6 +84,7 @@ export async function listPublishedArticles({
     if (error) throw error;
     return { articles: (data ?? []) as ArticleWithAuthor[], total: count ?? 0 };
   } catch (err) {
+    unstable_rethrow(err);
     console.error("[knowledge] listPublishedArticles gagal:", err);
     return { articles: [], total: 0 };
   }
@@ -94,6 +102,7 @@ export async function listArticleCategories() {
     if (error) throw error;
     return data ?? [];
   } catch (err) {
+    unstable_rethrow(err);
     console.error("[knowledge] listArticleCategories gagal:", err);
     return [];
   }
@@ -124,6 +133,7 @@ export async function getArticleBySlug(slug: string): Promise<ArticleDetail | nu
     if (error || !data) return null;
     return data as ArticleDetail;
   } catch (err) {
+    unstable_rethrow(err);
     console.error("[knowledge] getArticleBySlug gagal:", err);
     return null;
   }
@@ -141,7 +151,7 @@ export async function listRelatedArticles(
 
     let query = supabase
       .from("articles")
-      .select(ARTICLE_SELECT)
+      .select(ARTICLE_CARD_SELECT)
       .eq("status", "published")
       .neq("id", articleId)
       .order("published_at", { ascending: false, nullsFirst: false })
@@ -156,7 +166,7 @@ export async function listRelatedArticles(
       // Fallback: artikel terbaru lain
       const { data: fallback } = await supabase
         .from("articles")
-        .select(ARTICLE_SELECT)
+        .select(ARTICLE_CARD_SELECT)
         .eq("status", "published")
         .neq("id", articleId)
         .order("published_at", { ascending: false, nullsFirst: false })
@@ -166,7 +176,34 @@ export async function listRelatedArticles(
 
     return data as ArticleWithAuthor[];
   } catch (err) {
+    unstable_rethrow(err);
     console.error("[knowledge] listRelatedArticles gagal:", err);
+    return [];
+  }
+}
+
+/** Artikel published milik satu penulis — dipakai halaman profil publik. */
+export async function listArticlesByAuthor(
+  authorId: string,
+  limit = 6,
+): Promise<ArticleWithAuthor[]> {
+  try {
+    const { createClient } = await import("@/lib/supabase/server");
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from("articles")
+      .select(ARTICLE_CARD_SELECT)
+      .eq("author_id", authorId)
+      .eq("status", "published")
+      .order("published_at", { ascending: false, nullsFirst: false })
+      .limit(limit);
+
+    if (error) throw error;
+    return (data ?? []) as ArticleWithAuthor[];
+  } catch (err) {
+    unstable_rethrow(err);
+    console.error("[knowledge] listArticlesByAuthor gagal:", err);
     return [];
   }
 }
@@ -197,6 +234,7 @@ export async function listArticleComments(
     if (error) throw error;
     return (data ?? []) as ArticleCommentWithAuthor[];
   } catch (err) {
+    unstable_rethrow(err);
     console.error("[knowledge] listArticleComments gagal:", err);
     return [];
   }

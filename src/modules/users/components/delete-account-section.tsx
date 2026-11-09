@@ -9,7 +9,11 @@ import { actionDeleteAccount, type ProfileActionState } from "@/modules/users/ac
 const initialState: ProfileActionState = { error: null, success: null };
 
 /** Zona bahaya: penghapusan akun permanen dengan konfirmasi ganda. */
-export function DeleteAccountSection() {
+export function DeleteAccountSection({
+  requiresPassword,
+}: {
+  requiresPassword: boolean;
+}) {
   const [state, formAction, pending] = useActionState(actionDeleteAccount, initialState);
   const [open, setOpen] = useState(false);
 
@@ -56,13 +60,15 @@ export function DeleteAccountSection() {
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
         <Input name="confirmation" required placeholder="HAPUS" aria-label="Konfirmasi hapus" />
-        <Input
-          name="password"
-          type="password"
-          placeholder="Password akun (jika ada)"
-          aria-label="Password akun"
-          autoComplete="current-password"
-        />
+        {requiresPassword ? (
+          <Input
+            name="password"
+            type="password"
+            placeholder="Password akun"
+            aria-label="Password akun"
+            autoComplete="current-password"
+          />
+        ) : null}
       </div>
       <div className="flex gap-2">
         <Button

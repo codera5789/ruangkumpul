@@ -56,14 +56,28 @@ export async function actionToggleToolFavorite(
 /**
  * Catat satu pemakaian tool (dipanggil dari route handler — bukan dari client langsung).
  * Gagal logging tidak boleh mengganggu pemakaian tool.
+ *
+ * `visitorKey` adalah hash IP dari route handler agar kuota tidak dibagi
+ * seluruh pengunjung (sebelumnya 20/menit global per tool → undercount).
  */
 export async function logToolUsage(
   toolSlug: string,
+  visitorKey?: string,
 ): Promise<void> {
   const slug = toolSlug.trim().toLowerCase();
   if (!/^[a-z0-9-]{1,100}$/.test(slug)) return;
 
   const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  try {
+    await enforceRateLimit(`tool-usage:${user?.id ?? visitorKey ?? "anon"}:${slug}`, 20, 60);
+  } catch {
+    return; // melebihi kuota logging — abaikan
+  }
 
   const { data: tool } = await supabase
     .from("tools")
@@ -71,16 +85,6 @@ export async function logToolUsage(
     .eq("slug", slug)
     .single();
   if (!tool) return;
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  try {
-    await enforceRateLimit(`tool-usage:${slug}`, 20, 60);
-  } catch {
-    return; // melebihi kuota logging — abaikan
-  }
 
   await supabase.from("tool_usage_logs").insert({
     tool_id: tool.id,

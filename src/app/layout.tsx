@@ -17,6 +17,7 @@ export const metadata: Metadata = {
   },
   description: siteConfig.description,
   applicationName: siteConfig.name,
+  manifest: "/manifest.webmanifest",
   keywords: [
     "ruangkumpul",
     "tools online gratis",
@@ -59,6 +60,12 @@ export default function RootLayout({
   return (
     <html lang="id" className={`${jakarta.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="flex min-h-full flex-col bg-surface-secondary text-ink">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-brand-800 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
+        >
+          Lewati ke konten utama
+        </a>
         <script
           // Terapkan tema tersimpan sebelum paint untuk mencegah kedipan (FOUC).
           // Class "js" membuka gate reveal-animations (fallback aman bila JS mati).

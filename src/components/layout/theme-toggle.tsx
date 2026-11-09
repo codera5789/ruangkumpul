@@ -15,20 +15,27 @@ function applyTheme(theme: Theme) {
 
 /** Toggle tema terang/gelap; tersimpan di localStorage. */
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>("system");
+  const [isDark, setIsDark] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // Inline script di root layout sudah menerapkan tema sebelum paint;
+    // di sini kita hanya menyelaraskan state tombol dengan tema efektif.
     const stored = (localStorage.getItem(STORAGE_KEY) as Theme | null) ?? "system";
     // eslint-disable-next-line react-hooks/set-state-in-effect -- hidrasi localStorage + penanda hydrate; pola wajib untuk tema tersimpan
-    setTheme(stored);
+    setIsDark(
+      stored === "dark" ||
+        (stored === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches),
+    );
     setMounted(true);
 
-    // Ikuti perubahan preferensi OS saat mode "system".
+    // Ikuti perubahan preferensi OS hanya saat pilihan masih "system".
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const onChange = () => {
-      if ((localStorage.getItem(STORAGE_KEY) as Theme | null) ?? "system") {
+      const current = (localStorage.getItem(STORAGE_KEY) as Theme | null) ?? "system";
+      if (current === "system") {
         applyTheme("system");
+        setIsDark(mq.matches);
       }
     };
     mq.addEventListener("change", onChange);
@@ -36,22 +43,22 @@ export function ThemeToggle() {
   }, []);
 
   function cycle() {
-    const next: Theme = document.documentElement.classList.contains("dark") ? "light" : "dark";
+    const next: Theme = isDark ? "light" : "dark";
     localStorage.setItem(STORAGE_KEY, next);
-    setTheme(next);
+    setIsDark(next === "dark");
     applyTheme(next);
   }
 
-  const isDark = mounted && theme === "dark";
+  const effectiveDark = mounted && isDark;
 
   return (
     <button
       type="button"
       onClick={cycle}
-      aria-label={isDark ? "Aktifkan mode terang" : "Aktifkan mode gelap"}
+      aria-label={effectiveDark ? "Aktifkan mode terang" : "Aktifkan mode gelap"}
       className="flex size-9 items-center justify-center rounded-full text-ink-secondary transition-all duration-200 hover:bg-surface-muted hover:text-ink active:scale-90"
     >
-      {isDark ? (
+      {effectiveDark ? (
         <Sun className="size-5 transition-transform duration-500 ease-out-expo hover:rotate-90" aria-hidden="true" />
       ) : (
         <Moon className="size-5 transition-transform duration-500 ease-out-expo hover:-rotate-12" aria-hidden="true" />

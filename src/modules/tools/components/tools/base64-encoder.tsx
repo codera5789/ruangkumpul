@@ -27,10 +27,15 @@ function encodeBase64(text: string): string {
 function decodeBase64(value: string): string {
   const normalized = value.replace(/\s+/g, "");
   if (normalized.length === 0) return "";
-  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(normalized) || normalized.length % 4 !== 0) {
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(normalized) || normalized.length % 4 === 1) {
     throw new Error("invalid-base64");
   }
-  const binary = atob(normalized);
+  // Base64 tanpa padding (mis. "SGVsbG8") valid; tambahkan "=" sebelum atob.
+  const padded =
+    normalized.length % 4 === 0
+      ? normalized
+      : normalized + "=".repeat(4 - (normalized.length % 4));
+  const binary = atob(padded);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i += 1) {
     bytes[i] = binary.charCodeAt(i);

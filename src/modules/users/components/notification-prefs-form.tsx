@@ -67,6 +67,7 @@ export function NotificationPrefsForm({
                 type="checkbox"
                 name={item.name}
                 defaultChecked={defaults[item.name]}
+                aria-label={item.title}
                 className="peer sr-only"
               />
               <span className="h-6 w-11 rounded-full bg-slate-200 transition-colors after:absolute after:top-0.5 after:left-0.5 after:size-5 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:bg-brand-600 peer-checked:after:translate-x-5" />

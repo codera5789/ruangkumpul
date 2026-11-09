@@ -8,7 +8,13 @@ import { actionChangeEmail, type ProfileActionState } from "@/modules/users/acti
 const initialState: ProfileActionState = { error: null, success: null };
 
 /** Form ganti email akun — mengirim email konfirmasi ke alamat baru. */
-export function ChangeEmailForm({ currentEmail }: { currentEmail: string }) {
+export function ChangeEmailForm({
+  currentEmail,
+  requiresPassword,
+}: {
+  currentEmail: string;
+  requiresPassword: boolean;
+}) {
   const [state, formAction] = useActionState(actionChangeEmail, initialState);
 
   return (
@@ -31,16 +37,19 @@ export function ChangeEmailForm({ currentEmail }: { currentEmail: string }) {
           required
           placeholder={currentEmail}
           aria-label="Email baru"
+          autoComplete="email"
         />
-        <Input
-          name="currentPassword"
-          type="password"
-          required
-          minLength={6}
-          placeholder="Password saat ini"
-          aria-label="Password saat ini"
-          autoComplete="current-password"
-        />
+        {requiresPassword ? (
+          <Input
+            name="currentPassword"
+            type="password"
+            required
+            minLength={6}
+            placeholder="Password saat ini"
+            aria-label="Password saat ini"
+            autoComplete="current-password"
+          />
+        ) : null}
       </div>
       <SubmitButton pendingText="Memproses...">Kirim Konfirmasi</SubmitButton>
     </form>

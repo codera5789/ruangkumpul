@@ -6,6 +6,7 @@ import { ChangeEmailForm } from "@/modules/users/components/change-email-form";
 import { NotificationPrefsForm } from "@/modules/users/components/notification-prefs-form";
 import { DeleteAccountSection } from "@/modules/users/components/delete-account-section";
 import { createClient } from "@/lib/supabase/server";
+import { hasPasswordIdentity } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Pengaturan" };
 
@@ -16,6 +17,8 @@ export default async function PengaturanPage() {
   } = await supabase.auth.getUser();
 
   if (!user) redirect("/login?next=/dashboard/pengaturan");
+
+  const requiresPassword = hasPasswordIdentity(user);
 
   const { data: settings } = await supabase
     .from("user_settings")
@@ -41,7 +44,7 @@ export default async function PengaturanPage() {
           Email saat ini: <strong className="text-ink">{user.email}</strong>. Kami akan mengirim
           tautan konfirmasi ke alamat baru.
         </p>
-        <ChangeEmailForm currentEmail={user.email ?? ""} />
+        <ChangeEmailForm currentEmail={user.email ?? ""} requiresPassword={requiresPassword} />
       </section>
 
       <section
@@ -114,7 +117,7 @@ export default async function PengaturanPage() {
           Zona bahaya
         </h2>
         <div className="mt-4">
-          <DeleteAccountSection />
+          <DeleteAccountSection requiresPassword={requiresPassword} />
         </div>
       </section>
     </div>

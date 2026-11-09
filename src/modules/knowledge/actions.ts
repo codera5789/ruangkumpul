@@ -45,6 +45,12 @@ export async function actionAddArticleComment(
     return { error: "Kamu harus masuk untuk berkomentar.", success: false };
   }
 
+  try {
+    await enforceRateLimit(`article-comment:${user.id}`, 8, 60);
+  } catch {
+    return { error: "Kamu berkomentar terlalu cepat. Tunggu sebentar.", success: false };
+  }
+
   const { data: article } = await supabase
     .from("articles")
     .select("id")
@@ -240,12 +246,18 @@ export async function actionUpdateArticle(
   // Verifikasi kepemilikan (RLS juga membatasi, ini untuk pesan yang jelas).
   const { data: existing } = await supabase
     .from("articles")
-    .select("id, slug, author_id")
+    .select("id, slug, author_id, published_at")
     .eq("id", articleId)
     .single();
   if (!existing) return { error: "Artikel tidak ditemukan.", success: null };
 
-  const { error } = await supabase
+  // Pertahankan tanggal terbit asli saat artikel sudah pernah terbit.
+  const nextPublishedAt =
+    parsed.data.status === "published"
+      ? (existing.published_at ?? new Date().toISOString())
+      : existing.published_at;
+
+  const { data: updated, error } = await supabase
     .from("articles")
     .update({
       category_id: parsed.data.categoryId || null,
@@ -253,15 +265,21 @@ export async function actionUpdateArticle(
       excerpt: parsed.data.excerpt || null,
       content: markdownToBlocks(parsed.data.content),
       status: parsed.data.status,
-      published_at: parsed.data.status === "published" ? new Date().toISOString() : null,
+      published_at: nextPublishedAt,
       seo_title: parsed.data.seoTitle || null,
       seo_description: parsed.data.seoDescription || null,
     })
-    .eq("id", articleId);
+    .eq("id", articleId)
+    .select("id");
 
   if (error) {
     console.error("[knowledge] gagal memperbarui artikel:", error.message);
     return { error: "Gagal menyimpan perubahan.", success: null };
+  }
+
+  // RLS mengembalikan 0 baris (bukan error) bila bukan penulis/moderator.
+  if (!updated || updated.length === 0) {
+    return { error: "Kamu tidak punya izin mengubah artikel ini.", success: null };
   }
 
   if (parsed.data.tags !== undefined) {
@@ -287,8 +305,15 @@ export async function actionDeleteArticle(formData: FormData): Promise<void> {
   const { supabase, user } = await requireContributor();
   if (!user) return;
 
-  await supabase.from("articles").delete().eq("id", articleId);
+  const { data: deleted } = await supabase
+    .from("articles")
+    .delete()
+    .eq("id", articleId)
+    .select("id");
   revalidatePath("/dashboard/artikel");
   revalidatePath("/artikel");
+  if (deleted && deleted.length > 0) {
+    revalidatePath("/");
+  }
 }
 

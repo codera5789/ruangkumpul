@@ -8,7 +8,7 @@ import { PageHero } from "@/components/shared/page-hero";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { CommunitySearch } from "@/modules/community/components/community-search";
-import { listTopCommunities } from "@/modules/community/services";
+import { listPublicCommunitiesPaginated } from "@/modules/community/services";
 
 export const metadata: Metadata = {
   title: "Komunitas · Temukan dan Bangun Komunitasmu",
@@ -28,12 +28,11 @@ async function KomunitasContent({
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, Math.min(100, Number(pageParam) || 1));
 
-  const communities = await listTopCommunities(PAGE_SIZE * page);
-  const hasMore = communities.length === PAGE_SIZE * page; // heuristik ada halaman berikutnya
-
-  const start = (page - 1) * PAGE_SIZE;
-  const visible = communities.slice(start, start + PAGE_SIZE);
-  const totalPages = hasMore || visible.length > 0 ? (hasMore ? page + 1 : page) : 1;
+  const { communities: visible, total } = await listPublicCommunitiesPaginated({
+    page,
+    pageSize: PAGE_SIZE,
+  });
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
     <div className="animate-fade-in">

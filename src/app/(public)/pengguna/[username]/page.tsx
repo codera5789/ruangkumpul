@@ -6,10 +6,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ArticleCard } from "@/modules/knowledge/components/article-card";
-import {
-  listPublishedArticles,
-  type ArticleWithAuthor,
-} from "@/modules/knowledge/services";
+import { listArticlesByAuthor } from "@/modules/knowledge/services";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateId } from "@/lib/utils";
 
@@ -55,11 +52,8 @@ async function ProfilContent({ params }: ProfilPublikPageProps) {
 
   if (!profile) notFound();
 
-  // Artikel published milik pengguna ini (filter di aplikasi agar query tetap sederhana).
-  const { articles } = await listPublishedArticles({ page: 1, pageSize: 50 });
-  const userArticles = articles.filter(
-    (a: ArticleWithAuthor) => a.profiles?.username === profile.username,
-  );
+  // Artikel published milik pengguna ini (query langsung, bukan filter di memori).
+  const userArticles = await listArticlesByAuthor(profile.id, 6);
 
   const { count: communityCount } = await supabase
     .from("community_members")
@@ -130,7 +124,7 @@ async function ProfilContent({ params }: ProfilPublikPageProps) {
           </h2>
           {userArticles.length > 0 ? (
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              {userArticles.slice(0, 6).map((article) => (
+              {userArticles.map((article) => (
                 <ArticleCard key={article.id} article={article} />
               ))}
             </div>

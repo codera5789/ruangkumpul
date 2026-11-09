@@ -3,6 +3,8 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { safeNext } from "@/lib/utils";
+import { siteConfig } from "@/config/site";
 import { createClient } from "@/lib/supabase/server";
 
 export interface AuthActionState {
@@ -45,11 +47,16 @@ function translateAuthError(message: string): string {
 }
 
 async function getOrigin(): Promise<string> {
+  // Utamakan URL kanonik. Jangan pernah membangun link auth dari header Host
+  // di produksi (rawan host-header poisoning pada email reset/konfirmasi).
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "");
+  if (configured) return configured;
+  if (process.env.NODE_ENV === "production") return siteConfig.url.replace(/\/+$/, "");
+
   const headerList = await headers();
   const proto = headerList.get("x-forwarded-proto") ?? "http";
   const host = headerList.get("host") ?? "localhost:3000";
-  // Normalisasi: buang trailing slash agar tidak menghasilkan `//auth/callback`
-  return (process.env.NEXT_PUBLIC_SITE_URL || `${proto}://${host}`).replace(/\/+$/, "");
+  return `${proto}://${host}`.replace(/\/+$/, "");
 }
 
 export async function actionSignIn(
@@ -78,9 +85,7 @@ export async function actionSignIn(
   }
 
   const next = String(formData.get("next") || "/dashboard");
-  // next hanya boleh path internal
-  const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
-  redirect(safeNext);
+  redirect(safeNext(next));
 }
 
 export async function actionSignUp(

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { hasPasswordIdentity } from "@/lib/auth";
 
 export interface ProfileActionState {
   error: string | null;
@@ -139,10 +140,12 @@ export async function actionUploadAvatar(
   const { data } = await supabase.storage.from("avatars").getPublicUrl(path);
   const publicUrl = data.publicUrl;
 
-  const { error: updateError } = await supabase
+  const { data: updatedProfile, error: updateError } = await supabase
     .from("profiles")
     .update({ avatar_url: publicUrl })
-    .eq("id", user.id);
+    .eq("id", user.id)
+    .select("username")
+    .single();
 
   if (updateError) {
     console.error("[profile] gagal menyimpan avatar:", updateError.message);
@@ -151,6 +154,9 @@ export async function actionUploadAvatar(
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/profil");
+  if (updatedProfile?.username) {
+    revalidatePath(`/pengguna/${updatedProfile.username}`);
+  }
   return { error: null, success: "Avatar diperbarui." };
 }
 
@@ -165,7 +171,7 @@ export async function actionChangeEmail(
   const parsed = z
     .object({
       email: z.string().trim().toLowerCase().email("Email tidak valid"),
-      currentPassword: z.string().min(6, "Password minimal 6 karakter"),
+      currentPassword: z.string().optional().or(z.literal("")),
     })
     .safeParse({
       email: formData.get("email"),
@@ -187,13 +193,21 @@ export async function actionChangeEmail(
     return { error: "Email sudah digunakan akun ini.", success: null };
   }
 
-  // Verifikasi password (re-auth ringan) sebelum mengubah email.
-  const { error: verifyError } = await supabase.auth.signInWithPassword({
-    email: user.email ?? "",
-    password: parsed.data.currentPassword,
-  });
-  if (verifyError) {
-    return { error: "Password salah.", success: null };
+  // Verifikasi password hanya untuk akun yang memang punya password.
+  // Akun OAuth (mis. Google) tidak punya password dan tetap bisa ganti email
+  // setelah konfirmasi dari Supabase.
+  if (hasPasswordIdentity(user)) {
+    const currentPassword = parsed.data.currentPassword ?? "";
+    if (currentPassword.length < 6) {
+      return { error: "Password minimal 6 karakter.", success: null };
+    }
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email: user.email ?? "",
+      password: currentPassword,
+    });
+    if (verifyError) {
+      return { error: "Password salah.", success: null };
+    }
   }
 
   const { error } = await supabase.auth.updateUser({ email: parsed.data.email });
@@ -279,17 +293,17 @@ export async function actionDeleteAccount(
 
   if (!user) return { error: "Sesi berakhir. Masuk kembali.", success: null };
 
-  // Verifikasi password (akun OAuth tanpa password boleh langsung lanjut).
-  if (user.app_metadata?.provider === "email" || user.email) {
+  // Verifikasi password hanya untuk akun dengan identitas email/password.
+  if (hasPasswordIdentity(user)) {
+    if (!password) {
+      return { error: "Masukkan password untuk konfirmasi.", success: null };
+    }
     const { error: verifyError } = await supabase.auth.signInWithPassword({
       email: user.email ?? "",
       password,
     });
-    if (verifyError && password !== "") {
+    if (verifyError) {
       return { error: "Password salah.", success: null };
-    }
-    if (verifyError && password === "") {
-      return { error: "Masukkan password untuk konfirmasi.", success: null };
     }
   }
 
@@ -310,6 +324,10 @@ export async function actionDeleteAccount(
   // Jalur fallback (tanpa SUPABASE_SERVICE_ROLE_KEY): anonimkan profil + hapus konten sendiri.
   await supabase.from("posts").delete().eq("author_id", user.id);
   await supabase.from("comments").delete().eq("author_id", user.id);
+  await supabase.from("article_comments").delete().eq("author_id", user.id);
+  await supabase.from("reactions").delete().eq("user_id", user.id);
+  await supabase.from("event_registrations").delete().eq("user_id", user.id);
+  await supabase.from("tool_favorites").delete().eq("user_id", user.id);
   await supabase.from("bookmarks").delete().eq("user_id", user.id);
   await supabase.from("notes").delete().eq("user_id", user.id);
   await supabase.from("tasks").delete().eq("user_id", user.id);

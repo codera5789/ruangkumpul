@@ -9,8 +9,16 @@ import { SubmitButton } from "@/modules/auth/components/submit-button";
 
 const initialState: AuthActionState = { error: null, success: null };
 
-export function LoginForm({ next }: { next?: string }) {
+const OAUTH_DISABLED = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_ENABLED === "false";
+
+const callbackErrorMessages: Record<string, string> = {
+  oauth: "Gagal masuk dengan Google. Coba lagi atau gunakan email dan password.",
+  auth: "Tautan konfirmasi tidak valid atau sudah kedaluwarsa. Coba masuk kembali.",
+};
+
+export function LoginForm({ next, error }: { next?: string; error?: string }) {
   const [state, formAction] = useActionState(actionSignIn, initialState);
+  const callbackError = error ? callbackErrorMessages[error] : null;
 
   return (
     <div className="space-y-6">
@@ -21,15 +29,28 @@ export function LoginForm({ next }: { next?: string }) {
         </p>
       </div>
 
-      <form action={actionSignInWithGoogle}>
-        <GoogleButton label="Masuk dengan Google" />
-      </form>
+      {callbackError ? (
+        <div
+          role="alert"
+          className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700"
+        >
+          {callbackError}
+        </div>
+      ) : null}
 
-      <div className="flex items-center gap-3 text-xs text-ink-muted">
-        <span className="h-px flex-1 bg-slate-200" />
-        atau dengan email
-        <span className="h-px flex-1 bg-slate-200" />
-      </div>
+      {!OAUTH_DISABLED ? (
+        <>
+          <form action={actionSignInWithGoogle}>
+            <GoogleButton label="Masuk dengan Google" />
+          </form>
+
+          <div className="flex items-center gap-3 text-xs text-ink-muted">
+            <span className="h-px flex-1 bg-slate-200" />
+            atau dengan email
+            <span className="h-px flex-1 bg-slate-200" />
+          </div>
+        </>
+      ) : null}
 
       <form action={formAction} className="space-y-4">
         <input type="hidden" name="next" value={next ?? "/dashboard"} />

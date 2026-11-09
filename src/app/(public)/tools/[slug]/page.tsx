@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { siteConfig } from "@/config/site";
+import { toJsonLd } from "@/lib/utils";
 import { BookmarkButton } from "@/components/shared/bookmark-button";
 import { ToolCard } from "@/modules/tools/components/tool-card";
 import { ToolRenderer } from "@/modules/tools/components/tool-renderer";
@@ -101,15 +102,15 @@ export default async function ToolPage({ params }: ToolPageProps) {
       <script
         type="application/ld+json"
         // Data berasal dari registry statis kami, bukan input pengguna.
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(toolJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: toJsonLd(toolJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: toJsonLd(breadcrumbJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: toJsonLd(faqJsonLd) }}
       />
 
       {/* Breadcrumb */}

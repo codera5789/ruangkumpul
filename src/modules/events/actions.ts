@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { slugify } from "@/lib/utils";
+import { parseWibDateTime } from "@/lib/datetime";
 import { createClient } from "@/lib/supabase/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
@@ -42,7 +43,15 @@ const createEventSchema = z
     startsAt: z.string().trim().min(1, "Tanggal mulai wajib diisi"),
     endsAt: z.string().trim().optional().or(z.literal("")),
     category: z.string().trim().max(60).optional().or(z.literal("")),
-    maxParticipants: z.string().trim().optional().or(z.literal("")),
+    maxParticipants: z
+      .string()
+      .trim()
+      .optional()
+      .or(z.literal(""))
+      .refine(
+        (v) => !v || (/^\d+$/.test(v) && Number(v) > 0),
+        "Kuota harus bilangan bulat positif",
+      ),
   })
   .refine(
     (data) => data.format === "online" || (data.location ?? "").length > 0,
@@ -78,9 +87,20 @@ export async function actionCreateEvent(
     return { error: "Batas membuat event tercapai. Coba lagi nanti.", success: null };
   }
 
-  const startsAt = new Date(parsed.data.startsAt);
-  if (Number.isNaN(startsAt.getTime())) {
+  const startsAt = parseWibDateTime(parsed.data.startsAt);
+  if (!startsAt) {
     return { error: "Tanggal mulai tidak valid.", success: null };
+  }
+
+  let endsAt: Date | null = null;
+  if (parsed.data.endsAt) {
+    endsAt = parseWibDateTime(parsed.data.endsAt);
+    if (!endsAt) {
+      return { error: "Tanggal berakhir tidak valid.", success: null };
+    }
+    if (endsAt.getTime() <= startsAt.getTime()) {
+      return { error: "Tanggal berakhir harus setelah tanggal mulai.", success: null };
+    }
   }
 
   const maxParticipants = parsed.data.maxParticipants
@@ -101,9 +121,7 @@ export async function actionCreateEvent(
       location: parsed.data.location || null,
       online_url: parsed.data.onlineUrl || null,
       starts_at: startsAt.toISOString(),
-      ends_at: parsed.data.endsAt
-        ? new Date(parsed.data.endsAt).toISOString()
-        : null,
+      ends_at: endsAt ? endsAt.toISOString() : null,
       category: parsed.data.category || null,
       max_participants: maxParticipants && maxParticipants > 0 ? maxParticipants : null,
       status: "published",
@@ -166,7 +184,12 @@ export async function actionToggleEventRegistration(
 
   if (error) {
     // Fallback untuk kondisi migration 0006 belum dijalankan di database.
-    if (error.code === "42883") {
+    // PostgREST mengembalikan PGRST202 untuk fungsi yang tidak ditemukan.
+    const rpcMissing =
+      error.code === "42883" ||
+      error.code === "PGRST202" ||
+      /could not find the function|schema cache/i.test(error.message);
+    if (rpcMissing) {
       console.warn("[events] RPC register_event belum ada — memakai jalur legacy.");
       return registerEventLegacy(supabase, user.id, event.id, eventSlug);
     }

@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { UserRoleManager } from "@/modules/admin/components/user-role-manager";
 import { createClient } from "@/lib/supabase/server";
-import { formatDateId } from "@/lib/utils";
+import { formatDateId, postgrestIlikePattern } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Admin · Pengguna" };
 
@@ -30,11 +30,13 @@ export default async function AdminUsersPage({
     .order("created_at", { ascending: false });
 
   if (query.length >= 2) {
-    request = request.or(`username.ilike.%${query}%,full_name.ilike.%${query}%`);
+    const pattern = postgrestIlikePattern(query);
+    request = request.or(`username.ilike.${pattern},full_name.ilike.${pattern}`);
   }
 
   const from = (page - 1) * PAGE_SIZE;
-  const { data: users, count } = await request.range(from, from + PAGE_SIZE - 1);
+  const { data: users, count, error: usersError } = await request.range(from, from + PAGE_SIZE - 1);
+  if (usersError) console.error("[admin/users] query gagal:", usersError.message);
   const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
 
   // Role milik admin yang sedang login (untuk membatasi UI).

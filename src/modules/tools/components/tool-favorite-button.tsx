@@ -15,7 +15,7 @@ interface ToolFavoriteButtonProps {
 /** Tombol favorit tool — status di-resolve klien (aman untuk halaman statis). */
 export function ToolFavoriteButton({ toolSlug, className }: ToolFavoriteButtonProps) {
   const [saved, setSaved] = useState(false);
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [loggedIn, setLoggedIn] = useState<boolean | undefined>(undefined);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -39,7 +39,7 @@ export function ToolFavoriteButton({ toolSlug, className }: ToolFavoriteButtonPr
   }, [toolSlug]);
 
   function handleClick() {
-    if (!loggedIn) {
+    if (loggedIn === false) {
       router.push(`/login?next=/tools/${toolSlug}`);
       return;
     }

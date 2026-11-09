@@ -10,7 +10,7 @@ import { PageHero } from "@/components/shared/page-hero";
 import { JobCard } from "@/modules/careers/components/job-card";
 import { JOB_TYPE_LABELS, listPublishedJobsPaginated } from "@/modules/careers/services";
 import type { Tables } from "@/types/database";
-import { cn } from "@/lib/utils";
+import { cn, toJsonLd } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -64,7 +64,7 @@ async function KarierContent({
     <div className="animate-fade-in">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+        dangerouslySetInnerHTML={{ __html: toJsonLd(JSON_LD) }}
       />
 
       <PageHero

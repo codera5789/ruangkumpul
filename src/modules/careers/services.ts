@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import type { Tables } from "@/types/database";
 
 export type JobWithPoster = Tables<"job_listings"> & {
@@ -32,6 +33,7 @@ export async function listPublishedJobs(limit = 30): Promise<JobWithPoster[]> {
     if (error) throw error;
     return (data ?? []) as JobWithPoster[];
   } catch (err) {
+    unstable_rethrow(err);
     console.error("[careers] listPublishedJobs gagal:", err);
     return [];
   }
@@ -71,6 +73,7 @@ export async function listPublishedJobsPaginated({
     if (error) throw error;
     return { jobs: (data ?? []) as JobWithPoster[], total: count ?? 0 };
   } catch (err) {
+    unstable_rethrow(err);
     console.error("[careers] listPublishedJobsPaginated gagal:", err);
     return { jobs: [], total: 0 };
   }
@@ -93,6 +96,7 @@ export async function getJobBySlug(slug: string): Promise<JobWithPoster | null> 
     if (error || !data) return null;
     return data as JobWithPoster;
   } catch (err) {
+    unstable_rethrow(err);
     console.error("[careers] getJobBySlug gagal:", err);
     return null;
   }

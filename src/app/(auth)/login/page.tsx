@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { LoginForm } from "@/modules/auth/components/login-form";
 import { createClient } from "@/lib/supabase/server";
+import { safeNext } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Masuk",
@@ -24,9 +25,10 @@ function AuthFormSkeleton() {
 async function LoginContent({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; error?: string }>;
 }) {
-  const { next } = await searchParams;
+  const { next, error } = await searchParams;
+  const target = safeNext(next);
 
   const supabase = await createClient();
   const {
@@ -34,16 +36,16 @@ async function LoginContent({
   } = await supabase.auth.getUser();
 
   if (user) {
-    redirect(next && next.startsWith("/") ? next : "/dashboard");
+    redirect(target);
   }
 
-  return <LoginForm next={next} />;
+  return <LoginForm next={target} error={error} />;
 }
 
 export default function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; error?: string }>;
 }) {
   return (
     <Suspense fallback={<AuthFormSkeleton />}>

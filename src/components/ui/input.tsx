@@ -5,10 +5,13 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: string | null;
 }
 
-export function Input({ className, error, ...props }: InputProps) {
+export function Input({ className, error, id, name, ...props }: InputProps) {
+  const errorId = error && (id || name) ? `${id ?? name}-error` : undefined;
   return (
     <div className="w-full">
       <input
+        id={id}
+        name={name}
         className={cn(
           "h-11 w-full rounded-xl border bg-surface px-3.5 text-sm text-ink transition-all duration-200",
           "placeholder:text-ink-muted",
@@ -19,9 +22,14 @@ export function Input({ className, error, ...props }: InputProps) {
           className,
         )}
         aria-invalid={error ? true : undefined}
+        aria-describedby={errorId}
         {...props}
       />
-      {error ? <p className="mt-1.5 text-xs text-red-600">{error}</p> : null}
+      {error ? (
+        <p id={errorId} role="alert" className="mt-1.5 text-xs text-red-600 dark:text-red-400">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -30,10 +38,13 @@ export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElemen
   error?: string | null;
 }
 
-export function Textarea({ className, error, ...props }: TextareaProps) {
+export function Textarea({ className, error, id, name, ...props }: TextareaProps) {
+  const errorId = error && (id || name) ? `${id ?? name}-error` : undefined;
   return (
     <div className="w-full">
       <textarea
+        id={id}
+        name={name}
         className={cn(
           "min-h-24 w-full rounded-xl border bg-surface px-3.5 py-2.5 text-sm text-ink transition-all duration-200",
           "placeholder:text-ink-muted",
@@ -44,9 +55,14 @@ export function Textarea({ className, error, ...props }: TextareaProps) {
           className,
         )}
         aria-invalid={error ? true : undefined}
+        aria-describedby={errorId}
         {...props}
       />
-      {error ? <p className="mt-1.5 text-xs text-red-600">{error}</p> : null}
+      {error ? (
+        <p id={errorId} role="alert" className="mt-1.5 text-xs text-red-600 dark:text-red-400">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }

@@ -48,8 +48,12 @@ async function expectBlocked(sql, label) {
   try {
     await db.query(sql);
     bad(`${label} — seharusnya diblok RLS tapi lolos`);
-  } catch {
-    ok(`${label} (diblok RLS)`);
+  } catch (e) {
+    if (e.code === "42501") {
+      ok(`${label} (diblok RLS)`);
+    } else {
+      bad(`${label} — error tak terduga [${e.code ?? "?"}]: ${String(e.message).split("\n")[0]}`);
+    }
   }
 }
 
@@ -68,6 +72,7 @@ try {
   }
 
   await run("0006_fix_private_community_and_event_quota (FILE UJI)", readFileSync(`${ROOT}/supabase/migrations/0006_fix_private_community_and_event_quota.sql`, "utf8"));
+  await run("0007_audit_fixes (FILE UJI)", readFileSync(`${ROOT}/supabase/migrations/0007_audit_fixes.sql`, "utf8"));
 
   // ---------- Data uji (superuser, bypass RLS) ----------
   await db.exec(`
@@ -119,14 +124,32 @@ try {
   await asUser("authenticated", MEMBER);
   await expectCount("select count(*) as count from posts where slug = 'post-privat'", 1, "TEST5 anggota approved membaca post privat");
   await expectCount("select count(*) as count from comments", 1, "TEST5b anggota approved membaca komentar privat");
+  // Regresi 0007: policy community_members sebelumnya rekursif (error 42P17).
+  await expectCount("select count(*) as count from community_members", 4, "TEST5c anggota approved membaca daftar anggota");
 
   await asUser("authenticated", PENDING);
   await expectCount("select count(*) as count from communities where slug = 'privat-aja'", 1, "TEST6 anggota pending melihat komunitas");
   await expectCount("select count(*) as count from posts where slug = 'post-privat'", 0, "TEST6b anggota pending TIDAK membaca post");
+  await expectCount("select count(*) as count from community_members", 4, "TEST6c anggota pending melihat daftar anggota");
+
+  // Trigger notifikasi tetap boleh memanggil create_notification setelah
+  // EXECUTE-nya dicabut dari client (0007).
+  await asUser("authenticated", MEMBER);
+  await db.query(
+    `insert into comments (post_id, author_id, content)
+     select id, '${MEMBER}', 'tes notifikasi' from posts where slug = 'post-publik'`,
+  );
+  await asUser("postgres");
+  await expectCount(
+    "select count(*) as count from notifications where user_id = '" + OWNER + "' and type = 'comment'",
+    1,
+    "TEST6d trigger komentar membuat notifikasi",
+  );
 
   await asUser("authenticated", STRANGER);
   await expectCount("select count(*) as count from communities where slug = 'privat-aja'", 0, "TEST7 orang luar tidak melihat komunitas privat");
   await expectCount("select count(*) as count from posts where slug = 'post-privat'", 0, "TEST7b orang luar tidak membaca post privat");
+  await expectCount("select count(*) as count from community_members", 1, "TEST7c orang luar hanya melihat anggota komunitas publik");
 
   console.log("\nTEST INSERT JOIN (RLS):");
   // UUID komunitas diambil sebagai superuser: orang luar tak bisa SELECT komunitas
@@ -152,6 +175,29 @@ try {
      values ('${PUBLIC_ID}', '${STRANGER}', 'member', 'approved')`,
   );
   ok("TEST10 insert approved ke komunitas publik lolos");
+  await expectBlocked(
+    `insert into community_members (community_id, user_id, role, status)
+     values ('${PUBLIC_ID}', '${EXTRA}', 'owner', 'approved')`,
+    "TEST10b insert role owner ke komunitas publik",
+  );
+
+  // Regresi 0007: moderator tidak boleh mengubah/mengeluarkan baris owner.
+  await asUser("postgres");
+  await db.query(
+    `insert into community_members (community_id, user_id, role, status)
+     values ('${PRIVATE_ID}', '${EXTRA}', 'moderator', 'approved')`,
+  );
+  await asUser("authenticated", EXTRA);
+  await expectBlocked(
+    `update community_members set status = 'banned'
+     where community_id = '${PRIVATE_ID}' and user_id = '${OWNER}'`,
+    "TEST15a moderator mengubah baris owner",
+  );
+  await expectBlocked(
+    `delete from community_members
+     where community_id = '${PRIVATE_ID}' and user_id = '${OWNER}'`,
+    "TEST15b moderator mengeluarkan owner",
+  );
 
   console.log("\nTEST RPC register_event:");
   await asUser("authenticated", MEMBER);
@@ -163,6 +209,15 @@ try {
   await expectRpc("select register_event((select id from events where slug = 'event-test')) as result", "full", "TEST11d kuota ke-3 → full");
   await asUser("postgres");
   await expectCount("select count(*) as count from events where slug = 'event-test' and participant_count = 2", 1, "TEST11e participant_count tersinkron trigger");
+  const { rows: eventRows } = await db.query("select id from events where slug = 'event-test'");
+  const EVENT_ID = eventRows[0].id;
+
+  // Regresi 0007: kuota tidak boleh dilewati lewat insert langsung (bukan RPC).
+  await asUser("authenticated", PENDING);
+  await expectBlocked(
+    `insert into event_registrations (event_id, user_id) values ('${EVENT_ID}', '${PENDING}')`,
+    "TEST11f insert langsung melewati kuota event",
+  );
 
   await asUser("anon");
   // anon sengaja di-revoke execute (hardening) — memanggil RPC harus ditolak.
@@ -171,7 +226,46 @@ try {
     "TEST12 anon memanggil register_event",
   );
 
-  console.log(`\n${failed === 0 ? "★★★ SEMUA TEST LULUS — migration 0006 aman dijalankan ★★★" : `✗✗✗ ${failed} TEST GAGAL`}`);
+  console.log("\nTEST NEWSLETTER & SIGNUP (0007):");
+  await asUser("anon");
+  await expectRpc("select subscribe_newsletter('Baru+Tag@Example.com', 'footer') as result", "ok", "TEST13a subscribe pertama");
+  await expectRpc("select subscribe_newsletter('baru+tag@example.com', 'footer') as result", "ok", "TEST13b subscribe ulang");
+  await asUser("postgres");
+  await expectCount("select count(*) as count from newsletter_subscribers where lower(email) = 'baru+tag@example.com'", 1, "TEST13c satu baris aktif");
+
+  // Email plus-addressed dulu menggagalkan CHECK username dan membatalkan signup.
+  await db.exec(`insert into auth.users (id, email) values ('77777777-7777-7777-7777-777777777777', 'plus+tag@example.com')`);
+  const { rows: profileRows } = await db.query("select username from profiles where id = '77777777-7777-7777-7777-777777777777'");
+  const generatedUsername = profileRows[0]?.username ?? "";
+  if (/^[a-z0-9_.-]{3,32}$/.test(generatedUsername)) {
+    ok(`TEST14 username plus-address valid (${generatedUsername})`);
+  } else {
+    bad(`TEST14 username plus-address tidak valid (${generatedUsername})`);
+  }
+
+  console.log("\nTEST RATE LIMIT (0007):");
+  // Orang lain tidak boleh menghabiskan kuota bucket milik korban.
+  await asUser("authenticated", STRANGER);
+  for (let i = 0; i < 3; i++) {
+    await expectRpc(
+      `select check_rate_limit('comment:${MEMBER}', 1, 60) as result`,
+      true,
+      `TEST16a${i + 1} bucket korban diabaikan`,
+    );
+  }
+  await asUser("authenticated", MEMBER);
+  await expectRpc(
+    `select check_rate_limit('comment:${MEMBER}', 1, 60) as result`,
+    true,
+    "TEST16b kuota korban masih utuh",
+  );
+  await expectRpc(
+    `select check_rate_limit('comment:${MEMBER}', 1, 60) as result`,
+    false,
+    "TEST16c kuota sendiri tetap berlaku",
+  );
+
+  console.log(`\n${failed === 0 ? "★★★ SEMUA TEST LULUS — migration 0001–0007 aman dijalankan ★★★" : `✗✗✗ ${failed} TEST GAGAL`}`);
   process.exitCode = failed === 0 ? 0 : 1;
 } catch (e) {
   console.error("Harness error:", e.message);

@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { createClient } from "@/lib/supabase/server";
-import { formatDateId, formatCompactId } from "@/lib/utils";
+import { formatDateId, formatCompactId, toJsonLd } from "@/lib/utils";
 import { actionCloseJob } from "@/modules/careers/actions";
 import { JOB_TYPE_LABELS, getJobBySlug } from "@/modules/careers/services";
 
@@ -69,13 +69,29 @@ async function JobDetailContent({ params }: JobDetailPageProps) {
   const salary = formatSalary(job);
   const posterName = job.profiles?.full_name || job.profiles?.username || "Pengguna";
 
+  // Google Jobs memakai enum schema.org, bukan enum internal (full_time, dst).
+  const employmentType: Record<string, string> = {
+    full_time: "FULL_TIME",
+    part_time: "PART_TIME",
+    contract: "CONTRACTOR",
+    freelance: "CONTRACTOR",
+    internship: "INTERN",
+  };
+  const salaryUnit: Record<string, string> = {
+    bulan: "MONTH",
+    tahun: "YEAR",
+    proyek: "OTHER",
+    jam: "HOUR",
+  };
+
   const jobJsonLd = {
     "@context": "https://schema.org",
     "@type": "JobPosting",
     title: job.title,
     description: job.description,
     datePosted: job.created_at,
-    employmentType: job.job_type.toUpperCase(),
+    validThrough: job.expires_at ?? undefined,
+    employmentType: employmentType[job.job_type] ?? job.job_type,
     hiringOrganization: { "@type": "Organization", name: job.company_name },
     jobLocationType: job.is_remote ? "TELECOMMUTE" : undefined,
     applicantLocationRequirements: job.is_remote
@@ -95,7 +111,7 @@ async function JobDetailContent({ params }: JobDetailPageProps) {
             "@type": "QuantitativeValue",
             minValue: job.salary_min ?? undefined,
             maxValue: job.salary_max ?? undefined,
-            unitText: job.salary_period.toUpperCase(),
+            unitText: salaryUnit[job.salary_period] ?? job.salary_period,
           },
         }
       : undefined,
@@ -105,7 +121,7 @@ async function JobDetailContent({ params }: JobDetailPageProps) {
     <div className="animate-slide-up-far">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jobJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: toJsonLd(jobJsonLd) }}
       />
 
       <nav

@@ -27,7 +27,7 @@ export function BookmarkButton({
   variant = "icon",
   className,
 }: BookmarkButtonProps) {
-  const [saved, setSaved] = useState(initialSaved);
+  const [saved, setSaved] = useState(initialSaved ?? false);
   const [loggedIn, setLoggedIn] = useState<boolean | undefined>(isLoggedIn);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
@@ -42,6 +42,33 @@ export function BookmarkButton({
       .then(({ data }) => setLoggedIn(Boolean(data.user)))
       .catch(() => setLoggedIn(false));
   }, [isLoggedIn]);
+
+  // Status bookmark awal belum diketahui (mis. halaman tool statis): baca dari DB
+  // agar klik pertama tidak justru menghapus bookmark yang sudah ada.
+  useEffect(() => {
+    if (initialSaved !== undefined) return;
+    let active = true;
+    const supabase = createClient();
+    supabase.auth
+      .getUser()
+      .then(async ({ data: { user } }) => {
+        if (!active || !user) return;
+        const { data } = await supabase
+          .from("bookmarks")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("resource_type", resourceType)
+          .eq("resource_id", resourceId)
+          .maybeSingle();
+        if (active) setSaved(Boolean(data));
+      })
+      .catch(() => {
+        // Biarkan status default; aksi tetap divalidasi server.
+      });
+    return () => {
+      active = false;
+    };
+  }, [initialSaved, resourceType, resourceId]);
 
   function handleClick() {
     if (loggedIn === false) {
