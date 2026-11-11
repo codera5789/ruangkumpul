@@ -9,6 +9,7 @@ import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { CommunitySearch } from "@/modules/community/components/community-search";
 import { listPublicCommunitiesPaginated } from "@/modules/community/services";
+import { parsePageParam } from "@/lib/form";
 
 export const metadata: Metadata = {
   title: "Komunitas · Temukan dan Bangun Komunitasmu",
@@ -26,7 +27,7 @@ async function KomunitasContent({
   searchParams: Promise<{ page?: string }>;
 }) {
   const { page: pageParam } = await searchParams;
-  const page = Math.max(1, Math.min(100, Number(pageParam) || 1));
+  const page = parsePageParam(pageParam);
 
   const { communities: visible, total } = await listPublicCommunitiesPaginated({
     page,

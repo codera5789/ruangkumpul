@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { slugify } from "@/lib/utils";
+import { zodFieldErrors } from "@/lib/form";
+import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
@@ -11,23 +13,6 @@ export interface CommunityActionState {
   error: string | null;
   success: string | null;
   fieldErrors?: Record<string, string>;
-}
-
-function zodFieldErrors(err: z.ZodError): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const issue of err.issues) {
-    const key = String(issue.path[0] ?? "form");
-    if (!out[key]) out[key] = issue.message;
-  }
-  return out;
-}
-
-async function requireUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return { supabase, user };
 }
 
 // ---------------------------------------------------------------------------

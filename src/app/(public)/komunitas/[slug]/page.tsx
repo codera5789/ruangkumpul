@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Card } from "@/components/ui/card";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { siteConfig } from "@/config/site";
 import { formatCompactId, timeAgoId } from "@/lib/utils";
 import { CreatePostForm } from "@/modules/community/components/create-post-form";
 import { JoinLeaveButtons } from "@/modules/community/components/join-leave-buttons";
@@ -35,6 +36,15 @@ export async function generateMetadata({
       description: community.description ?? undefined,
       url: `/komunitas/${community.slug}`,
       type: "website",
+      siteName: siteConfig.name,
+      locale: siteConfig.locale,
+      images: [{ url: siteConfig.ogImage, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: community.name,
+      description: community.description ?? undefined,
+      images: [siteConfig.ogImage],
     },
   };
 }

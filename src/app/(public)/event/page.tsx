@@ -10,6 +10,7 @@ import { PageHero } from "@/components/shared/page-hero";
 import { EventCard } from "@/modules/events/components/event-card";
 import { listUpcomingEventsPaginated } from "@/modules/events/services";
 import { cn } from "@/lib/utils";
+import { parsePageParam } from "@/lib/form";
 
 export const metadata: Metadata = {
   title: "Ruang Event · Webinar, Workshop, dan Acara Komunitas",
@@ -41,7 +42,7 @@ async function EventContent({
 }) {
   const { format: formatParam, page: pageParam } = await searchParams;
   const format = isFormatFilter(formatParam) ? formatParam : undefined;
-  const page = Math.max(1, Math.min(100, Number(pageParam) || 1));
+  const page = parsePageParam(pageParam);
 
   const { events, total } = await listUpcomingEventsPaginated({
     page,

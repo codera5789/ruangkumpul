@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { hasPasswordIdentity } from "@/lib/auth";
+import { zodFieldErrors } from "@/lib/form";
 
 export interface ProfileActionState {
   error: string | null;
@@ -42,12 +43,7 @@ export async function actionUpdateProfile(
   });
 
   if (!parsed.success) {
-    const fieldErrors: Record<string, string> = {};
-    for (const issue of parsed.error.issues) {
-      const key = String(issue.path[0] ?? "form");
-      if (!fieldErrors[key]) fieldErrors[key] = issue.message;
-    }
-    return { error: null, success: null, fieldErrors };
+    return { error: null, success: null, fieldErrors: zodFieldErrors(parsed.error) };
   }
 
   const supabase = await createClient();

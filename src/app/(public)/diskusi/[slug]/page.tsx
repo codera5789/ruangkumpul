@@ -9,6 +9,7 @@ import { BookmarkButton } from "@/components/shared/bookmark-button";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { siteConfig } from "@/config/site";
 import { formatCompactId, timeAgoId } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
 import { LikePostButton } from "@/modules/community/components/like-post-button";
@@ -39,6 +40,15 @@ export async function generateMetadata({
       description: post.content.slice(0, 160),
       url: `/diskusi/${post.slug}`,
       type: "article",
+      siteName: siteConfig.name,
+      locale: siteConfig.locale,
+      images: [{ url: siteConfig.ogImage, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.content.slice(0, 160),
+      images: [siteConfig.ogImage],
     },
   };
 }

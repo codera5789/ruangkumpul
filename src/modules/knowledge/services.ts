@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { unstable_rethrow } from "next/navigation";
 import type { Tables } from "@/types/database";
 
@@ -114,8 +115,13 @@ export type ArticleDetail = ArticleWithAuthor & {
   }[];
 };
 
-/** Detail artikel published berdasarkan slug. Null jika tidak ditemukan. */
-export async function getArticleBySlug(slug: string): Promise<ArticleDetail | null> {
+/** Detail artikel published berdasarkan slug. Null jika tidak ditemukan.
+ *  Di-cache per request: dipanggil generateMetadata + komponen halaman tanpa query ganda. */
+export const getArticleBySlug = cache(async (slug: string) =>
+  getArticleBySlugUncached(slug),
+);
+
+async function getArticleBySlugUncached(slug: string): Promise<ArticleDetail | null> {
   try {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();

@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { createClient } from "@/lib/supabase/server";
+import { siteConfig } from "@/config/site";
 import { formatDateId, formatCompactId, toJsonLd } from "@/lib/utils";
 import { actionCloseJob } from "@/modules/careers/actions";
 import { JOB_TYPE_LABELS, getJobBySlug } from "@/modules/careers/services";
@@ -41,6 +42,15 @@ export async function generateMetadata({ params }: JobDetailPageProps): Promise<
       description: job.description.slice(0, 160),
       url: `/karier/${job.slug}`,
       type: "article",
+      siteName: siteConfig.name,
+      locale: siteConfig.locale,
+      images: [{ url: siteConfig.ogImage, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${job.title} · ${job.company_name}`,
+      description: job.description.slice(0, 160),
+      images: [siteConfig.ogImage],
     },
   };
 }

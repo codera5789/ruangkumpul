@@ -44,11 +44,21 @@ export async function generateMetadata({
       title: article.seo_title || article.title,
       description: article.seo_description || article.excerpt || undefined,
       url: `/artikel/${article.slug}`,
+      siteName: siteConfig.name,
+      locale: siteConfig.locale,
       publishedTime: article.published_at ?? undefined,
       authors: article.profiles?.full_name
         ? [article.profiles.full_name]
         : undefined,
-      images: article.featured_image ? [{ url: article.featured_image }] : undefined,
+      images: [
+        { url: article.featured_image ?? siteConfig.ogImage, width: 1200, height: 630 },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: article.seo_title || article.title,
+      description: article.seo_description || article.excerpt || undefined,
+      images: [article.featured_image ?? siteConfig.ogImage],
     },
   };
 }

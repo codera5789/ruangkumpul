@@ -7,9 +7,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run && node tests/sql-security-smoke.mjs",
     "test:sql": "node tests/sql-security-smoke.mjs",
     "seed": "node --env-file=.env.local scripts/seed-content.mjs"
+  },
+  "engines": {
+    "node": ">=20.9.0"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
