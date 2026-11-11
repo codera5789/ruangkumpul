@@ -1,0 +1,46 @@
+name: Usulan Tool Baru (Ruang Tools)
+description: Usulkan tool gratis baru berbasis peramban (client-side) untuk katalog Ruang Tools.
+title: "tool: [nama tool yang diusulkan]"
+labels: ["tool-proposal", "good first issue"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Semua tool di RuangKumpul diproses **100% pada peramban klien** untuk kecepatan dan privasi.
+  - type: input
+    id: tool_name
+    attributes:
+      label: Nama Tool
+      placeholder: mis. Generator Favicon / Markdown to HTML
+    validations:
+      required: true
+  - type: dropdown
+    id: tool_category
+    attributes:
+      label: Kategori Tool
+      options:
+        - Teks (teks)
+        - Developer (developer)
+        - Encoding (encoding)
+        - Generator (generator)
+        - Kalkulator (kalkulator)
+        - Produktivitas (produktivitas)
+        - Desain (desain)
+        - File (file)
+    validations:
+      required: true
+  - type: textarea
+    id: tool_description
+    attributes:
+      label: Deskripsi & Manfaat Tool
+      description: Jelaskan fungsi utama tool dan mengapa bermanfaat bagi pengguna Indonesia.
+    validations:
+      required: true
+  - type: textarea
+    id: technical_approach
+    attributes:
+      label: Pendekatan Teknis (Library / Web API)
+      description: Library open-source apa yang dapat dipakai (mis. Canvas API, library ringan, tanpa backend API)?
+      placeholder: Menggunakan Browser Native Canvas API / library ringan tanpa server request...
+    validations:
+      required: false

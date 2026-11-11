@@ -149,3 +149,10 @@ tests/unit/               # Unit tests (vitest)
 4. Arahkan DNS di registrar sesuai instruksi Vercel.
 
 Panduan lengkap: `docs/deployment.md`.
+
+## Berkontribusi
+
+Kami menyambut kontribusi dari siapa pun! Untuk panduan alur kerja git, konvensi commit, panduan penambahan tool baru, dan aturan desain, silakan baca panduan lengkap di:
+
+Lihat panduan lengkap di [**CONTRIBUTING.md**](CONTRIBUTING.md).
+

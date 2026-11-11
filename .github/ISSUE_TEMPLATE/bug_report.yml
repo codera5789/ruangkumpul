@@ -1,0 +1,43 @@
+name: Laporan Bug
+description: Laporkan kesalahan, perilaku tak terduga, atau error pada RuangKumpul.
+title: "bug: [deskripsi ringkas]"
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: Terima kasih telah membantu meningkatkan kualitas RuangKumpul.
+  - type: textarea
+    id: description
+    attributes:
+      label: Deskripsi Masalah
+      description: Jelaskan apa yang terjadi dan bagaimana masalah ini muncul.
+      placeholder: Saat membuka halaman /tools/..., terjadi error...
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Langkah-Langkah Reproduksi
+      description: Berikan langkah terperinci untuk mereproduksi bug.
+      placeholder: |
+        1. Buka halaman '...'
+        2. Klik tombol '...'
+        3. Masukkan input '...'
+        4. Lihat error yang muncul
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Perilaku yang Diharapkan
+      description: Apa yang seharusnya terjadi?
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Lingkungan Pengujian
+      description: Peramban (Chrome/Firefox/Safari), OS, dan tipe perangkat (Desktop/Mobile).
+      placeholder: Chrome 120 di Android 14 / macOS Sonoma
+    validations:
+      required: false

@@ -1,0 +1,38 @@
+name: Usulan Fitur Baru
+description: Ajukan ide atau peningkatan fitur untuk ekosistem RuangKumpul.
+title: "feat: [nama fitur yang diusulkan]"
+labels: ["enhancement", "discussion"]
+body:
+  - type: markdown
+    attributes:
+      value: Usulkan ide atau fitur baru untuk melengkapi ekosistem RuangKumpul.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Masalah yang Dihadapi / Kebutuhan Pengguna
+      description: Apa masalah atau kebutuhan yang ingin diselesaikan dengan fitur ini?
+      placeholder: Pengguna sering membutuhkan... tetapi saat ini belum ada cara mudah untuk...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solusi yang Diusulkan
+      description: Jelaskan bagaimana fitur ini bekerja dan bagaimana pengguna akan berinteraksi dengannya.
+    validations:
+      required: true
+  - type: dropdown
+    id: module_target
+    attributes:
+      label: Target Modul
+      options:
+        - Ruang Tools
+        - Ruang Pengetahuan (Artikel)
+        - Ruang Komunitas
+        - Ruang Event
+        - Ruang Karier
+        - Ruang Produktivitas
+        - Autentikasi & Akun
+        - Lainnya
+    validations:
+      required: true
