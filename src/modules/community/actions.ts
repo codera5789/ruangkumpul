@@ -519,6 +519,41 @@ export async function actionDeletePostComment(formData: FormData): Promise<void>
 }
 
 // ---------------------------------------------------------------------------
+// Solusi terpilih untuk postingan pertanyaan (accepted answer)
+// ---------------------------------------------------------------------------
+
+const acceptedAnswerSchema = z.object({
+  postId: z.string().uuid("ID postingan tidak valid"),
+  commentId: z.string().uuid("ID komentar tidak valid"),
+  postSlug: z.string().trim().min(1).max(220),
+});
+
+export async function actionToggleAcceptedAnswer(formData: FormData): Promise<void> {
+  const parsed = acceptedAnswerSchema.safeParse({
+    postId: formData.get("postId"),
+    commentId: formData.get("commentId"),
+    postSlug: formData.get("postSlug"),
+  });
+
+  if (!parsed.success) return;
+
+  const { supabase, user } = await requireUser();
+  if (!user) return;
+
+  const { error } = await supabase.rpc("set_accepted_answer", {
+    p_post_id: parsed.data.postId,
+    p_comment_id: parsed.data.commentId,
+  });
+
+  if (error) {
+    console.error("[community] set_accepted_answer gagal:", error.message);
+    return;
+  }
+
+  revalidatePath(`/diskusi/${parsed.data.postSlug}`);
+}
+
+// ---------------------------------------------------------------------------
 // Kelola anggota komunitas (owner/moderator)
 // ---------------------------------------------------------------------------
 

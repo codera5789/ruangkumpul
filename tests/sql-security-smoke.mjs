@@ -73,6 +73,7 @@ try {
 
   await run("0006_fix_private_community_and_event_quota (FILE UJI)", readFileSync(`${ROOT}/supabase/migrations/0006_fix_private_community_and_event_quota.sql`, "utf8"));
   await run("0007_audit_fixes (FILE UJI)", readFileSync(`${ROOT}/supabase/migrations/0007_audit_fixes.sql`, "utf8"));
+  await run("0008_accepted_answer (FILE UJI)", readFileSync(`${ROOT}/supabase/migrations/0008_accepted_answer.sql`, "utf8"));
 
   // ---------- Data uji (superuser, bypass RLS) ----------
   await db.exec(`
@@ -265,7 +266,50 @@ try {
     "TEST16c kuota sendiri tetap berlaku",
   );
 
-  console.log(`\n${failed === 0 ? "★★★ SEMUA TEST LULUS — migration 0001–0007 aman dijalankan ★★★" : `✗✗✗ ${failed} TEST GAGAL`}`);
+  console.log("\nTEST ACCEPTED ANSWER (0008):");
+  await db.exec("reset role;");
+  const qRes = await db.query(`
+    insert into posts (community_id, author_id, title, slug, content, post_type, status)
+    select id, '${OWNER}', 'Pertanyaan Test?', 'pertanyaan-test', 'Bagaimana ini?', 'question', 'published'
+    from communities where slug = 'publik-aja'
+    returning id;
+  `);
+  const questionId = qRes.rows[0].id;
+
+  const cRes = await db.query(`
+    insert into comments (post_id, author_id, content, status)
+    values ('${questionId}', '${MEMBER}', 'Ini solusinya.', 'published')
+    returning id;
+  `);
+  const commentId = cRes.rows[0].id;
+
+  // Stranger mencoba menandai solusi -> harus ditolak
+  await asUser("authenticated", STRANGER);
+  try {
+    await db.query(`select set_accepted_answer('${questionId}', '${commentId}')`);
+    bad("TEST17a stranger menandai solusi seharusnya diblok");
+  } catch {
+    ok("TEST17a stranger menandai solusi ditolak");
+  }
+
+  // Owner menandai solusi -> sukses
+  await asUser("authenticated", OWNER);
+  const setRes = await db.query(`select set_accepted_answer('${questionId}', '${commentId}') as result`);
+  if (setRes.rows[0].result === true) {
+    ok("TEST17b owner berhasil menandai solusi");
+  } else {
+    bad("TEST17b owner gagal menandai solusi");
+  }
+
+  // Toggle off solusi -> sukses
+  const unsetRes = await db.query(`select set_accepted_answer('${questionId}', '${commentId}') as result`);
+  if (unsetRes.rows[0].result === false) {
+    ok("TEST17c owner berhasil mencabut status solusi");
+  } else {
+    bad("TEST17c owner gagal mencabut status solusi");
+  }
+
+  console.log(`\n${failed === 0 ? "★★★ SEMUA TEST LULUS — migration 0001–0008 aman dijalankan ★★★" : `✗✗✗ ${failed} TEST GAGAL`}`);
   process.exitCode = failed === 0 ? 0 : 1;
 } catch (e) {
   console.error("Harness error:", e.message);

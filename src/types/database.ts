@@ -183,6 +183,7 @@ export type Database = {
           post_type: Database["public"]["Enums"]["post_type"];
           status: Database["public"]["Enums"]["post_status"];
           view_count: number;
+          accepted_comment_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -196,6 +197,7 @@ export type Database = {
           post_type?: Database["public"]["Enums"]["post_type"];
           status?: Database["public"]["Enums"]["post_status"];
           view_count?: number;
+          accepted_comment_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -206,8 +208,16 @@ export type Database = {
           content?: string;
           post_type?: Database["public"]["Enums"]["post_type"];
           status?: Database["public"]["Enums"]["post_status"];
+          accepted_comment_id?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "posts_accepted_comment_id_fkey";
+            columns: ["accepted_comment_id"];
+            isOneToOne: false;
+            referencedRelation: "comments";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "posts_author_id_fkey";
             columns: ["author_id"];
@@ -1146,6 +1156,10 @@ export type Database = {
       subscribe_newsletter: {
         Args: { p_email: string; p_source?: string };
         Returns: string;
+      };
+      set_accepted_answer: {
+        Args: { p_post_id: string; p_comment_id: string | null };
+        Returns: boolean;
       };
     };
     Enums: {
