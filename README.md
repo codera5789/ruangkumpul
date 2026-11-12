@@ -23,7 +23,7 @@ All-in-One Digital Super App untuk Indonesia: tools gratis, ruang pengetahuan, k
 
 <table>
   <tr>
-    <td width="50%" align="center"><img src="docs/screenshots/tools.png" alt="Ruang Tools — katalog 21+ tools gratis"><br><b>Ruang Tools</b> — 21+ tools gratis, tanpa login</td>
+    <td width="50%" align="center"><img src="docs/screenshots/tools.png" alt="Ruang Tools — katalog 24+ tools gratis"><br><b>Ruang Tools</b> — 24+ tools gratis, tanpa login</td>
     <td width="50%" align="center"><img src="docs/screenshots/pengetahuan.png" alt="Ruang Pengetahuan — artikel dan tutorial"><br><b>Ruang Pengetahuan</b> — artikel &amp; tutorial pilihan</td>
   </tr>
   <tr>
@@ -37,7 +37,7 @@ All-in-One Digital Super App untuk Indonesia: tools gratis, ruang pengetahuan, k
 
 ## Fitur
 
-- **Ruang Tools** — 21 tool gratis tanpa login, landing page SEO + JSON-LD per tool, favorit tool, bookmark, dan usage analytics.
+- **Ruang Tools** — 24 tool gratis tanpa login, landing page SEO + JSON-LD per tool, favorit tool, bookmark, dan usage analytics.
 - **Ruang Pengetahuan** — artikel dengan kategori, tag, komentar, view counter, bookmark, dan **editor artikel untuk kontributor** (markdown sederhana → blok JSONB, alur draft/review/terbit).
 - **Ruang Komunitas** — buat/gabung komunitas, diskusi, komentar (edit/hapus sendiri), suka, bookmark, laporan moderasi, **kelola anggota** (setujui/tolak/promote moderator), komunitas privat dengan persetujuan.
 - **Ruang Event** — buat event (online/offline/hybrid), pendaftaran peserta dengan kuota, JSON-LD Event.
@@ -122,8 +122,8 @@ src/
 ├── modules/              # Feature-based: tools, knowledge, community, events,
 │   │                     # careers, productivity, newsletter, users, admin...
 │   └── tools/
-│       ├── tools-registry/   # Sumber kebenaran data 21 tools
-│       └── components/tools/ # 21 komponen tool (client, code-split)
+│       ├── tools-registry/   # Sumber kebenaran data 24 tools
+│       └── components/tools/ # 24 komponen tool (client, code-split)
 ├── lib/                  # supabase/ (client, server, admin, proxy) + rate-limit + utils
 ├── types/                # Tipe Database Supabase
 └── config/               # Konfigurasi situs

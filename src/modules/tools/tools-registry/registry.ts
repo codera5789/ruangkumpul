@@ -688,6 +688,115 @@ export const TOOLS: ToolDefinition[] = [
       },
     ],
   },
+  // ── Penambahan Tool Baru ──────────────────────────────────────────────────
+  {
+    slug: "markdown-converter",
+    name: "Konverter Markdown ke HTML",
+    description:
+      "Ubah teks Markdown menjadi kode HTML siap pakai dan pratinjau tampilan secara langsung. 100% diproses di browser.",
+    category: "developer",
+    icon: "FileCode",
+    route: "/tools/markdown-converter",
+    seoTitle: "Konverter Markdown ke HTML Online — Live Preview Gratis",
+    seoDescription:
+      "Konversi Markdown ke format HTML secara online dan instan. Dilengkapi pratinjau langsung dua kolom, aman tanpa kirim data ke server.",
+    keywords: [
+      "markdown ke html",
+      "markdown converter",
+      "markdown previewer online",
+      "ubah markdown jadi html",
+      "markdown editor",
+    ],
+    howTo: [
+      "Tulis atau tempel teks Markdown pada kolom editor sebelah kiri.",
+      "Lihat hasil tampilan terformat langsung di tab Pratinjau Tampilan.",
+      "Pilih tab Kode HTML lalu klik Salin HTML untuk menyalin kode yang dihasilkan.",
+    ],
+    faqs: [
+      {
+        question: "Elemen Markdown apa saja yang didukung?",
+        answer:
+          "Mendukung heading (h1-h3), teks tebal, miring, coret, kutipan blockquote, blok kode dengan bahasa, inline code, daftar bernomor, dan bullet list.",
+      },
+      {
+        question: "Apakah kode yang dimasukkan aman dari XSS?",
+        answer:
+          "Ya. Semua tag HTML mentah disanitasi dan di-escape sebelum dirender sehingga aman digunakan.",
+      },
+    ],
+  },
+  {
+    slug: "favicon-generator",
+    name: "Generator Favicon & Ikon Web",
+    description:
+      "Buat paket ukuran favicon lengkap (16x16, 32x32, 180x180, 192x192, 512x512) dari satu file logo gambar secara instan.",
+    category: "desain",
+    icon: "AppWindow",
+    route: "/tools/favicon-generator",
+    seoTitle: "Generator Favicon Online Gratis — Buat Paket Ikon Web & PWA",
+    seoDescription:
+      "Generate paket favicon lengkap untuk website, Apple Touch Icon, dan Android Chrome PWA dari gambar PNG/JPG/SVG langsung di peramban.",
+    keywords: [
+      "generator favicon",
+      "buat favicon online",
+      "favicon generator gratis",
+      "apple touch icon generator",
+      "pwa icon generator",
+    ],
+    howTo: [
+      "Unggah gambar logo dalam format PNG, JPG, atau SVG beresolusi tinggi.",
+      "Sistem akan otomatis me-render seluruh varian ukuran favicon standar.",
+      "Unduh ukuran favicon yang diinginkan atau salin tag HTML untuk disematkan di website.",
+    ],
+    faqs: [
+      {
+        question: "Format gambar apa yang paling disarankan?",
+        answer:
+          "Format PNG transparan atau SVG dengan rasio 1:1 (persegi) minimal 512x512 piksel untuk ketajaman terbaik.",
+      },
+      {
+        question: "Apakah gambar saya diunggah ke server?",
+        answer:
+          "Tidak. Pemrosesan ukuran gambar berjalan 100% pada Canvas peramban lokal di perangkatmu.",
+      },
+    ],
+  },
+  {
+    slug: "diff-checker",
+    name: "Pembanding Teks (Diff Checker)",
+    description:
+      "Bandingkan dua teks atau kode secara berdampingan. Temukan penambahan, penghapusan, dan perbedaan baris secara instan.",
+    category: "developer",
+    icon: "Columns2",
+    route: "/tools/diff-checker",
+    seoTitle: "Pembanding Teks Online (Diff Checker) — Cek Perbedaan Baris",
+    seoDescription:
+      "Bandingkan dua versi teks atau kode program secara instan di browser. Sorotan perbedaan baris warna hijau dan merah, aman dan gratis.",
+    keywords: [
+      "diff checker indonesia",
+      "pembanding teks online",
+      "cek perbedaan teks",
+      "text compare tool",
+      "diff code online",
+    ],
+    howTo: [
+      "Masukkan teks asli pada kolom sebelah kiri.",
+      "Masukkan teks versi baru pada kolom sebelah kanan.",
+      "Perhatikan tabel penyorotan di bagian bawah: hijau untuk penambahan, merah untuk pengurangan.",
+    ],
+    faqs: [
+      {
+        question: "Apakah tool ini bisa membandingkan kode pemrograman?",
+        answer:
+          "Bisa. Tool ini membandingkan baris demi baris sehingga cocok untuk teks dokumen, skrip konfigurasi, maupun kode program.",
+      },
+      {
+        question: "Berapa panjang teks maksimum yang bisa dibandingkan?",
+        answer:
+          "Karena diproses di peramban, tool ini dapat membandingkan ribuan baris teks tanpa kendala batas server.",
+      },
+    ],
+  },
 ];
 
 export const TOOL_COUNT = TOOLS.length;

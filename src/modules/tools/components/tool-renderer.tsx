@@ -89,6 +89,17 @@ const TOOL_COMPONENTS: Record<string, React.ComponentType> = {
   "pdf-split": dynamic(() => import("@/modules/tools/components/tools/pdf-split"), {
     loading: ToolLoading,
   }),
+  "markdown-converter": dynamic(
+    () => import("@/modules/tools/components/tools/markdown-converter"),
+    { loading: ToolLoading },
+  ),
+  "favicon-generator": dynamic(
+    () => import("@/modules/tools/components/tools/favicon-generator"),
+    { loading: ToolLoading },
+  ),
+  "diff-checker": dynamic(() => import("@/modules/tools/components/tools/diff-checker"), {
+    loading: ToolLoading,
+  }),
 };
 
 export function ToolRenderer({ slug }: { slug: string }) {
