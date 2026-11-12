@@ -6,10 +6,16 @@ on:
   pull_request:
     branches: [main]
 
+# Batalkan run lama pada branch yang sama (dari PR #1 oleh @ogibinedi).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   quality:
     name: Lint, typecheck, test, build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
