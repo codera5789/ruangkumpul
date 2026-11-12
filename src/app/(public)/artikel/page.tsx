@@ -9,6 +9,7 @@ import { listArticleCategories, listPublishedArticles } from "@/modules/knowledg
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHero } from "@/components/shared/page-hero";
 import { cn } from "@/lib/utils";
+import { parsePageParam } from "@/lib/form";
 
 export const metadata: Metadata = {
   title: "Artikel & Tutorial · Belajar Bersama di RuangKumpul",
@@ -26,7 +27,7 @@ async function ArtikelContent({
   searchParams: Promise<{ kategori?: string; page?: string }>;
 }) {
   const { kategori, page: pageParam } = await searchParams;
-  const page = Math.max(1, Math.min(100, Number(pageParam) || 1));
+  const page = parsePageParam(pageParam);
 
   const [categories, result] = await Promise.all([
     listArticleCategories(),

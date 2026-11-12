@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { safeNext } from "@/lib/utils";
+import { zodFieldErrors } from "@/lib/form";
 import { siteConfig } from "@/config/site";
 import { createClient } from "@/lib/supabase/server";
 
@@ -18,15 +19,6 @@ const passwordSchema = z
   .string()
   .min(8, "Password minimal 8 karakter")
   .max(72, "Password maksimal 72 karakter");
-
-function fieldErrorsFromZod(err: z.ZodError): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const issue of err.issues) {
-    const key = String(issue.path[0] ?? "form");
-    if (!out[key]) out[key] = issue.message;
-  }
-  return out;
-}
 
 /** Peta pesan error Supabase ke Bahasa Indonesia yang ramah pengguna. */
 function translateAuthError(message: string): string {
@@ -71,7 +63,7 @@ export async function actionSignIn(
     });
 
   if (!parsed.success) {
-    return { error: null, success: null, fieldErrors: fieldErrorsFromZod(parsed.error) };
+    return { error: null, success: null, fieldErrors: zodFieldErrors(parsed.error) };
   }
 
   const supabase = await createClient();
@@ -105,7 +97,7 @@ export async function actionSignUp(
     });
 
   if (!parsed.success) {
-    return { error: null, success: null, fieldErrors: fieldErrorsFromZod(parsed.error) };
+    return { error: null, success: null, fieldErrors: zodFieldErrors(parsed.error) };
   }
 
   const supabase = await createClient();
@@ -163,7 +155,7 @@ export async function actionRequestPasswordReset(
     .safeParse({ email: formData.get("email") });
 
   if (!parsed.success) {
-    return { error: null, success: null, fieldErrors: fieldErrorsFromZod(parsed.error) };
+    return { error: null, success: null, fieldErrors: zodFieldErrors(parsed.error) };
   }
 
   const supabase = await createClient();

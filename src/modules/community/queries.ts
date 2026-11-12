@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { unstable_rethrow } from "next/navigation";
 import type { Tables } from "@/types/database";
 import type { CommunitySummary } from "@/modules/community/services";
@@ -19,8 +20,14 @@ interface CommunityContext {
   isOwner: boolean;
 }
 
-/** Detail komunitas + status keanggotaan pengguna saat ini. */
-export async function getCommunityBySlug(
+/** Detail komunitas + status keanggotaan pengguna saat ini.
+ *  Di-cache per request: dipanggil generateMetadata + komponen halaman
+ *  tanpa query ganda. */
+export const getCommunityBySlug = cache(async (slug: string) =>
+  getCommunityBySlugUncached(slug),
+);
+
+async function getCommunityBySlugUncached(
   slug: string,
 ): Promise<CommunityContext | null> {
   try {
@@ -119,8 +126,13 @@ export async function listCommunityPosts(
   }
 }
 
-/** Detail diskusi berdasarkan slug. Diskusi komunitas privat hanya untuk anggota approved. */
-export async function getPostBySlug(slug: string): Promise<PostWithAuthor | null> {
+/** Detail diskusi berdasarkan slug. Diskusi komunitas privat hanya untuk anggota approved.
+ *  Di-cache per request (dipanggil generateMetadata + komponen halaman). */
+export const getPostBySlug = cache(async (slug: string) =>
+  getPostBySlugUncached(slug),
+);
+
+async function getPostBySlugUncached(slug: string): Promise<PostWithAuthor | null> {
   try {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();

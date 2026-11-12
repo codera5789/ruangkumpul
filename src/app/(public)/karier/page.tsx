@@ -11,6 +11,7 @@ import { JobCard } from "@/modules/careers/components/job-card";
 import { JOB_TYPE_LABELS, listPublishedJobsPaginated } from "@/modules/careers/services";
 import type { Tables } from "@/types/database";
 import { cn, toJsonLd } from "@/lib/utils";
+import { parsePageParam } from "@/lib/form";
 import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -44,7 +45,7 @@ async function KarierContent({
 }) {
   const { tipe: tipeParam, page: pageParam } = await searchParams;
   const jobType = isJobType(tipeParam) ? tipeParam : undefined;
-  const page = Math.max(1, Math.min(100, Number(pageParam) || 1));
+  const page = parsePageParam(pageParam);
 
   const { jobs, total } = await listPublishedJobsPaginated({
     page,

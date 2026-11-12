@@ -30,6 +30,22 @@ Supabase Dashboard → **SQL Editor** → jalankan berurutan:
 
 Verifikasi: Database → Tables — harus muncul 29 tabel + enum + seed kategori/tools.
 
+Verifikasi cepat security 0006+0007 di **SQL Editor** — semua query ini harus
+mengembalikan baris/nilai sesuai ekspektasi:
+
+```sql
+-- RPC & helper utama harus ada (0006 + 0007)
+select proname from pg_proc join pg_namespace n on n.oid = pronamespace
+where n.nspname = 'public'
+  and proname in ('register_event','can_join_community','can_read_post',
+                  'is_community_member','can_register_event');
+-- RLS aktif di tabel sensitif (semua harus t)
+select relname, relrowsecurity from pg_class
+where relname in ('posts','comments','communities','community_members','event_registrations');
+-- Helper publik lain tidak bisa dipanggil anon: should_return_false
+select public.is_community_member('00000000-0000-0000-0000-000000000000', array['approved']);
+```
+
 ## 3. Ambil Kredensial API
 
 Supabase Dashboard → **Project Settings → API**:

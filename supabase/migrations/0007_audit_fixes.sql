@@ -41,6 +41,11 @@
 --  11. Moderator bisa mengubah/mengeluarkan baris owner → trigger penjaga.
 --  12. check_rate_limit menerima bucket sembarang → bucket UUID hanya untuk
 --      pemiliknya, parameter dibatasi, dan hit lama dibersihkan berkala.
+--  13. helper SECURITY DEFINER (is_community_member, can_read_post,
+--      is_community_staff, can_register_event, is_community_owner) kini
+--      MEMAKSA auth.uid() di dalam body — parameter p_user_id diabaikan agar
+--      tidak bisa dipakai memprobing data pengguna lain; helper yang hanya
+--      dipakai policy "to authenticated"/trigger dicabut dari public & anon.
 --
 -- Aman dijalankan berulang (idempotent) dan kompatibel dengan data lama.
 -- ============================================================================
@@ -477,3 +482,161 @@ grant execute on function public.is_community_staff(uuid, uuid) to authenticated
 grant execute on function public.can_register_event(uuid, uuid) to authenticated;
 grant execute on function public.subscribe_newsletter(text, text) to anon, authenticated;
 grant execute on function public.is_community_owner(uuid, uuid) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 14. Tutup vektor probing lewat helper SECURITY DEFINER (temuan audit lanjutan)
+--     Semua helper kini MEMAKSA auth.uid() di dalam body: parameter p_user_id
+--     dipertahankan demi kompatibilitas signature & policy yang sudah ada,
+--     tetapi DIABAIKAN — tidak ada lagi yang bisa memanggil dengan uuid
+--     pengguna lain untuk menebak keanggotaan/kepemilikan.
+--     is_community_member & can_read_post tetap EXECUTE-able oleh anon karena
+--     dipakai policy select yang juga dievaluasi untuk anon; sisanya (hanya
+--     dipakai policy "to authenticated" atau trigger) dicabut dari public/anon.
+-- ---------------------------------------------------------------------------
+
+create or replace function public.is_community_member(
+  p_community_id uuid,
+  p_statuses text[],
+  p_user_id uuid default null  -- diabaikan: identitas selalu auth.uid()
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select p_community_id is not null
+    and auth.uid() is not null
+    and exists (
+      select 1 from public.community_members m
+      where m.community_id = p_community_id
+        and m.user_id = auth.uid()
+        and m.status::text = any (p_statuses)
+    );
+$$;
+
+create or replace function public.can_read_post(
+  p_post_id uuid,
+  p_user_id uuid default null  -- diabaikan: identitas selalu auth.uid()
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.posts p
+    where p.id = p_post_id
+      and (
+        p.author_id = auth.uid()
+        or (
+          p.status = 'published'
+          and (
+            p.community_id is null
+            or exists (
+              select 1 from public.communities c
+              where c.id = p.community_id and c.visibility = 'public'
+            )
+            or exists (
+              select 1 from public.community_members m
+              where m.community_id = p.community_id
+                and m.user_id = auth.uid()
+                and m.status = 'approved'
+            )
+          )
+        )
+      )
+  );
+$$;
+
+create or replace function public.is_community_staff(
+  p_community_id uuid,
+  p_user_id uuid default null  -- diabaikan: identitas selalu auth.uid()
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select p_community_id is not null
+    and auth.uid() is not null
+    and exists (
+      select 1 from public.community_members m
+      where m.community_id = p_community_id
+        and m.user_id = auth.uid()
+        and m.status = 'approved'
+        and m.role in ('owner', 'moderator')
+    );
+$$;
+
+create or replace function public.can_register_event(
+  p_event_id uuid,
+  p_user_id uuid default null  -- diabaikan: identitas selalu auth.uid()
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select auth.uid() is not null
+    and exists (
+      select 1 from public.events e
+      where e.id = p_event_id
+        and e.status = 'published'
+        and e.starts_at >= now()
+        and (
+          e.max_participants is null
+          or (
+            select count(*) from public.event_registrations r
+            where r.event_id = e.id
+          ) < e.max_participants
+        )
+        and not exists (
+          select 1 from public.event_registrations r2
+          where r2.event_id = e.id and r2.user_id = auth.uid()
+        )
+    );
+$$;
+
+create or replace function public.is_community_owner(
+  p_community_id uuid,
+  p_user_id uuid default null  -- diabaikan: identitas selalu auth.uid()
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select auth.uid() is not null
+    and (
+      exists (
+        select 1 from public.communities c
+        where c.id = p_community_id and c.owner_id = auth.uid()
+      )
+      or exists (
+        select 1 from public.community_members m
+        where m.community_id = p_community_id
+          and m.user_id = auth.uid()
+          and m.role = 'owner'
+          and m.status = 'approved'
+      )
+    );
+$$;
+
+-- can_join_community tidak punya p_user_id, tetapi pola jawabannya membocorkan
+-- visibility/status komunitas arbitrer — batasi ke authenticated (hanya dipakai
+-- policy insert "to authenticated" pada community_members).
+revoke all on function public.can_join_community(uuid, text, text)
+  from public, anon;
+grant execute on function public.can_join_community(uuid, text, text)
+  to authenticated;
+
+-- Helper berikut hanya dipakai policy "to authenticated" atau trigger;
+-- anon/public tidak membutuhkan akses langsung.
+revoke all on function public.can_register_event(uuid, uuid) from public, anon;
+revoke all on function public.is_community_staff(uuid, uuid) from public, anon;
+revoke all on function public.is_community_owner(uuid, uuid) from public, anon;

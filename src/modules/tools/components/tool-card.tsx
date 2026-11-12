@@ -1,12 +1,62 @@
-import * as LucideIcons from "lucide-react";
+import {
+  Binary,
+  Blend,
+  Braces,
+  Cake,
+  CalendarDays,
+  CaseSensitive,
+  Files,
+  FileText,
+  Fingerprint,
+  ImageDown,
+  KeyRound,
+  Link2,
+  ListChecks,
+  Palette,
+  Percent,
+  QrCode,
+  Ruler,
+  Scissors,
+  ShieldCheck,
+  TextQuote,
+  Timer,
+  type LucideIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { ToolDefinition } from "@/modules/tools/tools-registry/registry";
 
+/**
+ * Map statis ikon registry → komponen. Import eksplisit (bukan `import *`)
+ * supaya tree-shaking lucide-react bekerja: hanya 21 ikon ini yang masuk
+ * bundle client, bukan seluruh library (ribuan ikon).
+ */
+const TOOL_ICONS: Record<string, LucideIcon> = {
+  FileText,
+  CaseSensitive,
+  TextQuote,
+  Braces,
+  ShieldCheck,
+  Fingerprint,
+  Binary,
+  Link2,
+  QrCode,
+  KeyRound,
+  Percent,
+  Cake,
+  CalendarDays,
+  Ruler,
+  Timer,
+  ListChecks,
+  Palette,
+  Blend,
+  ImageDown,
+  Files,
+  Scissors,
+};
+
 function ToolIcon({ name, className }: { name: string; className?: string }) {
-  const Icon = (
-    LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>>
-  )[name];
+  const Icon = TOOL_ICONS[name];
   if (!Icon) return null;
   return <Icon className={className} aria-hidden />;
 }

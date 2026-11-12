@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { unstable_rethrow } from "next/navigation";
 import type { Tables } from "@/types/database";
 
@@ -79,7 +80,12 @@ export async function listPublishedJobsPaginated({
   }
 }
 
-export async function getJobBySlug(slug: string): Promise<JobWithPoster | null> {
+/** Di-cache per request: dipanggil generateMetadata + komponen halaman tanpa query ganda. */
+export const getJobBySlug = cache(async (slug: string) =>
+  getJobBySlugUncached(slug),
+);
+
+async function getJobBySlugUncached(slug: string): Promise<JobWithPoster | null> {
   try {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();

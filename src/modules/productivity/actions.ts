@@ -2,20 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/auth";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
 export interface ProductivityActionState {
   error: string | null;
   success: string | null;
-}
-
-async function requireUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return { supabase, user };
 }
 
 // ---------------------------------------------------------------------------

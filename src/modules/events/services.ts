@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { unstable_rethrow } from "next/navigation";
 import type { Tables } from "@/types/database";
 
@@ -71,7 +72,12 @@ export async function listUpcomingEventsPaginated({
   }
 }
 
-export async function getEventBySlug(slug: string): Promise<EventWithOrganizer | null> {
+/** Di-cache per request: dipanggil generateMetadata + komponen halaman tanpa query ganda. */
+export const getEventBySlug = cache(async (slug: string) =>
+  getEventBySlugUncached(slug),
+);
+
+async function getEventBySlugUncached(slug: string): Promise<EventWithOrganizer | null> {
   try {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();

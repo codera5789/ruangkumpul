@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { slugify } from "@/lib/utils";
+import { zodFieldErrors } from "@/lib/form";
 import { createClient } from "@/lib/supabase/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { markdownToBlocks } from "@/modules/knowledge/markdown";
@@ -125,15 +126,6 @@ function parseArticleForm(formData: FormData) {
   });
 }
 
-function fieldErrorsOf(err: z.ZodError): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const issue of err.issues) {
-    const key = String(issue.path[0] ?? "form");
-    if (!out[key]) out[key] = issue.message;
-  }
-  return out;
-}
-
 async function resolveTags(
   supabase: Awaited<ReturnType<typeof createClient>>,
   tagsInput: string,
@@ -173,7 +165,7 @@ export async function actionCreateArticle(
 ): Promise<ArticleActionState> {
   const parsed = parseArticleForm(formData);
   if (!parsed.success) {
-    return { error: null, success: null, fieldErrors: fieldErrorsOf(parsed.error) };
+    return { error: null, success: null, fieldErrors: zodFieldErrors(parsed.error) };
   }
 
   const { supabase, user } = await requireContributor();
@@ -232,7 +224,7 @@ export async function actionUpdateArticle(
   const articleId = String(formData.get("articleId") || "");
 
   if (!parsed.success) {
-    return { error: null, success: null, fieldErrors: fieldErrorsOf(parsed.error) };
+    return { error: null, success: null, fieldErrors: zodFieldErrors(parsed.error) };
   }
   if (!/^[0-9a-f-]{36}$/i.test(articleId)) {
     return { error: "Artikel tidak valid.", success: null };

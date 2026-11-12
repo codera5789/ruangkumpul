@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, cache } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CalendarDays, Globe2, MapPin, Users } from "lucide-react";
@@ -8,53 +8,69 @@ import { Card } from "@/components/ui/card";
 import { ArticleCard } from "@/modules/knowledge/components/article-card";
 import { listArticlesByAuthor } from "@/modules/knowledge/services";
 import { createClient } from "@/lib/supabase/server";
+import { siteConfig } from "@/config/site";
 import { formatDateId } from "@/lib/utils";
 
 interface ProfilPublikPageProps {
   params: Promise<{ username: string }>;
 }
 
+/** Profil publik — di-cache per request: generateMetadata + konten halaman
+ *  memakai satu query, bukan dua. */
+const getProfilByUsername = cache(async (username: string) => {
+  try {
+    const supabase = await createClient();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("username", username.toLowerCase())
+      .single();
+    return profile ?? null;
+  } catch {
+    return null;
+  }
+});
+
 export async function generateMetadata({
   params,
 }: ProfilPublikPageProps): Promise<Metadata> {
   const { username } = await params;
+  const profile = await getProfilByUsername(username);
 
-  try {
-    const { createClient } = await import("@/lib/supabase/server");
-    const supabase = await createClient();
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("username, full_name, bio")
-      .eq("username", username.toLowerCase())
-      .single();
+  if (!profile) return { title: "Pengguna tidak ditemukan" };
 
-    if (!profile) return { title: "Pengguna tidak ditemukan" };
-
-    return {
+  return {
+    title: `${profile.full_name || profile.username} (@${profile.username})`,
+    description: profile.bio ?? `Profil publik ${profile.username} di RuangKumpul.`,
+    alternates: { canonical: `/pengguna/${profile.username}` },
+    openGraph: {
       title: `${profile.full_name || profile.username} (@${profile.username})`,
       description: profile.bio ?? `Profil publik ${profile.username} di RuangKumpul.`,
-      alternates: { canonical: `/pengguna/${profile.username}` },
-    };
-  } catch {
-    return { title: "Profil Pengguna" };
-  }
+      url: `/pengguna/${profile.username}`,
+      type: "profile",
+      siteName: siteConfig.name,
+      locale: siteConfig.locale,
+      images: [{ url: siteConfig.ogImage, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${profile.full_name || profile.username} (@${profile.username})`,
+      description: profile.bio ?? `Profil publik ${profile.username} di RuangKumpul.`,
+      images: [siteConfig.ogImage],
+    },
+  };
 }
 
 async function ProfilContent({ params }: ProfilPublikPageProps) {
   const { username } = await params;
 
-  const supabase = await createClient();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("username", username.toLowerCase())
-    .single();
-
+  const profile = await getProfilByUsername(username);
   if (!profile) notFound();
 
   // Artikel published milik pengguna ini (query langsung, bukan filter di memori).
   const userArticles = await listArticlesByAuthor(profile.id, 6);
 
+  const supabase = await createClient();
   const { count: communityCount } = await supabase
     .from("community_members")
     .select("*", { count: "exact", head: true })

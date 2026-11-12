@@ -4,23 +4,15 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { slugify } from "@/lib/utils";
+import { zodFieldErrors } from "@/lib/form";
+import { requireUser } from "@/lib/auth";
 import { parseWibDateTime } from "@/lib/datetime";
-import { createClient } from "@/lib/supabase/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
 export interface EventActionState {
   error: string | null;
   success: string | null;
   fieldErrors?: Record<string, string>;
-}
-
-function zodFieldErrors(err: z.ZodError): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const issue of err.issues) {
-    const key = String(issue.path[0] ?? "form");
-    if (!out[key]) out[key] = issue.message;
-  }
-  return out;
 }
 
 const createEventSchema = z
@@ -183,16 +175,6 @@ export async function actionToggleEventRegistration(
   });
 
   if (error) {
-    // Fallback untuk kondisi migration 0006 belum dijalankan di database.
-    // PostgREST mengembalikan PGRST202 untuk fungsi yang tidak ditemukan.
-    const rpcMissing =
-      error.code === "42883" ||
-      error.code === "PGRST202" ||
-      /could not find the function|schema cache/i.test(error.message);
-    if (rpcMissing) {
-      console.warn("[events] RPC register_event belum ada — memakai jalur legacy.");
-      return registerEventLegacy(supabase, user.id, event.id, eventSlug);
-    }
     console.error("[events] register_event gagal:", error.message);
     return { error: "Gagal mendaftar. Coba lagi.", success: null };
   }
@@ -212,36 +194,6 @@ export async function actionToggleEventRegistration(
   }
 }
 
-/** Jalur lama (sebelum migration 0006): cek kuota di aplikasi, rentan race. */
-async function registerEventLegacy(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  userId: string,
-  eventId: string,
-  eventSlug: string,
-): Promise<EventActionState> {
-  const { data: event } = await supabase
-    .from("events")
-    .select("max_participants, participant_count")
-    .eq("id", eventId)
-    .single();
-
-  if (event?.max_participants != null && event.participant_count >= event.max_participants) {
-    return { error: "Maaf, kuota event sudah penuh.", success: null };
-  }
-
-  const { error } = await supabase
-    .from("event_registrations")
-    .insert({ event_id: eventId, user_id: userId });
-
-  if (error) {
-    console.error("[events] gagal mendaftar (legacy):", error.message);
-    return { error: "Gagal mendaftar. Coba lagi.", success: null };
-  }
-
-  revalidatePath(`/event/${eventSlug}`);
-  return { error: null, success: "Berhasil mendaftar! Sampai jumpa di event." };
-}
-
 export async function actionDeleteEvent(formData: FormData): Promise<void> {
   const eventSlug = String(formData.get("eventSlug") || "");
   if (!eventSlug) return;
@@ -253,12 +205,4 @@ export async function actionDeleteEvent(formData: FormData): Promise<void> {
   await supabase.from("events").delete().eq("slug", eventSlug);
   revalidatePath("/event");
   redirect("/event");
-}
-
-async function requireUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return { supabase, user };
 }

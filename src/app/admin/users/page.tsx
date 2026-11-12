@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { UserRoleManager } from "@/modules/admin/components/user-role-manager";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateId, postgrestIlikePattern } from "@/lib/utils";
+import { parsePageParam } from "@/lib/form";
 
 export const metadata: Metadata = { title: "Admin · Pengguna" };
 
@@ -15,7 +16,7 @@ export default async function AdminUsersPage({
   searchParams: Promise<{ q?: string; page?: string }>;
 }) {
   const { q, page: pageParam } = await searchParams;
-  const page = Math.max(1, Math.min(100, Number(pageParam) || 1));
+  const page = parsePageParam(pageParam);
   const query = (q ?? "").trim();
 
   const supabase = await createClient();

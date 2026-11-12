@@ -13,14 +13,14 @@ const items = [
   { href: "/komunitas", label: "Komunitas", icon: Users },
 ];
 
-/** Navigasi bawah khusus mobile (tampil < md). */
+/** Navigasi bawah khusus mobile/tablet (tampil < lg — desktop memakai nav header). */
 export function MobileNav() {
   const pathname = usePathname();
 
   return (
     <nav
       aria-label="Navigasi mobile"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
       <ul className="grid grid-cols-5">
         {items.map((item) => {

@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { createClient } from "@/lib/supabase/server";
 import { postgrestIlikePattern } from "@/lib/utils";
+import { parsePageParam } from "@/lib/form";
 import { TOOLS } from "@/modules/tools/tools-registry/registry";
 
 export const metadata: Metadata = {
@@ -69,7 +70,7 @@ async function SearchContent({
 }) {
   const { q: rawQ, page: rawPage } = await searchParams;
   const query = (rawQ ?? "").trim();
-  const page = Math.max(1, Math.min(50, Number(rawPage) || 1));
+  const page = parsePageParam(rawPage, 50);
 
   let results: SearchResult[] = [];
   let totalAvailable = 0;
