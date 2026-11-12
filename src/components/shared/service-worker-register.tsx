@@ -1,10 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Wifi, WifiOff, X } from "lucide-react";
 
+/** Status online/offline — sumber kebenaran dari browser, bukan state effect. */
+function subscribeConnectivity(onChange: () => void) {
+  window.addEventListener("online", onChange);
+  window.addEventListener("offline", onChange);
+  return () => {
+    window.removeEventListener("online", onChange);
+    window.removeEventListener("offline", onChange);
+  };
+}
+
 export function ServiceWorkerRegister() {
-  const [isOffline, setIsOffline] = useState(false);
+  const isOffline = useSyncExternalStore(
+    subscribeConnectivity,
+    () => !navigator.onLine,
+    () => false, // snapshot server: selalu online
+  );
   const [showReconnected, setShowReconnected] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
@@ -23,35 +37,34 @@ export function ServiceWorkerRegister() {
         registerSW();
       } else {
         window.addEventListener("load", registerSW);
+        return () => window.removeEventListener("load", registerSW);
       }
     }
+  }, []);
 
-    // 2. Deteksi status koneksi internet
+  useEffect(() => {
+    // 2. Transisi koneksi hanya lewat event browser (bukan setState sinkron)
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
     const handleOnline = () => {
-      setIsOffline(false);
       setDismissed(false);
       setShowReconnected(true);
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         setShowReconnected(false);
       }, 3500);
-      return () => clearTimeout(timer);
     };
 
     const handleOffline = () => {
-      setIsOffline(true);
       setShowReconnected(false);
       setDismissed(false);
     };
 
-    if (typeof window !== "undefined") {
-      setIsOffline(!navigator.onLine);
-      window.addEventListener("online", handleOnline);
-      window.addEventListener("offline", handleOffline);
-    }
-
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
+      if (timer) clearTimeout(timer);
     };
   }, []);
 
