@@ -124,8 +124,21 @@ async function DiskusiDetailContent({ params }: DiskusiDetailPageProps) {
               <p className="text-xs text-ink-muted">{timeAgoId(post.created_at)}</p>
             </div>
             {post.post_type !== "discussion" ? (
-              <Badge variant={post.post_type === "question" ? "warning" : "brand"} className="ml-auto">
-                {post.post_type === "question" ? "Pertanyaan" : "Pengumuman"}
+              <Badge
+                variant={
+                  post.post_type === "question"
+                    ? post.accepted_comment_id
+                      ? "success"
+                      : "warning"
+                    : "brand"
+                }
+                className="ml-auto"
+              >
+                {post.post_type === "question"
+                  ? post.accepted_comment_id
+                    ? "Solusi Ditemukan"
+                    : "Pertanyaan"
+                  : "Pengumuman"}
               </Badge>
             ) : null}
           </div>
@@ -207,15 +220,24 @@ async function DiskusiDetailContent({ params }: DiskusiDetailPageProps) {
 
           {comments.length > 0 ? (
             <div className="mt-4 divide-y divide-slate-100 rounded-card border border-slate-200/80 bg-surface px-5">
-              {comments.map((comment) => (
-                <CommentItem
-                  key={comment.id}
-                  comment={comment}
-                  postSlug={post.slug}
-                  currentUserId={user?.id ?? null}
-                  isModerator={isModerator}
-                />
-              ))}
+              {[...comments]
+                .sort((a, b) => {
+                  if (a.id === post.accepted_comment_id) return -1;
+                  if (b.id === post.accepted_comment_id) return 1;
+                  return 0;
+                })
+                .map((comment) => (
+                  <CommentItem
+                    key={comment.id}
+                    comment={comment}
+                    postSlug={post.slug}
+                    currentUserId={user?.id ?? null}
+                    isModerator={isModerator}
+                    postId={post.id}
+                    isAccepted={comment.id === post.accepted_comment_id}
+                    canMarkAccepted={post.post_type === "question" && (isOwner || isModerator)}
+                  />
+                ))}
             </div>
           ) : (
             <p className="mt-4 text-sm text-ink-muted">

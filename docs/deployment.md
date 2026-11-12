@@ -27,6 +27,7 @@ Supabase Dashboard → **SQL Editor** → jalankan berurutan:
 5. Isi `supabase/migrations/0005_seed_tools.sql` → **Run**
 6. Isi `supabase/migrations/0006_fix_private_community_and_event_quota.sql` → **Run**
 7. Isi `supabase/migrations/0007_audit_fixes.sql` → **Run**
+8. Isi `supabase/migrations/0008_accepted_answer.sql` → **Run**
 
 Verifikasi: Database → Tables — harus muncul 29 tabel + enum + seed kategori/tools.
 
