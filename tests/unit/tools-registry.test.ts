@@ -9,7 +9,7 @@ import {
 
 describe("tools registry", () => {
   it("konsisten dengan TOOL_COUNT", () => {
-    expect(TOOLS.length).toBe(21);
+    expect(TOOLS.length).toBe(24);
     expect(TOOL_COUNT).toBe(TOOLS.length);
   });
 

@@ -1,10 +1,13 @@
 import {
+  AppWindow,
   Binary,
   Blend,
   Braces,
   Cake,
   CalendarDays,
   CaseSensitive,
+  Columns2,
+  FileCode,
   Files,
   FileText,
   Fingerprint,
@@ -28,10 +31,13 @@ import type { ToolDefinition } from "@/modules/tools/tools-registry/registry";
 
 /**
  * Map statis ikon registry → komponen. Import eksplisit (bukan `import *`)
- * supaya tree-shaking lucide-react bekerja: hanya 21 ikon ini yang masuk
+ * supaya tree-shaking lucide-react bekerja: hanya ikon yang terdaftar yang masuk
  * bundle client, bukan seluruh library (ribuan ikon).
  */
 const TOOL_ICONS: Record<string, LucideIcon> = {
+  AppWindow,
+  Columns2,
+  FileCode,
   FileText,
   CaseSensitive,
   TextQuote,
