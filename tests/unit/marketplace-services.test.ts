@@ -8,6 +8,7 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 
 import {
+  getProductById,
   getProductBySlug,
   listMarketplaceCategories,
   listPublishedProductsPaginated,
@@ -64,13 +65,21 @@ describe("listPublishedProductsPaginated", () => {
   });
 });
 
-describe("getProductBySlug", () => {
+describe("getProductBySlug & getProductById", () => {
   it("mengembalikan detail produk sesuai slug", async () => {
     const prod = { id: "p1", slug: "starter-kit" };
     const double = setClient({ data: prod, error: null });
 
     await expect(getProductBySlug("starter-kit")).resolves.toEqual(prod);
     expect(hasCall(double.calls, "eq", "slug", "starter-kit")).toBe(true);
+  });
+
+  it("mengembalikan detail produk sesuai id", async () => {
+    const prod = { id: "p1", slug: "starter-kit" };
+    const double = setClient({ data: prod, error: null });
+
+    await expect(getProductById("p1")).resolves.toEqual(prod);
+    expect(hasCall(double.calls, "eq", "id", "p1")).toBe(true);
   });
 });
 

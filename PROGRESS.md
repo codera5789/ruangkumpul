@@ -1,19 +1,16 @@
 # Progress Pengembangan
 
-Branch aktif: `feat/ruang-marketplace`
-Fokus saat ini: **Pilar 4 — Ruang Marketplace** (Tahap implementasi selesai, siap review & PR)
+Branch aktif: `feat/polish-ruang-marketplace`
+Fokus saat ini: **Polish & Integrasi Pilar 4 — Ruang Marketplace** (Lulus verifikasi, siap commit & PR)
 
 ## Status Pekerjaan Saat Ini
 
 | Tahap | Deskripsi | Status |
 | --- | --- | --- |
-| 1 | Migrasi database `0009_marketplace.sql` (tabel, enum, trigger, RLS) | Selesai |
-| 1b | Pembaruan `src/types/database.ts` dan smoke test RLS `0009` | Selesai |
-| 2 | Modul `src/modules/marketplace/` (constants, schemas, services, actions) | Selesai |
-| 2b | Unit test Vitest untuk skema & layanan marketplace (14 test baru) | Selesai |
-| 3 | Halaman UI `/marketplace`, `/marketplace/[slug]`, `/marketplace/buat`, `/dashboard/marketplace` | Selesai |
-| 3b | Integrasi navigasi (`header`, `footer`, `dashboard-sidebar`) & `sitemap.ts` | Selesai |
-| 4 | Verifikasi akhir (`typecheck`, `lint`, `test` 115 unit + SQL smoke 0001-0009) | Lulus |
+| M2 | Pilar 4: Ruang Marketplace inti (PR #7 ter-merge ke `main`) | Selesai |
+| M2b | Halaman sunting `/dashboard/marketplace/[id]/edit` dan tautan Sunting | Selesai |
+| M2c | Integrasi Ruang Marketplace ke `/jelajahi`, `/search`, `/api/search/suggest` | Selesai |
+| M2d | Verifikasi penuh (`lint`, `typecheck`, 116 unit test, SQL smoke 0001-0009, build 85/85 rute) | Lulus |
 
 ## Catatan Teknis
 - Setiap perubahan fitur dikembangkan di branch terpisah dari `main` (`Feature Branch Workflow`).

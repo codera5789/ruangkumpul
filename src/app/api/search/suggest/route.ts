@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const pattern = `%${q.replace(/[%_]/g, (m) => `\\${m}`)}%`;
 
-    const [articles, communities] = await Promise.all([
+    const [articles, communities, products] = await Promise.all([
       supabase
         .from("articles")
         .select("title, slug")
@@ -29,6 +29,13 @@ export async function GET(request: NextRequest) {
         .eq("status", "active")
         .ilike("name", pattern)
         .order("member_count", { ascending: false })
+        .limit(3),
+      supabase
+        .from("marketplace_products")
+        .select("title, slug")
+        .eq("status", "published")
+        .ilike("title", pattern)
+        .order("inquiry_count", { ascending: false })
         .limit(3),
     ]);
 
@@ -51,6 +58,11 @@ export async function GET(request: NextRequest) {
         type: "community" as const,
         title: c.name,
         href: `/komunitas/${c.slug}`,
+      })),
+      ...(products.data ?? []).map((p) => ({
+        type: "product" as const,
+        title: p.title,
+        href: `/marketplace/${p.slug}`,
       })),
     ].slice(0, 8);
 

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FileText, MessageSquare, SearchX, Users, Wrench } from "lucide-react";
+import { FileText, MessageSquare, SearchX, Store, Users, Wrench } from "lucide-react";
 import { SearchInput } from "@/components/layout/search-input";
 import { Pagination } from "@/components/ui/pagination";
 import { Card } from "@/components/ui/card";
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 
 const PAGE_SIZE = 20;
 
-type ResultType = "tool" | "article" | "community" | "post";
+type ResultType = "tool" | "article" | "community" | "post" | "product";
 
 interface SearchResult {
   type: ResultType;
@@ -31,7 +31,7 @@ interface SearchResult {
 async function searchDatabase(supabase: Awaited<ReturnType<typeof createClient>>, q: string) {
   const pattern = postgrestIlikePattern(q);
 
-  const [articles, communities, posts] = await Promise.all([
+  const [articles, communities, posts, products] = await Promise.all([
     supabase
       .from("articles")
       .select("title, slug, excerpt")
@@ -54,13 +54,27 @@ async function searchDatabase(supabase: Awaited<ReturnType<typeof createClient>>
       .or(`title.ilike.${pattern},content.ilike.${pattern}`)
       .order("created_at", { ascending: false })
       .limit(25),
+    supabase
+      .from("marketplace_products")
+      .select("title, slug, summary")
+      .eq("status", "published")
+      .or(`title.ilike.${pattern},summary.ilike.${pattern}`)
+      .order("inquiry_count", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(25),
   ]);
 
   if (articles.error) console.error("[search] artikel gagal:", articles.error.message);
   if (communities.error) console.error("[search] komunitas gagal:", communities.error.message);
   if (posts.error) console.error("[search] diskusi gagal:", posts.error.message);
+  if (products.error) console.error("[search] produk gagal:", products.error.message);
 
-  return { articles: articles.data ?? [], communities: communities.data ?? [], posts: posts.data ?? [] };
+  return {
+    articles: articles.data ?? [],
+    communities: communities.data ?? [],
+    posts: posts.data ?? [],
+    products: products.data ?? [],
+  };
 }
 
 async function SearchContent({
@@ -88,7 +102,7 @@ async function SearchContent({
 
     // Konten dinamis dari database — ILIKE memanfaatkan index GIN pg_trgm.
     const supabase = await createClient();
-    const { articles, communities, posts } = await searchDatabase(supabase, query);
+    const { articles, communities, posts, products } = await searchDatabase(supabase, query);
 
     results = [
       ...toolHits.map((tool) => ({
@@ -115,6 +129,12 @@ async function SearchContent({
         description: p.content.slice(0, 140),
         href: `/diskusi/${p.slug}`,
       })),
+      ...products.map((p) => ({
+        type: "product" as const,
+        title: p.title,
+        description: p.summary,
+        href: `/marketplace/${p.slug}`,
+      })),
     ];
 
     totalAvailable = results.length;
@@ -127,6 +147,7 @@ async function SearchContent({
     article: { label: "Artikel", icon: FileText, color: "bg-accent-50 text-accent-700" },
     community: { label: "Komunitas", icon: Users, color: "bg-emerald-50 text-emerald-700" },
     post: { label: "Diskusi", icon: MessageSquare, color: "bg-amber-50 text-amber-700" },
+    product: { label: "Produk", icon: Store, color: "bg-sky-50 text-sky-700" },
   } as const;
 
   const totalPages = Math.ceil(totalAvailable / PAGE_SIZE);
