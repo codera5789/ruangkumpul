@@ -96,22 +96,35 @@ export async function listPublishedProductsPaginated({
   });
 }
 
-/** Detail produk berdasarkan slug, di-cache per request. */
-export const getProductBySlug = cache(async (slug: string): Promise<ProductWithSeller | null> => {
-  return withFailSoft("[marketplace] getProductBySlug gagal:", null, async () => {
+/** Inti bersama getter produk: lookup satu kolom dengan fail-soft. */
+async function getProductByColumn(
+  column: "slug" | "id",
+  value: string,
+): Promise<ProductWithSeller | null> {
+  return withFailSoft(`[marketplace] getProductBy(${column}) gagal:`, null, async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
     const { data, error } = await supabase
       .from("marketplace_products")
       .select(PRODUCT_SELECT)
-      .eq("slug", slug)
+      .eq(column, value)
       .single();
 
     if (error || !data) return null;
     return data as ProductWithSeller;
   });
-});
+}
+
+/** Detail produk berdasarkan slug, di-cache per request. */
+export const getProductBySlug = cache(async (slug: string): Promise<ProductWithSeller | null> =>
+  getProductByColumn("slug", slug),
+);
+
+/** Detail produk berdasarkan ID, di-cache per request. */
+export const getProductById = cache(async (id: string): Promise<ProductWithSeller | null> =>
+  getProductByColumn("id", id),
+);
 
 /** Daftar produk milik kreator tertentu (termasuk draft & arsip). */
 export async function listSellerProducts(sellerId: string): Promise<ProductWithSeller[]> {

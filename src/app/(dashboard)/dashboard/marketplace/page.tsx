@@ -90,6 +90,9 @@ async function DashboardMarketplaceContent() {
                   <Button asChild variant="outline" size="sm">
                     <Link href={`/marketplace/${product.slug}`}>Lihat</Link>
                   </Button>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/dashboard/marketplace/${product.id}/edit`}>Sunting</Link>
+                  </Button>
                   {product.status === "published" ? (
                     <form action={actionUpdateProductStatus}>
                       <input type="hidden" name="productSlug" value={product.slug} />

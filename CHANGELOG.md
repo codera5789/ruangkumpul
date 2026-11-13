@@ -6,6 +6,15 @@ Format mengacu pada [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) dan
 ## [Unreleased]
 
 ### Added
+- **Pilar 4 (Ruang Marketplace — Polish & Integrasi):**
+  - Halaman sunting produk `/dashboard/marketplace/[id]/edit` dengan memakai ulang komponen `ProductForm` serta helper `getProductById` (`src/modules/marketplace/services.ts`).
+  - Tautan **Sunting** produk di `/dashboard/marketplace` dan `/marketplace/[slug]`.
+  - Integrasi produk marketplace pada etalase `/jelajahi` dan pencarian global (`/search`, `/api/search/suggest`, dan `search-input.tsx`).
+  - Penambahan unit test `getProductById` pada `tests/unit/marketplace-services.test.ts`.
+
+## [0.2.0] - 2026-11-13
+
+### Added
 - **Pilar 4 (Ruang Marketplace):**
   - Migrasi `supabase/migrations/0009_marketplace.sql` mencakup tabel `marketplace_categories`, `marketplace_products`, dan `product_inquiries`, trigger `sync_marketplace_inquiry_count`, serta kebijakan RLS ketat.
   - Definisi tipe TypeScript database di `src/types/database.ts`.

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BookOpen, CalendarDays, Briefcase, Users, Wrench } from "lucide-react";
+import { ArrowRight, BookOpen, CalendarDays, Briefcase, Store, Users, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { PageHero } from "@/components/shared/page-hero";
@@ -11,11 +11,13 @@ import { ArticleCard } from "@/modules/knowledge/components/article-card";
 import { ToolCard } from "@/modules/tools/components/tool-card";
 import { EventCard } from "@/modules/events/components/event-card";
 import { JobCard } from "@/modules/careers/components/job-card";
+import { ProductCard } from "@/modules/marketplace/components/product-card";
 import { TOOL_CATEGORIES, TOOLS } from "@/modules/tools/tools-registry/registry";
 import { listTopCommunities } from "@/modules/community/services";
 import { listPublishedArticles } from "@/modules/knowledge/services";
 import { listUpcomingEvents } from "@/modules/events/services";
 import { listPublishedJobs } from "@/modules/careers/services";
+import { listPublishedProductsPaginated } from "@/modules/marketplace/services";
 
 export const metadata: Metadata = {
   title: "Jelajahi Semua Konten RuangKumpul",
@@ -108,6 +110,29 @@ async function JobsSection() {
     <div className="grid gap-4 sm:grid-cols-2">
       {jobs.map((job) => (
         <JobCard key={job.id} job={job} />
+      ))}
+    </div>
+  );
+}
+
+async function MarketplaceSection() {
+  const { products } = await listPublishedProductsPaginated({ page: 1, pageSize: 6 });
+
+  if (products.length === 0) {
+    return (
+      <p className="rounded-card border border-dashed border-slate-300 bg-surface px-6 py-10 text-center text-sm text-ink-secondary">
+        Belum ada produk di marketplace.{" "}
+        <Link href="/marketplace/buat" className="font-semibold text-brand-700 hover:underline">
+          Tambahkan yang pertama →
+        </Link>
+      </p>
+    );
+  }
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {products.map((product) => (
+        <ProductCard key={product.id} product={product} />
       ))}
     </div>
   );
@@ -239,6 +264,28 @@ export default function JelajahiPage() {
           </div>
           <Suspense fallback={<PageSkeleton cards={2} />}>
             <JobsSection />
+          </Suspense>
+        </section>
+
+        {/* Marketplace */}
+        <section aria-labelledby="jelajahi-marketplace">
+          <div className="mb-5 flex items-end justify-between gap-4">
+            <div>
+              <h2 id="jelajahi-marketplace" className="flex items-center gap-2 text-xl font-extrabold text-ink">
+                <Store className="size-5 text-brand-800" aria-hidden="true" /> Marketplace
+              </h2>
+              <p className="mt-1 text-sm text-ink-secondary">
+                Produk digital, template kode, dan jasa freelance dari kreator komunitas.
+              </p>
+            </div>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/marketplace">
+                Semua produk <ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
+            </Button>
+          </div>
+          <Suspense fallback={<PageSkeleton cards={3} />}>
+            <MarketplaceSection />
           </Suspense>
         </section>
       </div>
