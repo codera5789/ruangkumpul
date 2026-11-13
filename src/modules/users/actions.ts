@@ -190,8 +190,8 @@ export async function actionChangeEmail(
   // setelah konfirmasi dari Supabase.
   if (hasPasswordIdentity(user)) {
     const currentPassword = parsed.data.currentPassword ?? "";
-    if (currentPassword.length < 6) {
-      return { error: "Password minimal 6 karakter.", success: null };
+    if (currentPassword.length < 8) {
+      return { error: "Password minimal 8 karakter.", success: null };
     }
     const { error: verifyError } = await supabase.auth.signInWithPassword({
       email: user.email ?? "",
@@ -314,15 +314,24 @@ export async function actionDeleteAccount(
   }
 
   // Jalur fallback (tanpa SUPABASE_SERVICE_ROLE_KEY): anonimkan profil + hapus konten sendiri.
-  await supabase.from("posts").delete().eq("author_id", user.id);
+  // Catatan: `reports` & `user_roles` tidak memiliki kebijakan DELETE pengguna di RLS.
   await supabase.from("comments").delete().eq("author_id", user.id);
   await supabase.from("article_comments").delete().eq("author_id", user.id);
   await supabase.from("reactions").delete().eq("user_id", user.id);
+  await supabase.from("product_inquiries").delete().or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`);
+  await supabase.from("marketplace_products").delete().eq("seller_id", user.id);
+  await supabase.from("posts").delete().eq("author_id", user.id);
+  await supabase.from("articles").delete().eq("author_id", user.id);
   await supabase.from("event_registrations").delete().eq("user_id", user.id);
+  await supabase.from("events").delete().eq("organizer_id", user.id);
+  await supabase.from("job_listings").delete().eq("posted_by", user.id);
+  await supabase.from("communities").delete().eq("owner_id", user.id);
   await supabase.from("tool_favorites").delete().eq("user_id", user.id);
   await supabase.from("bookmarks").delete().eq("user_id", user.id);
   await supabase.from("notes").delete().eq("user_id", user.id);
   await supabase.from("tasks").delete().eq("user_id", user.id);
+  await supabase.from("notifications").delete().eq("user_id", user.id);
+  await supabase.from("user_settings").delete().eq("user_id", user.id);
   await supabase
     .from("profiles")
     .update({

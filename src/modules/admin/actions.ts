@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import type { ActionState } from "@/lib/form";
+import { isUuid, type ActionState } from "@/lib/form";
 import { createClient } from "@/lib/supabase/server";
 import type { Enums, Json } from "@/types/database";
 
@@ -137,13 +137,18 @@ export async function actionUpdateReportStatus(formData: FormData): Promise<void
   const reportId = String(formData.get("reportId") || "");
   const status = String(formData.get("status") || "") as Enums["report_status"];
 
-  if (!reportId || !["pending", "reviewing", "resolved", "rejected"].includes(status)) return;
+  if (!isUuid(reportId) || !["pending", "reviewing", "resolved", "rejected"].includes(status)) return;
 
   const admin = await getAdminDb();
-  await admin
+  const { error } = await admin
     .from("reports")
     .update({ status, reviewed_by: actor.id })
     .eq("id", reportId);
+
+  if (error) {
+    console.error("[admin] gagal update laporan:", error.message);
+    return;
+  }
 
   await writeAudit(actor.id, "report_status_update", "report", reportId, { status });
   revalidatePath("/admin/moderation");
@@ -159,12 +164,17 @@ export async function actionToggleToolStatus(formData: FormData): Promise<void> 
 
   const toolId = String(formData.get("toolId") || "");
   const rawStatus = String(formData.get("nextStatus") || "");
-  if (!toolId || !["active", "inactive"].includes(rawStatus)) return;
+  if (!isUuid(toolId) || !["active", "inactive"].includes(rawStatus)) return;
 
   const nextStatus = rawStatus as Enums["tool_status"];
 
   const admin = await getAdminDb();
-  await admin.from("tools").update({ status: nextStatus }).eq("id", toolId);
+  const { error } = await admin.from("tools").update({ status: nextStatus }).eq("id", toolId);
+
+  if (error) {
+    console.error("[admin] gagal update status tool:", error.message);
+    return;
+  }
 
   await writeAudit(actor.id, "tool_status_update", "tool", toolId, { status: nextStatus });
   revalidatePath("/admin/konten");
@@ -176,7 +186,7 @@ export async function actionSetArticleStatus(formData: FormData): Promise<void> 
 
   const articleId = String(formData.get("articleId") || "");
   const rawStatus = String(formData.get("nextStatus") || "");
-  if (!articleId || !["draft", "review", "published", "archived"].includes(rawStatus)) return;
+  if (!isUuid(articleId) || !["draft", "review", "published", "archived"].includes(rawStatus)) return;
 
   const nextStatus = rawStatus as Enums["article_status"];
 

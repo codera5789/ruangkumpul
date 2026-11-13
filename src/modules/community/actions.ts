@@ -98,7 +98,7 @@ export async function actionJoinCommunity(
   if (!slug) return { error: "Komunitas tidak valid.", success: null };
 
   const { supabase, user } = await requireUser();
-  if (!user) redirect(`/login?next=/komunitas/${slug}`);
+  if (!user) redirect(`/login?next=${encodeURIComponent(`/komunitas/${slug}`)}`);
 
   const { data: community } = await supabase
     .from("communities")
@@ -163,7 +163,7 @@ export async function actionLeaveCommunity(
   if (!slug) return { error: "Komunitas tidak valid.", success: null };
 
   const { supabase, user } = await requireUser();
-  if (!user) redirect(`/login?next=/komunitas/${slug}`);
+  if (!user) redirect(`/login?next=${encodeURIComponent(`/komunitas/${slug}`)}`);
 
   const { data: community } = await supabase
     .from("communities")
@@ -335,7 +335,7 @@ export async function actionTogglePostLike(
   if (!postSlug) return { error: "Diskusi tidak valid.", success: null };
 
   const { supabase, user } = await requireUser();
-  if (!user) redirect(`/login?next=/diskusi/${postSlug}`);
+  if (!user) redirect(`/login?next=${encodeURIComponent(`/diskusi/${postSlug}`)}`);
 
   try {
     await enforceRateLimit(`like:${user.id}`, 30, 60);

@@ -161,9 +161,9 @@ export async function actionRequestPasswordReset(
     redirectTo: `${origin}/auth/callback?next=/reset-password`,
   });
 
-  // Jangan bocorkan keberadaan akun: selalu tampilkan pesan sukses yang sama.
-  if (error && !/rate limit/i.test(error.message)) {
-    return { error: translateAuthError(error.message), success: null };
+  // Jangan bocorkan keberadaan akun atau status error: selalu tampilkan pesan sukses yang sama.
+  if (error) {
+    console.error("[auth] resetPasswordForEmail gagal:", error.message);
   }
 
   return {

@@ -133,7 +133,7 @@ export async function actionToggleEventRegistration(
   if (!eventSlug) return { error: "Event tidak valid.", success: null };
 
   const { supabase, user } = await requireUser();
-  if (!user) redirect(`/login?next=/event/${eventSlug}`);
+  if (!user) redirect(`/login?next=${encodeURIComponent(`/event/${eventSlug}`)}`);
 
   const { data: event } = await supabase
     .from("events")

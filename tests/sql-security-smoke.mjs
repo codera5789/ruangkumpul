@@ -75,6 +75,7 @@ try {
   await run("0007_audit_fixes (FILE UJI)", readFileSync(`${ROOT}/supabase/migrations/0007_audit_fixes.sql`, "utf8"));
   await run("0008_accepted_answer (FILE UJI)", readFileSync(`${ROOT}/supabase/migrations/0008_accepted_answer.sql`, "utf8"));
   await run("0009_marketplace (FILE UJI)", readFileSync(`${ROOT}/supabase/migrations/0009_marketplace.sql`, "utf8"));
+  await run("0010_security_and_tools_sync (FILE UJI)", readFileSync(`${ROOT}/supabase/migrations/0010_security_and_tools_sync.sql`, "utf8"));
 
   // ---------- Data uji (superuser, bypass RLS) ----------
   await db.exec(`
@@ -375,7 +376,7 @@ try {
     "TEST18g seller dapat membaca inquiry produk miliknya",
   );
 
-  console.log(`\n${failed === 0 ? "★★★ SEMUA TEST LULUS — migration 0001–0009 aman dijalankan ★★★" : `✗✗✗ ${failed} TEST GAGAL`}`);
+  console.log(`\n${failed === 0 ? "★★★ SEMUA TEST LULUS — migration 0001–0010 aman dijalankan ★★★" : `✗✗✗ ${failed} TEST GAGAL`}`);
   process.exitCode = failed === 0 ? 0 : 1;
 } catch (e) {
   console.error("Harness error:", e.message);

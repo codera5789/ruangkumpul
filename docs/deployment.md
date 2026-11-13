@@ -28,8 +28,10 @@ Supabase Dashboard → **SQL Editor** → jalankan berurutan:
 6. Isi `supabase/migrations/0006_fix_private_community_and_event_quota.sql` → **Run**
 7. Isi `supabase/migrations/0007_audit_fixes.sql` → **Run**
 8. Isi `supabase/migrations/0008_accepted_answer.sql` → **Run**
+9. Isi `supabase/migrations/0009_marketplace.sql` → **Run**
+10. Isi `supabase/migrations/0010_security_and_tools_sync.sql` → **Run**
 
-Verifikasi: Database → Tables — harus muncul 29 tabel + enum + seed kategori/tools.
+Verifikasi: Database → Tables — harus muncul 32 tabel + enum + seed kategori/tools.
 
 Verifikasi cepat security 0006+0007 di **SQL Editor** — semua query ini harus
 mengembalikan baris/nilai sesuai ekspektasi:

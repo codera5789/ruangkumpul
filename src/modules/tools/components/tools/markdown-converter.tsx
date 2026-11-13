@@ -4,6 +4,7 @@ import { useId, useMemo, useState } from "react";
 import { Copy, Check, Code, Eye, RefreshCw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ToolLabel, ToolPanel } from "@/modules/tools/components/tool-shell";
+import { parseMarkdownToHtml } from "@/modules/tools/components/tools/markdown-converter-parser";
 
 const SAMPLE_MARKDOWN = `# Judul Artikel
 
@@ -29,101 +30,6 @@ function sapa(nama) {
 
 Kunjungi [RuangKumpul](https://ruangkumpul.my.id) untuk tools gratis lainnya.
 `;
-
-/**
- * Konverter Markdown sederhana ke HTML aman (XSS-safe).
- * Dijalankan murni di browser tanpa library eksternal besar.
- */
-function parseMarkdownToHtml(md: string): string {
-  if (!md.trim()) return "";
-
-  // 1. Amankan karakter HTML dasar
-  let html = md
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-
-  // 2. Blok kode
-  html = html.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (_match, lang, code) => {
-    const langAttr = lang ? ` class="language-${lang.trim()}"` : "";
-    return `<pre><code${langAttr}>${code.trim()}</code></pre>`;
-  });
-
-  // 3. Inline code
-  html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
-
-  // 4. Headings
-  html = html.replace(/^### (.*$)/gim, "<h3>$1</h3>");
-  html = html.replace(/^## (.*$)/gim, "<h2>$1</h2>");
-  html = html.replace(/^# (.*$)/gim, "<h1>$1</h1>");
-
-  // 5. Blockquote (kembalikan &gt; yang sebelumnya di-escape pada awal baris)
-  html = html.replace(/^&gt; (.*$)/gim, "<blockquote>$1</blockquote>");
-
-  // 6. Horizontal rule
-  html = html.replace(/^(?:---|\*\*\*|___)\s*$/gim, "<hr />");
-
-  // 7. Bold & Italic
-  html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
-  html = html.replace(/\*([^*]+)\*/g, "<em>$1</em>");
-  html = html.replace(/~~([^~]+)~~/g, "<del>$1</del>");
-
-  // 8. Tautan aman (hanya http, https, atau mailto)
-  html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+|mailto:[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-
-  // 9. Unordered list & ordered list
-  html = html.replace(/^\s*[-*]\s+(.*)$/gim, "<li>$1</li>");
-  html = html.replace(/^\s*\d+\.\s+(.*)$/gim, "<li>$1</li>");
-
-  // 10. Bungkus baris sisa menjadi paragraf
-  const lines = html.split("\n");
-  const processed: string[] = [];
-  let inList = false;
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed) {
-      if (inList) {
-        processed.push("</ul>");
-        inList = false;
-      }
-      continue;
-    }
-
-    if (trimmed.startsWith("<li>")) {
-      if (!inList) {
-        processed.push("<ul>");
-        inList = true;
-      }
-      processed.push(trimmed);
-      continue;
-    }
-
-    if (inList) {
-      processed.push("</ul>");
-      inList = false;
-    }
-
-    if (
-      trimmed.startsWith("<h1") ||
-      trimmed.startsWith("<h2") ||
-      trimmed.startsWith("<h3") ||
-      trimmed.startsWith("<pre") ||
-      trimmed.startsWith("<blockquote") ||
-      trimmed.startsWith("<hr")
-    ) {
-      processed.push(trimmed);
-    } else {
-      processed.push(`<p>${trimmed}</p>`);
-    }
-  }
-
-  if (inList) {
-    processed.push("</ul>");
-  }
-
-  return processed.join("\n");
-}
 
 export default function MarkdownConverter() {
   const [markdown, setMarkdown] = useState(SAMPLE_MARKDOWN);

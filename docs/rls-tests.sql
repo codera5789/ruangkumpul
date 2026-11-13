@@ -1,6 +1,6 @@
 -- ============================================================================
 -- RuangKumpul — RLS Smoke Tests
--- Jalankan di Supabase SQL Editor SETELAH semua migrasi (0001–0007).
+-- Jalankan di Supabase SQL Editor SETELAH semua migrasi (0001–0010).
 -- Setiap blok memverifikasi bahwa RLS memblokir/mengizinkan seperti mestinya.
 -- Hasil ditampilkan sebagai tabel; semua baris "pass" harus bernilai true.
 -- ============================================================================
@@ -104,8 +104,8 @@ select 'T5 kolom bookmarks.resource_id bertipe text' as test,
     where table_schema = 'public' and table_name = 'bookmarks' and column_name = 'resource_id'
   ) as pass;
 
-select 'T6 21 tools ter-seed' as test,
-  (select count(*) = 21 from public.tools) as pass;
+select 'T6 24 tools ter-seed' as test,
+  (select count(*) = 24 from public.tools) as pass;
 
 select 'T7 rate_limit table + fungsi ada' as test,
   (

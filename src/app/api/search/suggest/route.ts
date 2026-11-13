@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { postgrestIlikePattern } from "@/lib/utils";
 import { TOOLS } from "@/modules/tools/tools-registry/registry";
 
 /** GET /api/search/suggest?q=... — saran pencarian campuran (maks. 8). */
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const supabase = await createClient();
-    const pattern = `%${q.replace(/[%_]/g, (m) => `\\${m}`)}%`;
+    const pattern = postgrestIlikePattern(q);
 
     const [articles, communities] = await Promise.all([
       supabase
