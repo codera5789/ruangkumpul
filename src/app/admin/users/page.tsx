@@ -4,25 +4,167 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { UserRoleManager } from "@/modules/admin/components/user-role-manager";
+import { Pagination } from "@/components/ui/pagination";
+import { parsePageParam } from "@/lib/form";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateId, postgrestIlikePattern } from "@/lib/utils";
-import { parsePageParam } from "@/lib/form";
+import { actionToggleNewsletterSubscriber } from "@/modules/admin/actions";
+import { AdminFilterTabs } from "@/modules/admin/components/admin-filter-tabs";
+import { UserRoleManager } from "@/modules/admin/components/user-role-manager";
 
-export const metadata: Metadata = { title: "Admin · Pengguna" };
+export const metadata: Metadata = { title: "Admin · Pengguna & Newsletter" };
 
 const PAGE_SIZE = 30;
 
 export default async function AdminUsersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; page?: string; tab?: string }>;
 }) {
-  const { q, page: pageParam } = await searchParams;
+  const { q, page: pageParam, tab: rawTab } = await searchParams;
+  const tab = rawTab === "newsletter" ? "newsletter" : "pengguna";
   const page = parsePageParam(pageParam);
   const query = (q ?? "").trim();
 
   const supabase = await createClient();
+  const from = (page - 1) * PAGE_SIZE;
+
+  const [
+    { count: userTotalCount },
+    { count: subscriberActiveCount },
+  ] = await Promise.all([
+    supabase.from("profiles").select("*", { count: "exact", head: true }),
+    supabase
+      .from("newsletter_subscribers")
+      .select("*", { count: "exact", head: true })
+      .eq("is_active", true),
+  ]);
+
+  const filterTabs = [
+    {
+      label: "Pengguna Terdaftar",
+      href: "/admin/users",
+      active: tab === "pengguna",
+      count: userTotalCount ?? 0,
+    },
+    {
+      label: "Pelanggan Newsletter",
+      href: "/admin/users?tab=newsletter",
+      active: tab === "newsletter",
+      count: subscriberActiveCount ?? 0,
+    },
+  ];
+
+  if (tab === "newsletter") {
+    let subReq = supabase
+      .from("newsletter_subscribers")
+      .select("id, email, source, is_active, subscribed_at, unsubscribed_at", {
+        count: "exact",
+      })
+      .order("subscribed_at", { ascending: false });
+
+    if (query.length >= 2) {
+      subReq = subReq.ilike("email", `%${query}%`);
+    }
+
+    const { data: subscribers, count: subCount, error: subError } = await subReq.range(
+      from,
+      from + PAGE_SIZE - 1,
+    );
+    if (subError) console.error("[admin/users] newsletter query gagal:", subError.message);
+    const totalPages = Math.max(1, Math.ceil((subCount ?? 0) / PAGE_SIZE));
+
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight text-ink">
+            Pengguna &amp; Newsletter
+          </h1>
+          <p className="mt-1 text-sm text-ink-secondary">
+            {subCount ?? 0} alamat email terdaftar di buletin RuangKumpul.
+          </p>
+        </div>
+
+        <AdminFilterTabs label="Mode pengguna" items={filterTabs} />
+
+        <form action="/admin/users" method="GET" className="flex flex-wrap items-center gap-2">
+          <input type="hidden" name="tab" value="newsletter" />
+          <div className="min-w-0 flex-1 sm:max-w-sm">
+            <Input
+              name="q"
+              defaultValue={query}
+              placeholder="Cari alamat email..."
+              aria-label="Cari pelanggan newsletter"
+            />
+          </div>
+          <Button type="submit" variant="secondary" size="md">
+            Cari
+          </Button>
+          {query ? (
+            <Link
+              href="/admin/users?tab=newsletter"
+              className="rounded-lg border border-slate-200 bg-surface px-3.5 py-2 text-sm font-medium text-ink-secondary transition-colors hover:text-ink"
+            >
+              Reset
+            </Link>
+          ) : null}
+        </form>
+
+        <Card>
+          {(subscribers ?? []).length === 0 ? (
+            <p className="p-6 text-center text-sm text-ink-secondary">
+              Belum ada pelanggan newsletter yang cocok.
+            </p>
+          ) : (
+            <ul className="divide-y divide-slate-100">
+              {(subscribers ?? []).map((sub) => (
+                <li
+                  key={sub.id}
+                  className="flex flex-wrap items-center justify-between gap-3 p-4"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-ink">{sub.email}</p>
+                    <p className="text-xs text-ink-muted">
+                      sumber: {sub.source} · daftar {formatDateId(sub.subscribed_at)}
+                      {sub.unsubscribed_at
+                        ? ` · berhenti ${formatDateId(sub.unsubscribed_at)}`
+                        : ""}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={sub.is_active ? "success" : "default"}>
+                      {sub.is_active ? "Aktif" : "Berhenti"}
+                    </Badge>
+                    <form action={actionToggleNewsletterSubscriber}>
+                      <input type="hidden" name="subscriberId" value={sub.id} />
+                      <input
+                        type="hidden"
+                        name="nextActive"
+                        value={sub.is_active ? "false" : "true"}
+                      />
+                      <button
+                        type="submit"
+                        className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-ink-secondary hover:text-ink"
+                      >
+                        {sub.is_active ? "Nonaktifkan" : "Aktifkan"}
+                      </button>
+                    </form>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          basePath="/admin/users"
+          query={{ tab: "newsletter", ...(query ? { q: query } : {}) }}
+        />
+      </div>
+    );
+  }
 
   let request = supabase
     .from("profiles")
@@ -38,8 +180,10 @@ export default async function AdminUsersPage({
     request = request.or(`username.ilike.${pattern},full_name.ilike.${pattern}`);
   }
 
-  const from = (page - 1) * PAGE_SIZE;
-  const { data: users, count, error: usersError } = await request.range(from, from + PAGE_SIZE - 1);
+  const { data: users, count, error: usersError } = await request.range(
+    from,
+    from + PAGE_SIZE - 1,
+  );
   if (usersError) console.error("[admin/users] query gagal:", usersError.message);
   const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
 
@@ -56,12 +200,16 @@ export default async function AdminUsersPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight text-ink">Pengguna</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight text-ink">
+          Pengguna &amp; Newsletter
+        </h1>
         <p className="mt-1 text-sm text-ink-secondary">
-          {count ?? 0} akun terdaftar. Kelola role dengan hati-hati: setiap
-          perubahan tercatat di audit log.
+          {count ?? 0} akun terdaftar. Kelola role dengan hati-hati: setiap perubahan tercatat di
+          audit log.
         </p>
       </div>
+
+      <AdminFilterTabs label="Mode pengguna" items={filterTabs} />
 
       <form action="/admin/users" method="GET" className="flex flex-wrap items-center gap-2">
         <div className="min-w-0 flex-1 sm:max-w-sm">
@@ -123,29 +271,12 @@ export default async function AdminUsersPage({
         </ul>
       </Card>
 
-      {totalPages > 1 ? (
-        <nav aria-label="Navigasi halaman" className="flex justify-center gap-3 text-sm">
-          {page > 1 ? (
-            <Link
-              href={`/admin/users?page=${page - 1}${query ? `&q=${encodeURIComponent(query)}` : ""}`}
-              className="rounded-lg border border-slate-200 bg-surface px-4 py-2 font-semibold text-ink-secondary hover:text-ink"
-            >
-              ← Sebelumnya
-            </Link>
-          ) : null}
-          <span className="py-2 text-ink-secondary">
-            Halaman {page} dari {totalPages}
-          </span>
-          {page < totalPages ? (
-            <Link
-              href={`/admin/users?page=${page + 1}${query ? `&q=${encodeURIComponent(query)}` : ""}`}
-              className="rounded-lg border border-slate-200 bg-surface px-4 py-2 font-semibold text-ink-secondary hover:text-ink"
-            >
-              Selanjutnya →
-            </Link>
-          ) : null}
-        </nav>
-      ) : null}
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        basePath="/admin/users"
+        query={query ? { q: query } : undefined}
+      />
     </div>
   );
 }

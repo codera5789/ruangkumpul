@@ -7,15 +7,16 @@ import { slugify, uniqueSlug } from "@/lib/utils";
 import { isUuid, zodFieldErrors, type ActionState } from "@/lib/form";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { uploadPublicMediaImage } from "@/lib/supabase/storage";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
 export type CommunityActionState = ActionState;
 
 // ---------------------------------------------------------------------------
-// Buat komunitas
+// Buat & sunting komunitas
 // ---------------------------------------------------------------------------
 
-const createCommunitySchema = z.object({
+const communitySchema = z.object({
   name: z.string().trim().min(3, "Nama minimal 3 karakter").max(100, "Nama maksimal 100 karakter"),
   description: z
     .string()
@@ -25,15 +26,19 @@ const createCommunitySchema = z.object({
   visibility: z.enum(["public", "private"]),
 });
 
-export async function actionCreateCommunity(
-  _prev: CommunityActionState,
-  formData: FormData,
-): Promise<CommunityActionState> {
-  const parsed = createCommunitySchema.safeParse({
+function parseCommunityForm(formData: FormData) {
+  return communitySchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description"),
     visibility: formData.get("visibility") || "public",
   });
+}
+
+export async function actionCreateCommunity(
+  _prev: CommunityActionState,
+  formData: FormData,
+): Promise<CommunityActionState> {
+  const parsed = parseCommunityForm(formData);
 
   if (!parsed.success) {
     return { error: null, success: null, fieldErrors: zodFieldErrors(parsed.error) };
@@ -46,6 +51,19 @@ export async function actionCreateCommunity(
     await enforceRateLimit(`community-create:${user.id}`, 3, 3600);
   } catch {
     return { error: "Batas membuat komunitas tercapai (3 per jam). Coba lagi nanti.", success: null };
+  }
+
+  let iconUrl: string | null = null;
+  const iconFile = formData.get("iconFile");
+  if (iconFile instanceof File && iconFile.size > 0) {
+    const uploaded = await uploadPublicMediaImage(supabase, {
+      bucket: "communities",
+      userId: user.id,
+      prefix: "icon",
+      file: iconFile,
+    });
+    if (uploaded.error) return { error: uploaded.error, success: null };
+    iconUrl = uploaded.url;
   }
 
   const baseSlug = slugify(parsed.data.name).slice(0, 80) || "komunitas";
@@ -70,6 +88,7 @@ export async function actionCreateCommunity(
       slug,
       description: parsed.data.description,
       visibility: parsed.data.visibility,
+      icon_url: iconUrl,
     })
     .select("slug")
     .single();
@@ -84,6 +103,71 @@ export async function actionCreateCommunity(
 
   revalidatePath("/komunitas");
   redirect(`/komunitas/${community.slug}`);
+}
+
+export async function actionUpdateCommunity(
+  _prev: CommunityActionState,
+  formData: FormData,
+): Promise<CommunityActionState> {
+  const communitySlug = String(formData.get("communitySlug") || "");
+  if (!communitySlug) return { error: "Komunitas tidak valid.", success: null };
+
+  const parsed = parseCommunityForm(formData);
+  if (!parsed.success) {
+    return { error: null, success: null, fieldErrors: zodFieldErrors(parsed.error) };
+  }
+
+  const { supabase, user } = await requireUser();
+  if (!user) return { error: "Kamu harus masuk untuk menyunting komunitas.", success: null };
+
+  const { data: existing } = await supabase
+    .from("communities")
+    .select("id, owner_id, icon_url")
+    .eq("slug", communitySlug)
+    .single();
+  if (!existing) return { error: "Komunitas tidak ditemukan.", success: null };
+
+  const { data: isAdmin } = await supabase.rpc("is_admin");
+  if (existing.owner_id !== user.id && !isAdmin) {
+    return { error: "Hanya pemilik komunitas atau admin yang bisa menyunting.", success: null };
+  }
+
+  let nextIconUrl: string | null = existing.icon_url;
+  if (formData.get("removeIcon") === "1") {
+    nextIconUrl = null;
+  }
+  const iconFile = formData.get("iconFile");
+  if (iconFile instanceof File && iconFile.size > 0) {
+    const uploaded = await uploadPublicMediaImage(supabase, {
+      bucket: "communities",
+      userId: user.id,
+      prefix: "icon",
+      file: iconFile,
+    });
+    if (uploaded.error) return { error: uploaded.error, success: null };
+    nextIconUrl = uploaded.url;
+  }
+
+  const { data: updated, error } = await supabase
+    .from("communities")
+    .update({
+      name: parsed.data.name,
+      description: parsed.data.description,
+      visibility: parsed.data.visibility,
+      icon_url: nextIconUrl,
+    })
+    .eq("id", existing.id)
+    .select("id");
+
+  if (error || !updated || updated.length === 0) {
+    console.error("[community] gagal memperbarui komunitas:", error?.message);
+    return { error: "Gagal menyimpan perubahan komunitas.", success: null };
+  }
+
+  revalidatePath("/komunitas");
+  revalidatePath(`/komunitas/${communitySlug}`);
+  revalidatePath(`/komunitas/${communitySlug}/edit`);
+  return { error: null, success: "Profil komunitas diperbarui." };
 }
 
 // ---------------------------------------------------------------------------
@@ -678,13 +762,25 @@ const REPORT_TARGET_TABLES: Record<string, string> = {
   user: "profiles",
 };
 
-export async function actionReportContent(formData: FormData): Promise<void> {
+const VALID_REPORT_REASONS = new Set([
+  "konten_tidak_pantas",
+  "spam",
+  "penipuan",
+  "ujaran_kebencian",
+  "lainnya",
+]);
+
+async function createReportRecord(formData: FormData): Promise<ActionState> {
   const targetType = String(formData.get("targetType") || "");
   const targetId = String(formData.get("targetId") || "");
-  const reason = String(formData.get("reason") || "lainnya");
+  const rawReason = String(formData.get("reason") || "konten_tidak_pantas");
+  const reason = VALID_REPORT_REASONS.has(rawReason) ? rawReason : "lainnya";
+  const description = String(formData.get("description") || "").trim().slice(0, 500) || null;
   const redirectTo = String(formData.get("redirectTo") || "/");
 
-  if (!REPORT_TARGET_TABLES[targetType] || !isUuid(targetId)) return;
+  if (!REPORT_TARGET_TABLES[targetType] || !isUuid(targetId)) {
+    return { error: "Target laporan tidak valid.", success: null };
+  }
 
   const { supabase, user } = await requireUser();
   if (!user) redirect(`/login?next=${encodeURIComponent(redirectTo)}`);
@@ -692,7 +788,7 @@ export async function actionReportContent(formData: FormData): Promise<void> {
   try {
     await enforceRateLimit(`report:${user.id}`, 10, 3600);
   } catch {
-    return;
+    return { error: "Terlalu banyak laporan dalam 1 jam. Coba lagi nanti.", success: null };
   }
 
   // 1) Target harus benar-benar ada (anti sampah data).
@@ -701,7 +797,9 @@ export async function actionReportContent(formData: FormData): Promise<void> {
     .select("id")
     .eq("id", targetId)
     .single();
-  if (!target) return;
+  if (!target) {
+    return { error: "Konten yang dilaporkan tidak ditemukan.", success: null };
+  }
 
   // 2) Satu pengguna satu laporan per target (index unik di DB).
   const { error } = await supabase.from("reports").insert({
@@ -709,14 +807,29 @@ export async function actionReportContent(formData: FormData): Promise<void> {
     target_type: targetType,
     target_id: targetId,
     reason,
+    description,
   });
 
   if (error) {
-    // 23505 = unique violation — laporan duplikat; abaikan diam-diam.
-    if (error.code !== "23505") {
-      console.error("[community] gagal melapor:", error.message);
+    // 23505 = unique violation — laporan duplikat.
+    if (error.code === "23505") {
+      return { error: null, success: "Kamu sudah pernah melaporkan konten ini." };
     }
+    console.error("[community] gagal melapor:", error.message);
+    return { error: "Gagal mengirim laporan. Coba lagi.", success: null };
   }
 
   if (redirectTo.startsWith("/")) revalidatePath(redirectTo);
+  return { error: null, success: "Laporan dikirim dan akan ditinjau moderator." };
+}
+
+export async function actionReportContent(formData: FormData): Promise<void> {
+  await createReportRecord(formData);
+}
+
+export async function actionSubmitReport(
+  _prev: CommunityActionState,
+  formData: FormData,
+): Promise<CommunityActionState> {
+  return createReportRecord(formData);
 }

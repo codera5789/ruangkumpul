@@ -1,3 +1,5 @@
+const WIB_OFFSET_MS = 7 * 60 * 60 * 1000;
+
 /**
  * Utilitas tanggal untuk input `datetime-local` yang berlabel WIB.
  *
@@ -31,4 +33,22 @@ export function parseWibDateTime(value: string): Date | null {
 
   const date = new Date(Date.UTC(year, month - 1, day, hour - 7, minute, second));
   return Number.isNaN(date.getTime()) ? null : date;
+}
+
+/**
+ * Format timestamp ISO menjadi string `YYYY-MM-DDTHH:mm` zona WIB (UTC+7)
+ * untuk prefills `<input type="datetime-local">`.
+ */
+export function formatWibDateTimeLocal(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) return "";
+
+  const wib = new Date(parsed.getTime() + WIB_OFFSET_MS);
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  return (
+    `${wib.getUTCFullYear()}-${pad(wib.getUTCMonth() + 1)}-${pad(wib.getUTCDate())}` +
+    `T${pad(wib.getUTCHours())}:${pad(wib.getUTCMinutes())}`
+  );
 }

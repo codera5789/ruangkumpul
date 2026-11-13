@@ -4,14 +4,14 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { uniqueSlug } from "@/lib/utils";
-import { zodFieldErrors, type ActionState } from "@/lib/form";
+import { isUuid, zodFieldErrors, type ActionState } from "@/lib/form";
 import { requireUser } from "@/lib/auth";
 import { parseWibDateTime } from "@/lib/datetime";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
 export type EventActionState = ActionState;
 
-const createEventSchema = z
+const eventSchema = z
   .object({
     title: z.string().trim().min(5, "Judul minimal 5 karakter").max(200),
     description: z
@@ -46,11 +46,8 @@ const createEventSchema = z
     { message: "Lokasi wajib untuk event offline/hybrid", path: ["location"] },
   );
 
-export async function actionCreateEvent(
-  _prev: EventActionState,
-  formData: FormData,
-): Promise<EventActionState> {
-  const parsed = createEventSchema.safeParse({
+function parseAndValidateEventPayload(formData: FormData) {
+  const parsed = eventSchema.safeParse({
     title: formData.get("title"),
     description: formData.get("description"),
     format: formData.get("format") || "online",
@@ -63,8 +60,63 @@ export async function actionCreateEvent(
   });
 
   if (!parsed.success) {
-    return { error: null, success: null, fieldErrors: zodFieldErrors(parsed.error) };
+    return {
+      ok: false as const,
+      state: { error: null, success: null, fieldErrors: zodFieldErrors(parsed.error) },
+    };
   }
+
+  const startsAt = parseWibDateTime(parsed.data.startsAt);
+  if (!startsAt) {
+    return {
+      ok: false as const,
+      state: { error: "Tanggal mulai tidak valid.", success: null },
+    };
+  }
+
+  let endsAt: Date | null = null;
+  if (parsed.data.endsAt) {
+    endsAt = parseWibDateTime(parsed.data.endsAt);
+    if (!endsAt) {
+      return {
+        ok: false as const,
+        state: { error: "Tanggal berakhir tidak valid.", success: null },
+      };
+    }
+    if (endsAt.getTime() <= startsAt.getTime()) {
+      return {
+        ok: false as const,
+        state: { error: "Tanggal berakhir harus setelah tanggal mulai.", success: null },
+      };
+    }
+  }
+
+  const maxParticipants = parsed.data.maxParticipants
+    ? Number(parsed.data.maxParticipants)
+    : null;
+
+  return {
+    ok: true as const,
+    payload: {
+      title: parsed.data.title,
+      description: parsed.data.description,
+      format: parsed.data.format,
+      location: parsed.data.location || null,
+      online_url: parsed.data.onlineUrl || null,
+      starts_at: startsAt.toISOString(),
+      ends_at: endsAt ? endsAt.toISOString() : null,
+      category: parsed.data.category || null,
+      max_participants: maxParticipants && maxParticipants > 0 ? maxParticipants : null,
+    },
+  };
+}
+
+export async function actionCreateEvent(
+  _prev: EventActionState,
+  formData: FormData,
+): Promise<EventActionState> {
+  const validated = parseAndValidateEventPayload(formData);
+  if (!validated.ok) return validated.state;
 
   const { supabase, user } = await requireUser();
   if (!user) return { error: "Kamu harus masuk untuk membuat event.", success: null };
@@ -75,42 +127,14 @@ export async function actionCreateEvent(
     return { error: "Batas membuat event tercapai. Coba lagi nanti.", success: null };
   }
 
-  const startsAt = parseWibDateTime(parsed.data.startsAt);
-  if (!startsAt) {
-    return { error: "Tanggal mulai tidak valid.", success: null };
-  }
-
-  let endsAt: Date | null = null;
-  if (parsed.data.endsAt) {
-    endsAt = parseWibDateTime(parsed.data.endsAt);
-    if (!endsAt) {
-      return { error: "Tanggal berakhir tidak valid.", success: null };
-    }
-    if (endsAt.getTime() <= startsAt.getTime()) {
-      return { error: "Tanggal berakhir harus setelah tanggal mulai.", success: null };
-    }
-  }
-
-  const maxParticipants = parsed.data.maxParticipants
-    ? Number(parsed.data.maxParticipants)
-    : null;
-
-  const slug = uniqueSlug(parsed.data.title, "event", 200);
+  const slug = uniqueSlug(validated.payload.title, "event", 200);
 
   const { data: event, error } = await supabase
     .from("events")
     .insert({
       organizer_id: user.id,
-      title: parsed.data.title,
       slug,
-      description: parsed.data.description,
-      format: parsed.data.format,
-      location: parsed.data.location || null,
-      online_url: parsed.data.onlineUrl || null,
-      starts_at: startsAt.toISOString(),
-      ends_at: endsAt ? endsAt.toISOString() : null,
-      category: parsed.data.category || null,
-      max_participants: maxParticipants && maxParticipants > 0 ? maxParticipants : null,
+      ...validated.payload,
       status: "published",
     })
     .select("slug")
@@ -123,6 +147,53 @@ export async function actionCreateEvent(
 
   revalidatePath("/event");
   redirect(`/event/${event.slug}`);
+}
+
+export async function actionUpdateEvent(
+  _prev: EventActionState,
+  formData: FormData,
+): Promise<EventActionState> {
+  const eventId = String(formData.get("eventId") || "");
+  if (!isUuid(eventId)) return { error: "Event tidak valid.", success: null };
+
+  const validated = parseAndValidateEventPayload(formData);
+  if (!validated.ok) return validated.state;
+
+  const rawStatus = String(formData.get("status") || "published");
+  const status =
+    rawStatus === "cancelled" || rawStatus === "archived" ? rawStatus : "published";
+
+  const { supabase, user } = await requireUser();
+  if (!user) return { error: "Kamu harus masuk untuk menyunting event.", success: null };
+
+  const [{ data: existing }, { data: isMod }] = await Promise.all([
+    supabase.from("events").select("id, slug, organizer_id").eq("id", eventId).single(),
+    supabase.rpc("is_moderator"),
+  ]);
+
+  if (!existing) return { error: "Event tidak ditemukan.", success: null };
+  if (existing.organizer_id !== user.id && !isMod) {
+    return { error: "Kamu tidak punya izin menyunting event ini.", success: null };
+  }
+
+  const { data: updated, error } = await supabase
+    .from("events")
+    .update({
+      ...validated.payload,
+      status,
+    })
+    .eq("id", eventId)
+    .select("id");
+
+  if (error || !updated || updated.length === 0) {
+    console.error("[events] gagal memperbarui event:", error?.message);
+    return { error: "Gagal menyimpan perubahan event.", success: null };
+  }
+
+  revalidatePath("/event");
+  revalidatePath(`/event/${existing.slug}`);
+  revalidatePath(`/event/${existing.slug}/edit`);
+  return { error: null, success: "Perubahan event disimpan." };
 }
 
 export async function actionToggleEventRegistration(

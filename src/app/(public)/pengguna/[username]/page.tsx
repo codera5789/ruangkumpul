@@ -5,6 +5,7 @@ import { CalendarDays, Globe2, MapPin, Users } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { ReportButton } from "@/components/shared/report-button";
 import { ArticleCard } from "@/modules/knowledge/components/article-card";
 import { listArticlesByAuthor } from "@/modules/knowledge/services";
 import { createClient } from "@/lib/supabase/server";
@@ -71,10 +72,18 @@ async function ProfilContent({ params }: ProfilPublikPageProps) {
   const userArticles = await listArticlesByAuthor(profile.id, 6);
 
   const supabase = await createClient();
-  const { count: communityCount } = await supabase
-    .from("community_members")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", profile.id);
+  const [
+    { count: communityCount },
+    {
+      data: { user: viewer },
+    },
+  ] = await Promise.all([
+    supabase
+      .from("community_members")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", profile.id),
+    supabase.auth.getUser(),
+  ]);
 
   return (
     <div className="animate-slide-up-far">
@@ -88,13 +97,25 @@ async function ProfilContent({ params }: ProfilPublikPageProps) {
               className="size-20 text-2xl"
             />
             <div className="min-w-0 flex-1">
-              <h1 className="flex flex-wrap items-center gap-2 text-2xl font-extrabold tracking-tight text-ink">
-                {profile.full_name || profile.username}
-                {profile.is_verified ? (
-                  <Badge variant="brand">Terverifikasi</Badge>
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <h1 className="flex flex-wrap items-center gap-2 text-2xl font-extrabold tracking-tight text-ink">
+                    {profile.full_name || profile.username}
+                    {profile.is_verified ? (
+                      <Badge variant="brand">Terverifikasi</Badge>
+                    ) : null}
+                  </h1>
+                  <p className="text-sm text-ink-secondary">@{profile.username}</p>
+                </div>
+                {viewer?.id !== profile.id ? (
+                  <ReportButton
+                    targetType="user"
+                    targetId={profile.id}
+                    redirectTo={`/pengguna/${profile.username}`}
+                    isLoggedIn={Boolean(viewer)}
+                  />
                 ) : null}
-              </h1>
-              <p className="text-sm text-ink-secondary">@{profile.username}</p>
+              </div>
 
               {profile.bio ? (
                 <p className="mt-3 text-pretty leading-relaxed text-ink-secondary">

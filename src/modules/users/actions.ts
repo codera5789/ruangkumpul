@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { uploadPublicMediaImage } from "@/lib/supabase/storage";
 import { hasPasswordIdentity } from "@/lib/auth";
 import { zodFieldErrors, type ActionState } from "@/lib/form";
 
@@ -91,9 +92,6 @@ export async function actionUpdateProfile(
 // Upload avatar (Supabase Storage, bucket avatars, folder per user)
 // ---------------------------------------------------------------------------
 
-const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp"];
-const MAX_AVATAR_BYTES = 2 * 1024 * 1024; // 2 MB
-
 export async function actionUploadAvatar(
   _prev: ProfileActionState,
   formData: FormData,
@@ -105,32 +103,17 @@ export async function actionUploadAvatar(
 
   if (!user) return { error: "Sesi berakhir. Masuk kembali.", success: null };
 
-  const file = formData.get("avatar");
-  if (!(file instanceof File) || file.size === 0) {
-    return { error: "Pilih file gambar terlebih dahulu.", success: null };
+  const uploaded = await uploadPublicMediaImage(supabase, {
+    bucket: "avatars",
+    userId: user.id,
+    prefix: "avatar",
+    file: formData.get("avatar"),
+  });
+  if (uploaded.error || !uploaded.url) {
+    return { error: uploaded.error ?? "Gagal mengunggah gambar.", success: null };
   }
 
-  if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
-    return { error: "Format harus JPG, PNG, atau WebP.", success: null };
-  }
-  if (file.size > MAX_AVATAR_BYTES) {
-    return { error: "Ukuran maksimal 2 MB.", success: null };
-  }
-
-  const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
-  const path = `${user.id}/avatar-${Date.now()}.${ext}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from("avatars")
-    .upload(path, file, { contentType: file.type, upsert: false });
-
-  if (uploadError) {
-    console.error("[profile] upload avatar gagal:", uploadError.message);
-    return { error: "Gagal mengunggah gambar. Coba lagi.", success: null };
-  }
-
-  const { data } = await supabase.storage.from("avatars").getPublicUrl(path);
-  const publicUrl = data.publicUrl;
+  const publicUrl = uploaded.url;
 
   const { data: updatedProfile, error: updateError } = await supabase
     .from("profiles")

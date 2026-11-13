@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Clock,
   MapPin,
+  Pencil,
   Trash2,
   Users,
   Video,
@@ -153,7 +154,9 @@ async function EventDetailContent({ params }: EventDetailPageProps) {
             {event.format === "online" ? "Online" : event.format === "hybrid" ? "Hybrid" : "Offline"}
           </Badge>
           {event.category ? <Badge variant="outline">{event.category}</Badge> : null}
-          {isPast ? <Badge variant="warning">Sudah lewat</Badge> : null}
+          {event.status === "cancelled" ? <Badge variant="danger">Dibatalkan</Badge> : null}
+          {event.status === "archived" ? <Badge variant="outline">Diarsipkan</Badge> : null}
+          {isPast && event.status === "published" ? <Badge variant="warning">Sudah lewat</Badge> : null}
           <div className="ml-auto">
             <BookmarkButton resourceType="event" resourceId={event.id} isLoggedIn={Boolean(user)} />
           </div>
@@ -245,21 +248,29 @@ async function EventDetailContent({ params }: EventDetailPageProps) {
           </dl>
 
           {/* CTA */}
-          {!isOrganizer && !isPast ? (
+          {!isOrganizer && !isPast && event.status === "published" ? (
             <RegisterEventButton eventSlug={event.slug} registered={registered} isFull={isFull} />
           ) : isOrganizer ? (
-            <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-5">
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-5">
               <p className="text-sm text-ink-secondary">Kamu penyelenggara event ini.</p>
-              <ConfirmForm
-                action={actionDeleteEvent}
-                fields={{ eventSlug: event.slug }}
-                message={`Hapus event "${event.title}" beserta semua pendaftarannya? Tindakan ini tidak bisa dibatalkan.`}
-              >
-                <Button type="submit" variant="outline" size="sm" className="border-red-200 text-red-600 hover:bg-red-50">
-                  <Trash2 className="size-4" aria-hidden="true" />
-                  Hapus
+              <div className="flex flex-wrap items-center gap-2">
+                <Button asChild variant="outline" size="sm">
+                  <Link href={`/event/${event.slug}/edit`}>
+                    <Pencil className="size-4" aria-hidden="true" />
+                    Sunting
+                  </Link>
                 </Button>
-              </ConfirmForm>
+                <ConfirmForm
+                  action={actionDeleteEvent}
+                  fields={{ eventSlug: event.slug }}
+                  message={`Hapus event "${event.title}" beserta semua pendaftarannya? Tindakan ini tidak bisa dibatalkan.`}
+                >
+                  <Button type="submit" variant="outline" size="sm" className="border-red-200 text-red-600 hover:bg-red-50">
+                    <Trash2 className="size-4" aria-hidden="true" />
+                    Hapus
+                  </Button>
+                </ConfirmForm>
+              </div>
             </div>
           ) : null}
         </Card>

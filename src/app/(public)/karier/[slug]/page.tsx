@@ -9,7 +9,8 @@ import {
   ChevronRight,
   ExternalLink,
   MapPin,
-  Trash2,
+  Pencil,
+  RotateCcw,
   Wifi,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
@@ -204,24 +205,34 @@ async function JobDetailContent({ params }: JobDetailPageProps) {
           ) : null}
 
           {isOwner ? (
-            <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
               <p className="text-sm text-ink-secondary">Kamu memasang lowongan ini.</p>
-              {job.status === "published" ? (
-                <form action={actionCloseJob}>
-                  <input type="hidden" name="jobSlug" value={job.slug} />
-                  <Button type="submit" variant="outline" size="sm">
-                    Tutup Lowongan
-                  </Button>
-                </form>
-              ) : (
-                <form action={actionCloseJob}>
-                  <input type="hidden" name="jobSlug" value={job.slug} />
-                  <Button type="submit" variant="ghost" size="sm" className="text-ink-muted">
-                    <Trash2 className="size-4" aria-hidden="true" />
-                    Sudah ditutup
-                  </Button>
-                </form>
-              )}
+              <div className="flex flex-wrap items-center gap-2">
+                <Button asChild variant="outline" size="sm">
+                  <Link href={`/karier/${job.slug}/edit`}>
+                    <Pencil className="size-4" aria-hidden="true" />
+                    Sunting
+                  </Link>
+                </Button>
+                {job.status === "published" ? (
+                  <form action={actionCloseJob}>
+                    <input type="hidden" name="jobSlug" value={job.slug} />
+                    <input type="hidden" name="nextStatus" value="closed" />
+                    <Button type="submit" variant="outline" size="sm">
+                      Tutup Lowongan
+                    </Button>
+                  </form>
+                ) : (
+                  <form action={actionCloseJob}>
+                    <input type="hidden" name="jobSlug" value={job.slug} />
+                    <input type="hidden" name="nextStatus" value="published" />
+                    <Button type="submit" variant="outline" size="sm">
+                      <RotateCcw className="size-4" aria-hidden="true" />
+                      Buka Kembali
+                    </Button>
+                  </form>
+                )}
+              </div>
             </div>
           ) : null}
         </Card>

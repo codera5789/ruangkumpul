@@ -37,6 +37,12 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  experimental: {
+    // Izinkan unggah gambar hingga 2 MB + overhead multipart form-data via Server Actions.
+    serverActions: {
+      bodySizeLimit: "3mb",
+    },
+  },
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

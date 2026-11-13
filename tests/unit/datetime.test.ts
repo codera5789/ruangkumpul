@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseWibDateTime } from "@/lib/datetime";
+import { formatWibDateTimeLocal, parseWibDateTime } from "@/lib/datetime";
 
 describe("parseWibDateTime", () => {
   it("mem-parse nilai datetime-local sebagai WIB (UTC+7)", () => {
@@ -54,5 +54,20 @@ describe("parseWibDateTime", () => {
     expect(parseWibDateTime("2028-02-29T07:00")?.toISOString()).toBe(
       "2028-02-29T00:00:00.000Z",
     );
+  });
+});
+
+describe("formatWibDateTimeLocal", () => {
+  it("memformat ISO UTC ke datetime-local WIB termasuk saat melintasi batas hari dan tahun", () => {
+    expect(formatWibDateTimeLocal("2026-11-10T12:00:00.000Z")).toBe("2026-11-10T19:00");
+    expect(formatWibDateTimeLocal("2026-11-10T20:00:00.000Z")).toBe("2026-11-11T03:00");
+    expect(formatWibDateTimeLocal("2026-12-31T18:05:00.000Z")).toBe("2027-01-01T01:05");
+  });
+
+  it("mengembalikan string kosong untuk nilai kosong atau tidak valid", () => {
+    expect(formatWibDateTimeLocal(null)).toBe("");
+    expect(formatWibDateTimeLocal(undefined)).toBe("");
+    expect(formatWibDateTimeLocal("")).toBe("");
+    expect(formatWibDateTimeLocal("bukan-tanggal")).toBe("");
   });
 });

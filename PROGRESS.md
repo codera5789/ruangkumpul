@@ -1,7 +1,7 @@
 # Progress Pengembangan
 
 Branch aktif: `fix/post-merge-cleanup` (dari `main` `b91e7c3`)
-Fokus saat ini: **Perbaikan pasca-merge PR #8 & PR #9, sinkronisasi dokumen, dan persiapan M3**
+Fokus saat ini: **Perbaikan pasca-merge PR #8 & PR #9, kelengkapan UI fitur eksisting, sinkronisasi dokumen, dan persiapan M3**
 
 ## Status Pekerjaan Saat Ini
 
@@ -10,8 +10,8 @@ Fokus saat ini: **Perbaikan pasca-merge PR #8 & PR #9, sinkronisasi dokumen, dan
 | M1 | Fondasi Core & 6 Modul MVP + 24 Web Tools offline-ready | Selesai |
 | M2 | Pilar 4: Ruang Marketplace inti, edit produk, & integrasi pencarian (PR #7, #8) | Selesai |
 | M2x | Audit keamanan RLS `0010`, sentralisasi helper DRY, perbaikan UI/PWA/seeder (PR #9) | Selesai |
-| M2y | Perbaikan bug `.ilike()` di `/api/search/suggest`, `isUuid()` edit marketplace, & bersih-bersih scaffold | Dalam proses |
-| M3 | Command Palette (`Ctrl+K`), Ekspor data UU PDP, `/admin/audit`, & Playwright E2E | Direncanakan |
+| M2y | Perbaikan pasca-merge, upload media artikel/komunitas, edit komunitas/event/karier, & kelengkapan UI admin/moderasi | Selesai |
+| M3 | Command Palette (`Ctrl+K`), Ekspor data UU PDP, & Playwright E2E | Direncanakan |
 
 ## Catatan Teknis
 - Setiap perubahan fitur/perbaikan dikembangkan di branch terpisah dari `main` (`Feature Branch Workflow`).

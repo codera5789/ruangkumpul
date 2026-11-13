@@ -6,6 +6,7 @@ import { ChevronRight, Eye, Tag } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { BookmarkButton } from "@/components/shared/bookmark-button";
+import { ReportButton } from "@/components/shared/report-button";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { siteConfig } from "@/config/site";
 import { formatDateId, formatCompactId, toJsonLd } from "@/lib/utils";
@@ -202,13 +203,21 @@ async function ArticleDetailContent({ params }: ArticleDetailPageProps) {
                 </p>
               </div>
             </div>
-            <div className="ml-auto">
+            <div className="ml-auto flex items-center gap-1">
               <BookmarkButton
                 resourceType="article"
                 resourceId={article.id}
                 initialSaved={saved}
                 isLoggedIn={Boolean(user)}
               />
+              {user?.id !== article.author_id ? (
+                <ReportButton
+                  targetType="article"
+                  targetId={article.id}
+                  redirectTo={`/artikel/${article.slug}`}
+                  isLoggedIn={Boolean(user)}
+                />
+              ) : null}
             </div>
           </div>
         </header>

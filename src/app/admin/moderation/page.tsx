@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { actionUpdateReportStatus } from "@/modules/admin/actions";
 import { createClient } from "@/lib/supabase/server";
 import { timeAgoId } from "@/lib/utils";
+import { actionUpdateReportStatus } from "@/modules/admin/actions";
+import { AdminFilterTabs } from "@/modules/admin/components/admin-filter-tabs";
+import type { Enums } from "@/types/database";
 
 export const metadata: Metadata = { title: "Admin · Moderasi" };
 
@@ -22,10 +24,26 @@ const TARGET_LABELS: Record<string, string> = {
   user: "Pengguna",
 };
 
-export default async function AdminModerationPage() {
+const VALID_STATUSES = new Set<Enums["report_status"]>([
+  "pending",
+  "reviewing",
+  "resolved",
+  "rejected",
+]);
+
+export default async function AdminModerationPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>;
+}) {
+  const { status: rawStatus } = await searchParams;
+  const activeStatus = VALID_STATUSES.has(rawStatus as Enums["report_status"])
+    ? (rawStatus as Enums["report_status"])
+    : "all";
+
   const supabase = await createClient();
 
-  const { data: reports } = await supabase
+  let request = supabase
     .from("reports")
     .select(
       `id, target_type, target_id, reason, description, status, created_at,
@@ -34,6 +52,31 @@ export default async function AdminModerationPage() {
     )
     .order("created_at", { ascending: false })
     .limit(100);
+
+  if (activeStatus !== "all") {
+    request = request.eq("status", activeStatus);
+  }
+
+  const [{ data: reports }, { count: pendingCount }] = await Promise.all([
+    request,
+    supabase
+      .from("reports")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "pending"),
+  ]);
+
+  const filterTabs = [
+    { label: "Semua", href: "/admin/moderation", active: activeStatus === "all" },
+    {
+      label: "Pending",
+      href: "/admin/moderation?status=pending",
+      active: activeStatus === "pending",
+      count: pendingCount ?? 0,
+    },
+    { label: "Ditinjau", href: "/admin/moderation?status=reviewing", active: activeStatus === "reviewing" },
+    { label: "Selesai", href: "/admin/moderation?status=resolved", active: activeStatus === "resolved" },
+    { label: "Ditolak", href: "/admin/moderation?status=rejected", active: activeStatus === "rejected" },
+  ];
 
   return (
     <div className="space-y-6">
@@ -44,6 +87,8 @@ export default async function AdminModerationPage() {
         </p>
       </div>
 
+      <AdminFilterTabs label="Filter status laporan" items={filterTabs} />
+
       {reports && reports.length > 0 ? (
         <Card>
           <ul className="divide-y divide-slate-100">
@@ -52,7 +97,7 @@ export default async function AdminModerationPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant={statusVariants[report.status]}>{report.status}</Badge>
                   <span className="text-xs text-ink-muted">
-                    {TARGET_LABELS[report.target_type] ?? report.target_type} ·{" "}
+                    {TARGET_LABELS[report.target_type] ?? report.target_type} ({report.target_id.slice(0, 8)}…) ·{" "}
                     {report.reason} · oleh @{report.reporter?.username ?? "?"} ·{" "}
                     {timeAgoId(report.created_at)}
                   </span>
@@ -92,7 +137,9 @@ export default async function AdminModerationPage() {
         </Card>
       ) : (
         <p className="rounded-card border border-dashed border-slate-300 bg-surface px-6 py-14 text-center text-sm text-ink-secondary">
-          Tidak ada laporan. Platform dalam kondisi sehat 🎉
+          {activeStatus === "all"
+            ? "Tidak ada laporan. Platform dalam kondisi sehat 🎉"
+            : `Tidak ada laporan dengan status "${activeStatus}".`}
         </p>
       )}
     </div>
