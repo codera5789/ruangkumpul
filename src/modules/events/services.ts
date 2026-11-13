@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { unstable_rethrow } from "next/navigation";
+import { withFailSoft } from "@/lib/supabase/query";
 import type { Tables } from "@/types/database";
 
 export type EventWithOrganizer = Tables<"events"> & {
@@ -8,7 +8,7 @@ export type EventWithOrganizer = Tables<"events"> & {
 
 /** Event published mendatang (dan yang baru lewat di bawah). */
 export async function listUpcomingEvents(limit = 24): Promise<EventWithOrganizer[]> {
-  try {
+  return withFailSoft("[events] listUpcomingEvents gagal:", [], async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -25,11 +25,7 @@ export async function listUpcomingEvents(limit = 24): Promise<EventWithOrganizer
 
     if (error) throw error;
     return (data ?? []) as EventWithOrganizer[];
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[events] listUpcomingEvents gagal:", err);
-    return [];
-  }
+  });
 }
 
 /** Event published mendatang dengan pagination + filter format. */
@@ -42,7 +38,7 @@ export async function listUpcomingEventsPaginated({
   pageSize?: number;
   format?: "online" | "offline" | "hybrid";
 }): Promise<{ events: EventWithOrganizer[]; total: number }> {
-  try {
+  return withFailSoft("[events] listUpcomingEventsPaginated gagal:", { events: [], total: 0 }, async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -65,11 +61,7 @@ export async function listUpcomingEventsPaginated({
 
     if (error) throw error;
     return { events: (data ?? []) as EventWithOrganizer[], total: count ?? 0 };
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[events] listUpcomingEventsPaginated gagal:", err);
-    return { events: [], total: 0 };
-  }
+  });
 }
 
 /** Di-cache per request: dipanggil generateMetadata + komponen halaman tanpa query ganda. */
@@ -78,7 +70,7 @@ export const getEventBySlug = cache(async (slug: string) =>
 );
 
 async function getEventBySlugUncached(slug: string): Promise<EventWithOrganizer | null> {
-  try {
+  return withFailSoft("[events] getEventBySlug gagal:", null, async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -93,9 +85,5 @@ async function getEventBySlugUncached(slug: string): Promise<EventWithOrganizer 
 
     if (error || !data) return null;
     return data as EventWithOrganizer;
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[events] getEventBySlug gagal:", err);
-    return null;
-  }
+  });
 }

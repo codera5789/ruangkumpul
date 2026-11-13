@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { MessageSquarePlus } from "lucide-react";
-import { Input, Textarea } from "@/components/ui/input";
+import { Input, Select, Textarea } from "@/components/ui/input";
 import { actionCreatePost, type CommunityActionState } from "@/modules/community/actions";
 import { SubmitButton } from "@/modules/auth/components/submit-button";
 
@@ -48,16 +48,11 @@ export function CreatePostForm({ communitySlug }: { communitySlug: string }) {
             <label htmlFor="postType" className="text-sm font-semibold text-ink">
               Jenis
             </label>
-            <select
-              id="postType"
-              name="postType"
-              defaultValue="discussion"
-              className="h-11 w-full rounded-xl border border-slate-200 bg-surface px-3 text-sm text-ink focus:border-brand-500 focus:outline-hidden"
-            >
+            <Select id="postType" name="postType" defaultValue="discussion">
               <option value="discussion">Diskusi</option>
               <option value="question">Pertanyaan</option>
               <option value="announcement">Pengumuman</option>
-            </select>
+            </Select>
           </div>
         </div>
 

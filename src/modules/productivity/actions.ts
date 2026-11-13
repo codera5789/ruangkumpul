@@ -2,13 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { isUuid, type ActionState } from "@/lib/form";
 import { requireUser } from "@/lib/auth";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
-export interface ProductivityActionState {
-  error: string | null;
-  success: string | null;
-}
+export type ProductivityActionState = ActionState;
 
 // ---------------------------------------------------------------------------
 // Catatan
@@ -52,7 +50,7 @@ export async function actionSaveNote(formData: FormData): Promise<void> {
 
 export async function actionDeleteNote(formData: FormData): Promise<void> {
   const id = String(formData.get("id") || "");
-  if (!/^[0-9a-f-]{36}$/i.test(id)) return;
+  if (!isUuid(id)) return;
 
   const { supabase, user } = await requireUser();
   if (!user) return;
@@ -64,7 +62,7 @@ export async function actionDeleteNote(formData: FormData): Promise<void> {
 export async function actionToggleNotePin(formData: FormData): Promise<void> {
   const id = String(formData.get("id") || "");
   const nextPinned = formData.get("nextPinned") === "true";
-  if (!/^[0-9a-f-]{36}$/i.test(id)) return;
+  if (!isUuid(id)) return;
 
   const { supabase, user } = await requireUser();
   if (!user) return;
@@ -113,7 +111,7 @@ export async function actionMoveTask(formData: FormData): Promise<void> {
   const id = String(formData.get("id") || "");
   const nextStatus = String(formData.get("nextStatus") || "");
 
-  if (!/^[0-9a-f-]{36}$/i.test(id)) return;
+  if (!isUuid(id)) return;
   if (nextStatus !== "todo" && nextStatus !== "doing" && nextStatus !== "done") return;
 
   const { supabase, user } = await requireUser();
@@ -132,7 +130,7 @@ export async function actionMoveTask(formData: FormData): Promise<void> {
 
 export async function actionDeleteTask(formData: FormData): Promise<void> {
   const id = String(formData.get("id") || "");
-  if (!/^[0-9a-f-]{36}$/i.test(id)) return;
+  if (!isUuid(id)) return;
 
   const { supabase, user } = await requireUser();
   if (!user) return;

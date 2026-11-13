@@ -2,13 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import type { ActionState } from "@/lib/form";
 import { createClient } from "@/lib/supabase/server";
 import type { Enums, Json } from "@/types/database";
 
-export interface AdminActionState {
-  error: string | null;
-  success: string | null;
-}
+export type AdminActionState = ActionState;
 
 /** Pastikan pengguna saat ini adalah admin/super_admin (dicek via RLS function). */
 async function requireAdmin() {

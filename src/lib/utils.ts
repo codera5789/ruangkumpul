@@ -17,6 +17,12 @@ export function slugify(text: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+/** Bentuk slug unik dengan sufiks acak 6 karakter dari `crypto.randomUUID()`. */
+export function uniqueSlug(text: string, fallback = "item", maxBaseLength = 180): string {
+  const base = slugify(text).slice(0, maxBaseLength).replace(/-+$/g, "") || fallback;
+  return `${base}-${crypto.randomUUID().slice(0, 6)}`;
+}
+
 /** Format angka gaya Indonesia: 1.2k, 15.3k, 2.1jt */
 export function formatCompactId(n: number): string {
   return new Intl.NumberFormat("id-ID", {

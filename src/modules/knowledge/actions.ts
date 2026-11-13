@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { slugify } from "@/lib/utils";
-import { zodFieldErrors } from "@/lib/form";
+import { slugify, uniqueSlug } from "@/lib/utils";
+import { isUuid, zodFieldErrors, type ActionState } from "@/lib/form";
 import { createClient } from "@/lib/supabase/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { markdownToBlocks } from "@/modules/knowledge/markdown";
@@ -82,11 +82,7 @@ export async function actionAddArticleComment(
 // Editor artikel (contributor+)
 // ---------------------------------------------------------------------------
 
-export interface ArticleActionState {
-  error: string | null;
-  success: string | null;
-  fieldErrors?: Record<string, string>;
-}
+export type ArticleActionState = ActionState;
 
 const articleSchema = z.object({
   title: z.string().trim().min(5, "Judul minimal 5 karakter").max(200, "Judul maksimal 200 karakter"),
@@ -179,8 +175,7 @@ export async function actionCreateArticle(
     return { error: "Batas membuat artikel tercapai. Coba lagi nanti.", success: null };
   }
 
-  const baseSlug = slugify(parsed.data.title).slice(0, 200) || "artikel";
-  const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 7)}`;
+  const slug = uniqueSlug(parsed.data.title, "artikel", 200);
 
   const { data: article, error } = await supabase
     .from("articles")
@@ -226,7 +221,7 @@ export async function actionUpdateArticle(
   if (!parsed.success) {
     return { error: null, success: null, fieldErrors: zodFieldErrors(parsed.error) };
   }
-  if (!/^[0-9a-f-]{36}$/i.test(articleId)) {
+  if (!isUuid(articleId)) {
     return { error: "Artikel tidak valid.", success: null };
   }
 
@@ -292,7 +287,7 @@ export async function actionUpdateArticle(
 
 export async function actionDeleteArticle(formData: FormData): Promise<void> {
   const articleId = String(formData.get("articleId") || "");
-  if (!/^[0-9a-f-]{36}$/i.test(articleId)) return;
+  if (!isUuid(articleId)) return;
 
   const { supabase, user } = await requireContributor();
   if (!user) return;

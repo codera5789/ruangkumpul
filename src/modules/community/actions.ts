@@ -3,17 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { slugify } from "@/lib/utils";
-import { zodFieldErrors } from "@/lib/form";
+import { slugify, uniqueSlug } from "@/lib/utils";
+import { isUuid, zodFieldErrors, type ActionState } from "@/lib/form";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
-export interface CommunityActionState {
-  error: string | null;
-  success: string | null;
-  fieldErrors?: Record<string, string>;
-}
+export type CommunityActionState = ActionState;
 
 // ---------------------------------------------------------------------------
 // Buat komunitas
@@ -250,8 +246,7 @@ export async function actionCreatePost(
     return { error: "Gabung komunitas dulu sebelum membuat diskusi.", success: null };
   }
 
-  const baseSlug = slugify(parsed.data.title).slice(0, 200) || "diskusi";
-  const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 7)}`;
+  const slug = uniqueSlug(parsed.data.title, "diskusi", 200);
 
   const { data: post, error } = await supabase
     .from("posts")
@@ -582,7 +577,7 @@ async function requireStaffOf(supabase: Awaited<ReturnType<typeof createClient>>
 export async function actionApproveMember(formData: FormData): Promise<void> {
   const communitySlug = String(formData.get("communitySlug") || "");
   const memberId = String(formData.get("memberId") || "");
-  if (!communitySlug || !/^[0-9a-f-]{36}$/i.test(memberId)) return;
+  if (!communitySlug || !isUuid(memberId)) return;
 
   const { supabase, user } = await requireUser();
   if (!user) return;
@@ -603,7 +598,7 @@ export async function actionApproveMember(formData: FormData): Promise<void> {
 export async function actionRejectMember(formData: FormData): Promise<void> {
   const communitySlug = String(formData.get("communitySlug") || "");
   const memberId = String(formData.get("memberId") || "");
-  if (!communitySlug || !/^[0-9a-f-]{36}$/i.test(memberId)) return;
+  if (!communitySlug || !isUuid(memberId)) return;
 
   const { supabase, user } = await requireUser();
   if (!user) return;
@@ -625,7 +620,7 @@ export async function actionSetMemberRole(formData: FormData): Promise<void> {
   const memberId = String(formData.get("memberId") || "");
   const nextRole = String(formData.get("nextRole") || "");
 
-  if (!communitySlug || !/^[0-9a-f-]{36}$/i.test(memberId)) return;
+  if (!communitySlug || !isUuid(memberId)) return;
   if (nextRole !== "moderator" && nextRole !== "member") return;
 
   const { supabase, user } = await requireUser();
@@ -652,7 +647,7 @@ export async function actionSetMemberRole(formData: FormData): Promise<void> {
 export async function actionRemoveMember(formData: FormData): Promise<void> {
   const communitySlug = String(formData.get("communitySlug") || "");
   const memberId = String(formData.get("memberId") || "");
-  if (!communitySlug || !/^[0-9a-f-]{36}$/i.test(memberId)) return;
+  if (!communitySlug || !isUuid(memberId)) return;
 
   const { supabase, user } = await requireUser();
   if (!user) return;
@@ -689,7 +684,7 @@ export async function actionReportContent(formData: FormData): Promise<void> {
   const reason = String(formData.get("reason") || "lainnya");
   const redirectTo = String(formData.get("redirectTo") || "/");
 
-  if (!REPORT_TARGET_TABLES[targetType] || !/^[0-9a-f-]{36}$/i.test(targetId)) return;
+  if (!REPORT_TARGET_TABLES[targetType] || !isUuid(targetId)) return;
 
   const { supabase, user } = await requireUser();
   if (!user) redirect(`/login?next=${encodeURIComponent(redirectTo)}`);

@@ -4,13 +4,9 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { hasPasswordIdentity } from "@/lib/auth";
-import { zodFieldErrors } from "@/lib/form";
+import { zodFieldErrors, type ActionState } from "@/lib/form";
 
-export interface ProfileActionState {
-  error: string | null;
-  success: string | null;
-  fieldErrors?: Record<string, string>;
-}
+export type ProfileActionState = ActionState;
 
 const profileSchema = z.object({
   username: z

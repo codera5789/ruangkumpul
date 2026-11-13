@@ -4,15 +4,11 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { safeNext } from "@/lib/utils";
-import { zodFieldErrors } from "@/lib/form";
+import { zodFieldErrors, type ActionState } from "@/lib/form";
 import { siteConfig } from "@/config/site";
 import { createClient } from "@/lib/supabase/server";
 
-export interface AuthActionState {
-  error: string | null;
-  success: string | null;
-  fieldErrors?: Record<string, string>;
-}
+export type AuthActionState = ActionState;
 
 const emailSchema = z.string().trim().toLowerCase().email("Format email tidak valid");
 const passwordSchema = z

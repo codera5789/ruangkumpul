@@ -4,7 +4,7 @@ import { useActionState, useMemo, useState } from "react";
 import Link from "next/link";
 import { Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input, Select, Textarea } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { markdownToBlocks } from "@/modules/knowledge/markdown";
 import {
@@ -35,9 +35,6 @@ interface ArticleEditorFormProps {
     seoDescription: string;
   };
 }
-
-const inputCls =
-  "w-full rounded-xl border border-slate-200 bg-surface px-3.5 py-2.5 text-sm text-ink focus:outline-hidden";
 
 /** Form editor artikel dengan pratinjau render blok (markdown sederhana → blok JSONB). */
 export function ArticleEditorForm({
@@ -143,23 +140,21 @@ export function ArticleEditorForm({
 
             {/* Textarea selalu ter-mount agar nilai `content` tetap ikut terkirim
                 saat pengguna menyimpan dari mode pratinjau. */}
-            <textarea
-              id="content"
-              name="content"
-              defaultValue={defaults?.markdown}
-              onChange={(e) => setMarkdown(e.target.value)}
-              required={!showPreview}
-              minLength={showPreview ? undefined : 50}
-              rows={20}
-              aria-hidden={showPreview || undefined}
-              tabIndex={showPreview ? -1 : undefined}
-              placeholder={"Tulis artikel di sini...\n\n## Judul bagian\n\nParagraf biasa.\n\n- Butir list\n- Butir lain\n\n> Kutipan\n\n```js\nconsole.log('kode');\n```"}
-              className={cn(
-                inputCls,
-                "font-mono text-[13px] leading-relaxed",
-                showPreview && "hidden",
-              )}
-            />
+            <div className={cn(showPreview && "hidden")}>
+              <Textarea
+                id="content"
+                name="content"
+                defaultValue={defaults?.markdown}
+                onChange={(e) => setMarkdown(e.target.value)}
+                required={!showPreview}
+                minLength={showPreview ? undefined : 50}
+                rows={20}
+                aria-hidden={showPreview || undefined}
+                tabIndex={showPreview ? -1 : undefined}
+                placeholder={"Tulis artikel di sini...\n\n## Judul bagian\n\nParagraf biasa.\n\n- Butir list\n- Butir lain\n\n> Kutipan\n\n```js\nconsole.log('kode');\n```"}
+                className="font-mono text-[13px] leading-relaxed"
+              />
+            </div>
             <p className="mt-1.5 text-xs text-ink-muted">
               Didukung: <code>## Judul</code>, <code>- list</code>, <code>&gt; kutipan</code>, blok kode{" "}
               <code>```</code>. Baris kosong memisahkan paragraf.
@@ -174,11 +169,11 @@ export function ArticleEditorForm({
             <label htmlFor="status" className="mb-1.5 block text-xs font-semibold text-ink-secondary">
               Status
             </label>
-            <select id="status" name="status" defaultValue={defaults?.status ?? "draft"} className={inputCls}>
+            <Select id="status" name="status" defaultValue={defaults?.status ?? "draft"}>
               <option value="draft">Draft: hanya kamu</option>
               <option value="review">Review: menunggu moderasi</option>
               <option value="published">Terbitkan langsung</option>
-            </select>
+            </Select>
             <p className="mt-2 text-xs text-ink-muted">
               Artikel review diperiksa moderator sebelum tayang.
             </p>
@@ -189,12 +184,12 @@ export function ArticleEditorForm({
             <label htmlFor="categoryId" className="mb-1.5 block text-xs font-semibold text-ink-secondary">
               Kategori
             </label>
-            <select id="categoryId" name="categoryId" defaultValue={defaults?.categoryId ?? ""} className={inputCls}>
+            <Select id="categoryId" name="categoryId" defaultValue={defaults?.categoryId ?? ""}>
               <option value="">— Tanpa kategori —</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
-            </select>
+            </Select>
 
             <label htmlFor="tags" className="mb-1.5 mt-3 block text-xs font-semibold text-ink-secondary">
               Tag <span className="font-normal">(pisahkan dengan koma, maks. 8)</span>
@@ -212,13 +207,12 @@ export function ArticleEditorForm({
             <label htmlFor="excerpt" className="mb-1.5 block text-xs font-semibold text-ink-secondary">
               Ringkasan (maks. 500 karakter)
             </label>
-            <textarea
+            <Textarea
               id="excerpt"
               name="excerpt"
               defaultValue={defaults?.excerpt}
               rows={3}
               maxLength={500}
-              className={inputCls}
             />
             <label htmlFor="seoTitle" className="mb-1.5 mt-3 block text-xs font-semibold text-ink-secondary">
               Judul SEO (opsional)
@@ -227,13 +221,12 @@ export function ArticleEditorForm({
             <label htmlFor="seoDescription" className="mb-1.5 mt-3 block text-xs font-semibold text-ink-secondary">
               Deskripsi SEO (opsional)
             </label>
-            <textarea
+            <Textarea
               id="seoDescription"
               name="seoDescription"
               defaultValue={defaults?.seoDescription}
               rows={2}
               maxLength={300}
-              className={inputCls}
             />
           </div>
 

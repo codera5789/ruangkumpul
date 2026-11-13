@@ -1,4 +1,4 @@
-import { unstable_rethrow } from "next/navigation";
+import { withFailSoft } from "@/lib/supabase/query";
 import type { Tables } from "@/types/database";
 
 export type NotificationWithActor = Tables<"notifications"> & {
@@ -7,7 +7,7 @@ export type NotificationWithActor = Tables<"notifications"> & {
 
 /** Daftar notifikasi milik pengguna (dengan aktor untuk avatar). */
 export async function listNotifications(limit = 50): Promise<NotificationWithActor[]> {
-  try {
+  return withFailSoft("[notifications] listNotifications gagal:", [], async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -28,11 +28,7 @@ export async function listNotifications(limit = 50): Promise<NotificationWithAct
 
     if (error) throw error;
     return (data ?? []) as NotificationWithActor[];
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[notifications] listNotifications gagal:", err);
-    return [];
-  }
+  });
 }
 
 /** Resolusi tipe+id resource menjadi href nyata (batch per tabel). */
@@ -41,7 +37,7 @@ export async function resolveNotificationHrefs(
 ): Promise<Map<string, string>> {
   const map = new Map<string, string>();
 
-  try {
+  return withFailSoft("[notifications] resolveNotificationHrefs gagal:", map, async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -63,17 +59,13 @@ export async function resolveNotificationHrefs(
 
     for (const p of posts.data ?? []) map.set(`post:${p.id}`, `/diskusi/${p.slug}`);
     for (const a of articles.data ?? []) map.set(`article:${a.id}`, `/artikel/${a.slug}`);
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[notifications] resolveNotificationHrefs gagal:", err);
-  }
-
-  return map;
+    return map;
+  });
 }
 
 /** Jumlah notifikasi belum dibaca — untuk badge bell. */
 export async function countUnreadNotifications(): Promise<number> {
-  try {
+  return withFailSoft("[notifications] countUnread gagal:", 0, async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -83,9 +75,5 @@ export async function countUnreadNotifications(): Promise<number> {
       .eq("is_read", false);
 
     return count ?? 0;
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[notifications] countUnread gagal:", err);
-    return 0;
-  }
+  });
 }

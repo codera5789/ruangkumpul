@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { unstable_rethrow } from "next/navigation";
+import { withFailSoft } from "@/lib/supabase/query";
 import type { Tables } from "@/types/database";
 import type { CommunitySummary } from "@/modules/community/services";
 
@@ -30,7 +30,7 @@ export const getCommunityBySlug = cache(async (slug: string) =>
 async function getCommunityBySlugUncached(
   slug: string,
 ): Promise<CommunityContext | null> {
-  try {
+  return withFailSoft("[community] getCommunityBySlug gagal:", null, async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -62,11 +62,7 @@ async function getCommunityBySlugUncached(
       membership,
       isOwner: Boolean(user && community.owner_id === user.id),
     };
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[community] getCommunityBySlug gagal:", err);
-    return null;
-  }
+  });
 }
 
 /** Postingan published milik komunitas. */
@@ -74,7 +70,7 @@ export async function listCommunityPosts(
   communityId: string,
   limit = 30,
 ): Promise<PostWithAuthor[]> {
-  try {
+  return withFailSoft("[community] listCommunityPosts gagal:", [], async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -119,11 +115,7 @@ export async function listCommunityPosts(
     }
 
     return posts;
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[community] listCommunityPosts gagal:", err);
-    return [];
-  }
+  });
 }
 
 /** Detail diskusi berdasarkan slug. Diskusi komunitas privat hanya untuk anggota approved.
@@ -133,7 +125,7 @@ export const getPostBySlug = cache(async (slug: string) =>
 );
 
 async function getPostBySlugUncached(slug: string): Promise<PostWithAuthor | null> {
-  try {
+  return withFailSoft("[community] getPostBySlug gagal:", null, async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -197,11 +189,7 @@ async function getPostBySlugUncached(slug: string): Promise<PostWithAuthor | nul
     post.liked = Boolean(existingLike);
 
     return post;
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[community] getPostBySlug gagal:", err);
-    return null;
-  }
+  });
 }
 
 /** Komentar diskusi. */
@@ -213,7 +201,7 @@ export async function listPostComments(
   postId: string,
   limit = 100,
 ): Promise<PostCommentWithAuthor[]> {
-  try {
+  return withFailSoft("[community] listPostComments gagal:", [], async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -229,9 +217,5 @@ export async function listPostComments(
 
     if (error) throw error;
     return (data ?? []) as PostCommentWithAuthor[];
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[community] listPostComments gagal:", err);
-    return [];
-  }
+  });
 }

@@ -1,14 +1,11 @@
 "use client";
 
 import { useActionState } from "react";
-import { Input, Textarea } from "@/components/ui/input";
+import { Input, Select, Textarea } from "@/components/ui/input";
 import { SubmitButton } from "@/modules/auth/components/submit-button";
 import { actionCreateEvent, type EventActionState } from "@/modules/events/actions";
 
 const initialState: EventActionState = { error: null, success: null };
-
-const inputCls =
-  "w-full rounded-xl border border-slate-200 bg-surface px-3.5 py-2.5 text-sm text-ink focus:outline-hidden";
 
 /** Form buat event. */
 export function EventForm() {
@@ -58,11 +55,11 @@ export function EventForm() {
             <label htmlFor="format" className="mb-1.5 block text-xs font-semibold text-ink-secondary">
               Format *
             </label>
-            <select id="format" name="format" defaultValue="online" className={inputCls}>
+            <Select id="format" name="format" defaultValue="online">
               <option value="online">Online</option>
               <option value="offline">Offline (tatap muka)</option>
               <option value="hybrid">Hybrid</option>
-            </select>
+            </Select>
 
             <label htmlFor="location" className="mb-1.5 mt-3 block text-xs font-semibold text-ink-secondary">
               Lokasi <span className="font-normal">(wajib untuk offline/hybrid)</span>

@@ -3,16 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { slugify } from "@/lib/utils";
-import { zodFieldErrors } from "@/lib/form";
+import { uniqueSlug } from "@/lib/utils";
+import { zodFieldErrors, type ActionState } from "@/lib/form";
 import { createClient } from "@/lib/supabase/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
-export interface JobActionState {
-  error: string | null;
-  success: string | null;
-  fieldErrors?: Record<string, string>;
-}
+export type JobActionState = ActionState;
 
 const createJobSchema = z
   .object({
@@ -82,9 +78,7 @@ export async function actionCreateJob(
   }
 
   // Slug unik: perusahaan + posisi + random suffix.
-  const baseSlug =
-    slugify(`${parsed.data.companyName} ${parsed.data.title}`).slice(0, 180) || "lowongan";
-  const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
+  const slug = uniqueSlug(`${parsed.data.companyName} ${parsed.data.title}`, "lowongan", 180);
 
   const { data: job, error } = await supabase
     .from("job_listings")
