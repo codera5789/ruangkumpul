@@ -74,6 +74,7 @@ try {
   await run("0006_fix_private_community_and_event_quota (FILE UJI)", readFileSync(`${ROOT}/supabase/migrations/0006_fix_private_community_and_event_quota.sql`, "utf8"));
   await run("0007_audit_fixes (FILE UJI)", readFileSync(`${ROOT}/supabase/migrations/0007_audit_fixes.sql`, "utf8"));
   await run("0008_accepted_answer (FILE UJI)", readFileSync(`${ROOT}/supabase/migrations/0008_accepted_answer.sql`, "utf8"));
+  await run("0009_marketplace (FILE UJI)", readFileSync(`${ROOT}/supabase/migrations/0009_marketplace.sql`, "utf8"));
 
   // ---------- Data uji (superuser, bypass RLS) ----------
   await db.exec(`
@@ -309,7 +310,72 @@ try {
     bad("TEST17c owner gagal mencabut status solusi");
   }
 
-  console.log(`\n${failed === 0 ? "★★★ SEMUA TEST LULUS — migration 0001–0008 aman dijalankan ★★★" : `✗✗✗ ${failed} TEST GAGAL`}`);
+  console.log("\nTEST MARKETPLACE RLS & TRIGGERS (0009):");
+  await db.exec("reset role;");
+  const catRes = await db.query(`select id from marketplace_categories where slug = 'template-kode'`);
+  const catId = catRes.rows[0].id;
+
+  const prodPubRes = await db.query(`
+    insert into marketplace_products (seller_id, category_id, title, slug, summary, description, product_type, price_idr, status)
+    values ('${OWNER}', '${catId}', 'Starter Kit SaaS', 'starter-kit-saas', 'Ringkas', 'Deskripsi lengkap starter kit SaaS.', 'template', 150000, 'published')
+    returning id;
+  `);
+  const prodPubId = prodPubRes.rows[0].id;
+
+  await db.query(`
+    insert into marketplace_products (seller_id, category_id, title, slug, summary, description, product_type, price_idr, status)
+    values ('${OWNER}', '${catId}', 'Draft Produk', 'draft-produk', 'Ringkas draft', 'Deskripsi lengkap draft produk.', 'ui_kit', 0, 'draft')
+  `);
+
+  await asUser("anon", null);
+  await expectCount(`select count(*) from marketplace_products`, 1, "TEST18a anon hanya lihat produk published");
+
+  await asUser("authenticated", STRANGER);
+  await expectBlocked(
+    `insert into marketplace_products (seller_id, title, slug, summary, description)
+     values ('${OWNER}', 'Spoof Produk', 'spoof-produk', 'Ringkas', 'Deskripsi produk spoof.')`,
+    "TEST18b stranger tidak boleh insert produk atas nama owner",
+  );
+
+  await expectBlocked(
+    `insert into product_inquiries (product_id, buyer_id, seller_id, buyer_name, buyer_contact, message, status)
+     values ('${prodPubId}', '${MEMBER}', '${OWNER}', 'Spoof', 'spoof@example.com', 'Pesan spoof buyer id.', 'new')`,
+    "TEST18c stranger tidak boleh spoof buyer_id pada inquiry",
+  );
+
+  await asUser("authenticated", OWNER);
+  await expectBlocked(
+    `insert into product_inquiries (product_id, buyer_id, seller_id, buyer_name, buyer_contact, message, status)
+     values ('${prodPubId}', '${OWNER}', '${OWNER}', 'Owner', 'owner@example.com', 'Mengirim inquiry ke produk sendiri.', 'new')`,
+    "TEST18d seller tidak boleh mengirim inquiry ke produk sendiri",
+  );
+
+  await asUser("authenticated", MEMBER);
+  await db.query(`
+    insert into product_inquiries (product_id, buyer_id, seller_id, buyer_name, buyer_contact, message)
+    values ('${prodPubId}', '${MEMBER}', '${OWNER}', 'Budi', 'budi@example.com', 'Halo, apakah template ini mendukung Next.js 16?')
+  `);
+  await expectCount(
+    `select inquiry_count as count from marketplace_products where id = '${prodPubId}'`,
+    1,
+    "TEST18e trigger inquiry_count bertambah setelah inquiry valid",
+  );
+
+  await asUser("authenticated", STRANGER);
+  await expectCount(
+    `select count(*) from product_inquiries where product_id = '${prodPubId}'`,
+    0,
+    "TEST18f stranger tidak boleh membaca inquiry orang lain",
+  );
+
+  await asUser("authenticated", OWNER);
+  await expectCount(
+    `select count(*) from product_inquiries where product_id = '${prodPubId}'`,
+    1,
+    "TEST18g seller dapat membaca inquiry produk miliknya",
+  );
+
+  console.log(`\n${failed === 0 ? "★★★ SEMUA TEST LULUS — migration 0001–0009 aman dijalankan ★★★" : `✗✗✗ ${failed} TEST GAGAL`}`);
   process.exitCode = failed === 0 ? 0 : 1;
 } catch (e) {
   console.error("Harness error:", e.message);

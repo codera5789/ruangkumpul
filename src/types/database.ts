@@ -1118,6 +1118,162 @@ export type Database = {
         };
         Relationships: [];
       };
+      marketplace_categories: {
+        Row: {
+          id: string;
+          slug: string;
+          name: string;
+          description: string | null;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          name: string;
+          description?: string | null;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          slug?: string;
+          name?: string;
+          description?: string | null;
+          sort_order?: number;
+        };
+        Relationships: [];
+      };
+      marketplace_products: {
+        Row: {
+          id: string;
+          seller_id: string;
+          category_id: string | null;
+          title: string;
+          slug: string;
+          summary: string;
+          description: string;
+          product_type: Enums["marketplace_product_type"];
+          price_idr: number;
+          license_type: Enums["marketplace_license_type"];
+          preview_url: string | null;
+          demo_url: string | null;
+          thumbnail_url: string | null;
+          tags: string[];
+          status: Enums["marketplace_product_status"];
+          inquiry_count: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          seller_id: string;
+          category_id?: string | null;
+          title: string;
+          slug: string;
+          summary: string;
+          description: string;
+          product_type?: Enums["marketplace_product_type"];
+          price_idr?: number;
+          license_type?: Enums["marketplace_license_type"];
+          preview_url?: string | null;
+          demo_url?: string | null;
+          thumbnail_url?: string | null;
+          tags?: string[];
+          status?: Enums["marketplace_product_status"];
+          inquiry_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          category_id?: string | null;
+          title?: string;
+          slug?: string;
+          summary?: string;
+          description?: string;
+          product_type?: Enums["marketplace_product_type"];
+          price_idr?: number;
+          license_type?: Enums["marketplace_license_type"];
+          preview_url?: string | null;
+          demo_url?: string | null;
+          thumbnail_url?: string | null;
+          tags?: string[];
+          status?: Enums["marketplace_product_status"];
+          inquiry_count?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_products_seller_id_fkey";
+            columns: ["seller_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "marketplace_products_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "marketplace_categories";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      product_inquiries: {
+        Row: {
+          id: string;
+          product_id: string;
+          buyer_id: string;
+          seller_id: string;
+          buyer_name: string;
+          buyer_contact: string;
+          message: string;
+          status: Enums["marketplace_inquiry_status"];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          product_id: string;
+          buyer_id: string;
+          seller_id: string;
+          buyer_name: string;
+          buyer_contact: string;
+          message: string;
+          status?: Enums["marketplace_inquiry_status"];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          buyer_name?: string;
+          buyer_contact?: string;
+          message?: string;
+          status?: Enums["marketplace_inquiry_status"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "product_inquiries_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "marketplace_products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "product_inquiries_buyer_id_fkey";
+            columns: ["buyer_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "product_inquiries_seller_id_fkey";
+            columns: ["seller_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -1178,6 +1334,15 @@ export type Database = {
       job_type: "full_time" | "part_time" | "contract" | "freelance" | "internship";
       job_status: "published" | "closed";
       task_status: "todo" | "doing" | "done";
+      marketplace_product_type:
+        | "template"
+        | "source_code"
+        | "ui_kit"
+        | "digital_asset"
+        | "freelance_service";
+      marketplace_license_type: "free" | "personal" | "commercial" | "open_source";
+      marketplace_product_status: "draft" | "published" | "archived";
+      marketplace_inquiry_status: "new" | "replied" | "closed";
     };
     CompositeTypes: Record<string, never>;
   };

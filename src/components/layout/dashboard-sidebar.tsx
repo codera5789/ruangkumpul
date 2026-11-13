@@ -8,6 +8,7 @@ import {
   ListTodo,
   NotebookPen,
   Settings,
+  Store,
   UserRound,
 } from "lucide-react";
 import { SidebarLink } from "@/components/layout/sidebar-link";
@@ -21,6 +22,7 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/profil", label: "Profil Saya", icon: UserRound },
   { href: "/dashboard/artikel", label: "Artikel Saya", icon: FileText },
+  { href: "/dashboard/marketplace", label: "Marketplace", icon: Store },
   { href: "/dashboard/catatan", label: "Catatan", icon: NotebookPen },
   { href: "/dashboard/tugas", label: "Tugas", icon: ListTodo },
   { href: "/dashboard/bookmark", label: "Bookmark", icon: Bookmark },
