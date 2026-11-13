@@ -15,10 +15,28 @@ export type DoubleResult = {
 
 export type DoubleCall = { method: string; args: unknown[]; table: string };
 
+export type DoubleOptions = {
+  user?: { id: string; email?: string; app_metadata?: Record<string, unknown> } | null;
+  rpcResults?: DoubleResult | DoubleResult[];
+  authResults?: {
+    signInWithPassword?: DoubleResult;
+    signUp?: { data: { user?: unknown; session?: unknown }; error: { message: string } | null };
+    signInWithOAuth?: { data: { url?: string | null }; error: { message: string } | null };
+    resetPasswordForEmail?: DoubleResult;
+  };
+};
+
 const CHAIN_METHODS = [
   "select",
+  "insert",
+  "update",
+  "upsert",
+  "delete",
   "eq",
   "neq",
+  "in",
+  "ilike",
+  "is",
   "or",
   "gte",
   "gt",
@@ -31,14 +49,24 @@ const CHAIN_METHODS = [
   "maybeSingle",
 ] as const;
 
-export function createSupabaseDouble(results: DoubleResult | DoubleResult[]) {
+export function createSupabaseDouble(
+  results: DoubleResult | DoubleResult[],
+  options?: DoubleOptions,
+) {
   const calls: DoubleCall[] = [];
   const queue = Array.isArray(results) ? [...results] : null;
   const single = Array.isArray(results) ? null : results;
+  const rpcQueue = Array.isArray(options?.rpcResults) ? [...options.rpcResults] : null;
+  const rpcSingle = Array.isArray(options?.rpcResults) ? null : options?.rpcResults;
 
   function nextResult(): DoubleResult {
     if (queue) return queue.shift() ?? { data: [], error: null };
     return single ?? { data: null, error: null };
+  }
+
+  function nextRpcResult(): DoubleResult {
+    if (rpcQueue) return rpcQueue.shift() ?? { data: null, error: null };
+    return rpcSingle ?? { data: null, error: null };
   }
 
   function makeBuilder(table: string): Record<string, unknown> {
@@ -61,6 +89,36 @@ export function createSupabaseDouble(results: DoubleResult | DoubleResult[]) {
     from(table: string) {
       calls.push({ method: "from", args: [table], table });
       return makeBuilder(table);
+    },
+    rpc(fn: string, params?: unknown) {
+      calls.push({ method: "rpc", args: params !== undefined ? [fn, params] : [fn], table: "rpc" });
+      return Promise.resolve(nextRpcResult());
+    },
+    auth: {
+      async getUser() {
+        calls.push({ method: "auth.getUser", args: [], table: "auth" });
+        return { data: { user: options?.user ?? null }, error: null };
+      },
+      async signInWithPassword(creds: unknown) {
+        calls.push({ method: "auth.signInWithPassword", args: [creds], table: "auth" });
+        return options?.authResults?.signInWithPassword ?? { data: null, error: null };
+      },
+      async signUp(payload: unknown) {
+        calls.push({ method: "auth.signUp", args: [payload], table: "auth" });
+        return options?.authResults?.signUp ?? { data: { user: null, session: null }, error: null };
+      },
+      async signInWithOAuth(payload: unknown) {
+        calls.push({ method: "auth.signInWithOAuth", args: [payload], table: "auth" });
+        return options?.authResults?.signInWithOAuth ?? { data: { url: null }, error: null };
+      },
+      async resetPasswordForEmail(email: string, opts?: unknown) {
+        calls.push({
+          method: "auth.resetPasswordForEmail",
+          args: opts !== undefined ? [email, opts] : [email],
+          table: "auth",
+        });
+        return options?.authResults?.resetPasswordForEmail ?? { data: null, error: null };
+      },
     },
   };
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { parsePageParam, zodFieldErrors } from "@/lib/form";
+import { isUuid, parsePageParam, zodFieldErrors } from "@/lib/form";
 
 describe("zodFieldErrors", () => {
   it("memetakan issue zod dari safeParse menjadi { field: pesan }", () => {
@@ -61,5 +61,22 @@ describe("parsePageParam", () => {
   it("menghormati parameter max kustom", () => {
     expect(parsePageParam("50", 10)).toBe(10);
     expect(parsePageParam("7", 10)).toBe(7);
+  });
+});
+
+describe("isUuid", () => {
+  it("menerima UUID valid (case-insensitive)", () => {
+    expect(isUuid("550e8400-e29b-41d4-a716-446655440000")).toBe(true);
+    expect(isUuid("550E8400-E29B-41D4-A716-446655440000")).toBe(true);
+  });
+
+  it("menolak string non-UUID dan nilai bukan string", () => {
+    expect(isUuid("bukan-uuid")).toBe(false);
+    expect(isUuid("550e8400-e29b-41d4-a716-44665544000")).toBe(false);
+    expect(isUuid("prefix-550e8400-e29b-41d4-a716-446655440000")).toBe(false);
+    expect(isUuid("")).toBe(false);
+    expect(isUuid(null)).toBe(false);
+    expect(isUuid(undefined)).toBe(false);
+    expect(isUuid(123)).toBe(false);
   });
 });
