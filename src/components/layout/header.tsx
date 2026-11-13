@@ -15,6 +15,7 @@ const navItems = [
   { href: "/tools", label: "Tools" },
   { href: "/event", label: "Event" },
   { href: "/karier", label: "Karier" },
+  { href: "/marketplace", label: "Marketplace" },
 ];
 
 export async function Header() {

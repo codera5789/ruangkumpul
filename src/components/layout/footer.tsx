@@ -13,6 +13,7 @@ const columns = [
       { href: "/komunitas", label: "Komunitas" },
       { href: "/event", label: "Event" },
       { href: "/karier", label: "Karier" },
+      { href: "/marketplace", label: "Marketplace" },
       { href: "/jelajahi", label: "Jelajahi" },
     ],
   },

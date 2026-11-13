@@ -12,6 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/komunitas`, changeFrequency: "daily", priority: 0.8 },
     { url: `${base}/event`, changeFrequency: "daily", priority: 0.7 },
     { url: `${base}/karier`, changeFrequency: "daily", priority: 0.7 },
+    { url: `${base}/marketplace`, changeFrequency: "daily", priority: 0.8 },
     { url: `${base}/jelajahi`, changeFrequency: "weekly", priority: 0.6 },
     { url: `${base}/tentang`, changeFrequency: "monthly", priority: 0.4 },
     { url: `${base}/kontak`, changeFrequency: "monthly", priority: 0.3 },
@@ -33,12 +34,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let communityRoutes: MetadataRoute.Sitemap = [];
   let eventRoutes: MetadataRoute.Sitemap = [];
   let jobRoutes: MetadataRoute.Sitemap = [];
+  let marketplaceRoutes: MetadataRoute.Sitemap = [];
 
   try {
     const { createPublicClient } = await import("@/lib/supabase/public");
     const supabase = createPublicClient();
 
-    const [{ data: articles }, { data: communities }, { data: events }, { data: jobs }] =
+    const [{ data: articles }, { data: communities }, { data: events }, { data: jobs }, { data: products }] =
       await Promise.all([
         supabase
           .from("articles")
@@ -60,6 +62,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           .limit(2000),
         supabase
           .from("job_listings")
+          .select("slug, updated_at")
+          .eq("status", "published")
+          .order("created_at", { ascending: false })
+          .limit(2000),
+        supabase
+          .from("marketplace_products")
           .select("slug, updated_at")
           .eq("status", "published")
           .order("created_at", { ascending: false })
@@ -93,6 +101,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly" as const,
       priority: 0.6,
     }));
+
+    marketplaceRoutes = (products ?? []).map((p) => ({
+      url: `${base}/marketplace/${p.slug}`,
+      lastModified: p.updated_at ? new Date(p.updated_at) : undefined,
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    }));
   } catch (err) {
     console.error("[sitemap] gagal memuat konten dinamis:", err);
   }
@@ -104,5 +119,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...communityRoutes,
     ...eventRoutes,
     ...jobRoutes,
+    ...marketplaceRoutes,
   ];
 }
