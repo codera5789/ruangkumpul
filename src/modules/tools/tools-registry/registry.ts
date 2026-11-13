@@ -1,5 +1,5 @@
 /**
- * Registry 21 tools peluncuran RuangKumpul.
+ * Registry 24 tools RuangKumpul.
  * Sumber kebenaran untuk: direktori /tools, landing page SEO, sitemap,
  * dan seed database. Semua tool berjalan lokal di browser (tanpa upload server).
  */

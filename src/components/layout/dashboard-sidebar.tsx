@@ -18,7 +18,7 @@ import { SidebarLink } from "@/components/layout/sidebar-link";
  * pathname dari SidebarLink; konfigurasi item (beserta komponen ikon)
  * tinggal di sini agar tidak menyeberangi batas Server -> Client.
  */
-const navItems = [
+export const dashboardNavItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/profil", label: "Profil Saya", icon: UserRound },
   { href: "/dashboard/artikel", label: "Artikel Saya", icon: FileText },
@@ -33,7 +33,7 @@ const navItems = [
 export function DashboardSidebar() {
   return (
     <nav aria-label="Menu dashboard" className="sticky top-24 space-y-1">
-      {navItems.map((item) => (
+      {dashboardNavItems.map((item) => (
         <SidebarLink
           key={item.href}
           href={item.href}
@@ -52,7 +52,7 @@ export function DashboardMobileNav() {
       aria-label="Menu dashboard"
       className="mb-6 flex gap-1.5 overflow-x-auto pb-1 md:hidden"
     >
-      {navItems.map((item) => (
+      {dashboardNavItems.map((item) => (
         <span key={item.href} className="shrink-0">
           <SidebarLink href={item.href} label={item.label} icon={item.icon} />
         </span>

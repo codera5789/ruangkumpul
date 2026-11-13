@@ -206,7 +206,6 @@ export function ProductForm({
                 name="priceIdr"
                 type="number"
                 min={0}
-                step={1000}
                 required
                 defaultValue={initialProduct?.price_idr ?? 0}
                 error={state.fieldErrors?.priceIdr}

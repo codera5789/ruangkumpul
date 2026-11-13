@@ -4,6 +4,7 @@ import { BookOpen, Compass, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { KumpulMotif } from "@/components/shared/kumpul-motif";
 import { siteConfig } from "@/config/site";
+import { TOOL_COUNT } from "@/modules/tools/tools-registry/registry";
 
 export const metadata: Metadata = {
   title: "Tentang RuangKumpul",
@@ -16,7 +17,7 @@ const pillars = [
     icon: Compass,
     title: "Tools gratis",
     description:
-      "21+ tools praktis yang berjalan langsung di browser: privat, cepat, tanpa login.",
+      `${TOOL_COUNT}+ tools praktis yang berjalan langsung di browser: privat, cepat, tanpa login.`,
   },
   {
     icon: BookOpen,

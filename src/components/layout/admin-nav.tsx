@@ -18,7 +18,7 @@ const adminNav = [
 
 export function AdminSidebar() {
   return (
-    <nav aria-label="Menu admin" className="sticky top-24 space-y-1 animate-fade-in">
+    <nav aria-label="Menu admin" className="sticky top-24 space-y-1">
       {adminNav.map((item) => (
         <SidebarLink
           key={item.href}

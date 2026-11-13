@@ -13,10 +13,41 @@ export type ContentBlock =
   | { type: "image"; src: string; alt?: string }
   | { type: "list"; ordered?: boolean; items: string[] };
 
+function isSafeImageSrc(src: unknown): src is string {
+  if (typeof src !== "string" || src.length === 0) return false;
+  return (src.startsWith("/") && !src.startsWith("//")) || /^https?:\/\//i.test(src);
+}
+
 function isBlock(value: unknown): value is ContentBlock {
   if (typeof value !== "object" || value === null) return false;
-  const t = (value as { type?: unknown }).type;
-  return typeof t === "string";
+  const block = value as Record<string, unknown>;
+  switch (block.type) {
+    case "paragraph":
+    case "quote":
+      return typeof block.text === "string";
+    case "heading":
+      return (
+        typeof block.text === "string" &&
+        (block.level === undefined || block.level === 2 || block.level === 3)
+      );
+    case "code":
+      return (
+        typeof block.text === "string" &&
+        (block.language === undefined || typeof block.language === "string")
+      );
+    case "image":
+      return (
+        isSafeImageSrc(block.src) &&
+        (block.alt === undefined || typeof block.alt === "string")
+      );
+    case "list":
+      return (
+        Array.isArray(block.items) &&
+        (block.ordered === undefined || typeof block.ordered === "boolean")
+      );
+    default:
+      return false;
+  }
 }
 
 function BlockRenderer({ block }: { block: ContentBlock }) {
@@ -53,6 +84,7 @@ function BlockRenderer({ block }: { block: ContentBlock }) {
         </blockquote>
       );
     case "image":
+      if (!isSafeImageSrc(block.src)) return null;
       return (
         // eslint-disable-next-line @next/next/no-img-element
         <img

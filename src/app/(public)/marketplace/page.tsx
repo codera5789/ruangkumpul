@@ -237,8 +237,8 @@ async function MarketplaceContent({
               className={cn(
                 "rounded-full border px-3.5 py-1 text-xs font-semibold transition-all duration-200",
                 (productType ?? "") === f.value
-                  ? "border-accent bg-accent text-white"
-                  : "border-slate-200 bg-surface text-ink-secondary hover:border-accent hover:text-ink",
+                  ? "border-accent-600 bg-accent-600 text-white"
+                  : "border-slate-200 bg-surface text-ink-secondary hover:border-accent-500 hover:text-ink",
               )}
             >
               {f.label}

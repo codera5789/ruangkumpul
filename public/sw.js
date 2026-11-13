@@ -1,11 +1,12 @@
 /**
  * Service Worker RuangKumpul untuk dukungan PWA dan akses offline katalog tools.
- * Seluruh 21 web tools diproses pada sisi klien sehingga dapat berjalan tanpa internet.
+ * Seluruh 24 web tools diproses pada sisi klien sehingga dapat berjalan tanpa internet.
  */
 
-const CACHE_NAME = "rk-pwa-v1";
+const CACHE_NAME = "rk-pwa-v2";
 
 const PRECACHE_ASSETS = [
+  "/tools",
   "/offline",
   "/icon.svg",
   "/icon-512.png",
