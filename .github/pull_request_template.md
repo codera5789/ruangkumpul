@@ -16,7 +16,8 @@ Fixes / Relates to:
 
 ## Daftar Periksa (Checklist)
 Pastikan seluruh poin berikut terpenuhi sebelum meminta review:
-- [ ] Mengikuti konvensi kode proyek dan standar TypeScript ketat.
+- [ ] Mengikuti konvensi kode proyek, prinsip DRY (*Rule of Three*), dan standar TypeScript ketat.
+- [ ] Sudah menggunakan helper bersama di `src/lib/` dan komponen `src/components/ui/` (tanpa duplikasi validasi/boilerplate baru).
 - [ ] Berjalan bersih pada `npx tsc --noEmit` (tanpa error tipe).
 - [ ] Berjalan bersih pada `npm run lint` (tanpa pelanggaran lint).
 - [ ] Pengujian lolos melalui `npm test` (unit test & PGlite SQL smoke test).
