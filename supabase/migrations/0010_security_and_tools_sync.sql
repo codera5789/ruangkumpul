@@ -183,7 +183,6 @@ grant execute on function public.set_accepted_answer(uuid, uuid) to authenticate
 create or replace function public.guard_derived_fields_update()
 returns trigger
 language plpgsql
-security definer
 set search_path = public
 as $$
 declare
@@ -200,9 +199,9 @@ begin
     if new.view_count is distinct from old.view_count then
       raise exception 'Kolom view_count hanya dapat diperbarui oleh sistem' using errcode = '42501';
     end if;
-    -- Izinkan FK ON DELETE SET NULL saat komentar terpilih dihapus (pg_trigger_depth() > 0).
+    -- Izinkan FK ON DELETE SET NULL saat komentar terpilih dihapus (pg_trigger_depth() > 1).
     if new.accepted_comment_id is distinct from old.accepted_comment_id
-      and not (new.accepted_comment_id is null and pg_trigger_depth() > 0) then
+      and not (new.accepted_comment_id is null and pg_trigger_depth() > 1) then
       raise exception 'Gunakan RPC set_accepted_answer untuk mengubah solusi terpilih' using errcode = '42501';
     end if;
     if (new.author_id is distinct from old.author_id or new.community_id is distinct from old.community_id)
