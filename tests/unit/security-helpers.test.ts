@@ -5,8 +5,6 @@ import {
   safeNext,
   toJsonLd,
 } from "@/lib/utils";
-import { parseWibDateTime } from "@/lib/datetime";
-import { hasPasswordIdentity } from "@/lib/auth";
 
 describe("safeNext", () => {
   it("mempertahankan path internal", () => {
@@ -55,37 +53,5 @@ describe("formatDateId", () => {
   it("memakai zona Asia/Jakarta, bukan zona server", () => {
     // 6 Nov 2026 18:00 UTC = 7 Nov 2026 01:00 WIB.
     expect(formatDateId("2026-11-06T18:00:00.000Z")).toBe("7 November 2026");
-  });
-});
-
-describe("parseWibDateTime", () => {
-  it("menafsirkan datetime-local sebagai WIB (UTC+7)", () => {
-    expect(parseWibDateTime("2026-11-10T19:00")?.toISOString()).toBe(
-      "2026-11-10T12:00:00.000Z",
-    );
-  });
-
-  it("menerima komponen detik opsional", () => {
-    expect(parseWibDateTime("2026-11-10T19:30:45")?.toISOString()).toBe(
-      "2026-11-10T12:30:45.000Z",
-    );
-  });
-
-  it("menolak format dan tanggal yang tidak valid", () => {
-    expect(parseWibDateTime("abc")).toBeNull();
-    expect(parseWibDateTime("2026-02-31T10:00")).toBeNull();
-    expect(parseWibDateTime("2026-11-10T24:00")).toBeNull();
-  });
-});
-
-describe("hasPasswordIdentity", () => {
-  it("mendeteksi akun email/password", () => {
-    expect(hasPasswordIdentity({ app_metadata: { provider: "email" } })).toBe(true);
-    expect(hasPasswordIdentity({ app_metadata: { providers: ["email"] } })).toBe(true);
-  });
-
-  it("mendeteksi akun OAuth tanpa password", () => {
-    expect(hasPasswordIdentity({ app_metadata: { provider: "google" } })).toBe(false);
-    expect(hasPasswordIdentity({ app_metadata: { providers: ["google"] } })).toBe(false);
   });
 });

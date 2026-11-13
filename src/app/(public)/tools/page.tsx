@@ -5,7 +5,7 @@ import { ToolDirectory } from "@/modules/tools/components/tool-directory";
 import { TOOL_CATEGORIES, TOOL_COUNT } from "@/modules/tools/tools-registry/registry";
 
 export const metadata: Metadata = {
-  title: "Tools Online Gratis · 21+ Tools Praktis Tanpa Login",
+  title: `Tools Online Gratis · ${TOOL_COUNT}+ Tools Praktis Tanpa Login`,
   description:
     "Koleksi tools online gratis: penghitung kata, JSON formatter, generator QR code, kompres gambar, gabung PDF, dan lainnya. Semua berjalan di browser, tanpa login.",
   keywords: ["tools online gratis", "web tools indonesia", "tools praktis"],

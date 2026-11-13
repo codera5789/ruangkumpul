@@ -80,6 +80,8 @@ All-in-One Digital Super App untuk Indonesia: tools gratis, ruang pengetahuan, k
    - `supabase/migrations/0006_fix_private_community_and_event_quota.sql`
    - `supabase/migrations/0007_audit_fixes.sql`
    - `supabase/migrations/0008_accepted_answer.sql`
+   - `supabase/migrations/0009_marketplace.sql`
+   - `supabase/migrations/0010_security_and_tools_sync.sql`
 
    Lalu jalankan `npm run test:sql` untuk smoke test migrasi + RLS di Postgres
    (PGlite). `docs/rls-tests.sql` tetap tersedia untuk uji manual di SQL Editor.
@@ -127,7 +129,7 @@ src/
 ├── lib/                  # supabase/ (client, server, admin, proxy) + rate-limit + utils
 ├── types/                # Tipe Database Supabase
 └── config/               # Konfigurasi situs
-supabase/migrations/      # SQL migration 0001–0008 (schema + RLS + trigger + seed)
+supabase/migrations/      # SQL migration 0001–0010 (schema + RLS + trigger + seed)
 docs/rls-tests.sql        # Smoke test RLS (jalankan di SQL Editor)
 docs/screenshots/         # Screenshot tampilan aplikasi (dipakai README ini)
 tests/unit/               # Unit tests (vitest)

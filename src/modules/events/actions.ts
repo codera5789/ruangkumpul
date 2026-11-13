@@ -3,17 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { slugify } from "@/lib/utils";
-import { zodFieldErrors } from "@/lib/form";
+import { uniqueSlug } from "@/lib/utils";
+import { zodFieldErrors, type ActionState } from "@/lib/form";
 import { requireUser } from "@/lib/auth";
 import { parseWibDateTime } from "@/lib/datetime";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
-export interface EventActionState {
-  error: string | null;
-  success: string | null;
-  fieldErrors?: Record<string, string>;
-}
+export type EventActionState = ActionState;
 
 const createEventSchema = z
   .object({
@@ -99,8 +95,7 @@ export async function actionCreateEvent(
     ? Number(parsed.data.maxParticipants)
     : null;
 
-  const baseSlug = slugify(parsed.data.title).slice(0, 200) || "event";
-  const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
+  const slug = uniqueSlug(parsed.data.title, "event", 200);
 
   const { data: event, error } = await supabase
     .from("events")
@@ -138,7 +133,7 @@ export async function actionToggleEventRegistration(
   if (!eventSlug) return { error: "Event tidak valid.", success: null };
 
   const { supabase, user } = await requireUser();
-  if (!user) redirect(`/login?next=/event/${eventSlug}`);
+  if (!user) redirect(`/login?next=${encodeURIComponent(`/event/${eventSlug}`)}`);
 
   const { data: event } = await supabase
     .from("events")

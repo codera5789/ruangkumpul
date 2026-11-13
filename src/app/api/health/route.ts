@@ -1,13 +1,15 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { NextResponse, connection } from "next/server";
+import { createPublicClient } from "@/lib/supabase/public";
 
 /**
  * Health check: verifikasi kesiapan layanan + konektivitas database.
  * Dipakai monitoring/uptime checker; tidak mengungkap data apa pun.
  */
 export async function GET() {
+  await connection();
+
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
     const { error } = await supabase
       .from("profiles")
       .select("id", { count: "exact", head: true })

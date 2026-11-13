@@ -1,13 +1,11 @@
 "use server";
 
 import { z } from "zod";
+import type { ActionState } from "@/lib/form";
 import { createClient } from "@/lib/supabase/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
-export interface NewsletterActionState {
-  error: string | null;
-  success: string | null;
-}
+export type NewsletterActionState = ActionState;
 
 const schema = z.object({
   email: z.string().trim().toLowerCase().email("Email tidak valid").max(255),

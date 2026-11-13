@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { unstable_rethrow } from "next/navigation";
+import { withFailSoft } from "@/lib/supabase/query";
 import type { Tables } from "@/types/database";
 
 export type ArticleWithAuthor = Tables<"articles"> & {
@@ -12,7 +12,7 @@ export type ArticleWithAuthor = Tables<"articles"> & {
  * Gagal koneksi database mengembalikan array kosong (halaman tetap tampil).
  */
 export async function listLatestArticles(limit = 6): Promise<ArticleWithAuthor[]> {
-  try {
+  return withFailSoft("[knowledge] listLatestArticles gagal:", [], async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -25,11 +25,7 @@ export async function listLatestArticles(limit = 6): Promise<ArticleWithAuthor[]
 
     if (error) throw error;
     return (data ?? []) as ArticleWithAuthor[];
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[knowledge] listLatestArticles gagal:", err);
-    return [];
-  }
+  });
 }
 
 /**
@@ -55,7 +51,7 @@ export async function listPublishedArticles({
   page?: number;
   pageSize?: number;
 }): Promise<{ articles: ArticleWithAuthor[]; total: number }> {
-  try {
+  return withFailSoft("[knowledge] listPublishedArticles gagal:", { articles: [], total: 0 }, async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -84,16 +80,12 @@ export async function listPublishedArticles({
 
     if (error) throw error;
     return { articles: (data ?? []) as ArticleWithAuthor[], total: count ?? 0 };
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[knowledge] listPublishedArticles gagal:", err);
-    return { articles: [], total: 0 };
-  }
+  });
 }
 
 /** Semua kategori artikel (untuk filter listing). */
-export async function listArticleCategories() {
-  try {
+export async function listArticleCategories(): Promise<{ name: string; slug: string }[]> {
+  return withFailSoft("[knowledge] listArticleCategories gagal:", [], async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -102,11 +94,7 @@ export async function listArticleCategories() {
       .order("name");
     if (error) throw error;
     return data ?? [];
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[knowledge] listArticleCategories gagal:", err);
-    return [];
-  }
+  });
 }
 
 export type ArticleDetail = ArticleWithAuthor & {
@@ -122,7 +110,7 @@ export const getArticleBySlug = cache(async (slug: string) =>
 );
 
 async function getArticleBySlugUncached(slug: string): Promise<ArticleDetail | null> {
-  try {
+  return withFailSoft("[knowledge] getArticleBySlug gagal:", null, async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -138,11 +126,7 @@ async function getArticleBySlugUncached(slug: string): Promise<ArticleDetail | n
 
     if (error || !data) return null;
     return data as ArticleDetail;
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[knowledge] getArticleBySlug gagal:", err);
-    return null;
-  }
+  });
 }
 
 /** Artikel terkait: kategori sama, published, bukan artikel ini. */
@@ -151,7 +135,7 @@ export async function listRelatedArticles(
   categoryId: string | null,
   limit = 3,
 ): Promise<ArticleWithAuthor[]> {
-  try {
+  return withFailSoft("[knowledge] listRelatedArticles gagal:", [], async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -181,11 +165,7 @@ export async function listRelatedArticles(
     }
 
     return data as ArticleWithAuthor[];
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[knowledge] listRelatedArticles gagal:", err);
-    return [];
-  }
+  });
 }
 
 /** Artikel published milik satu penulis — dipakai halaman profil publik. */
@@ -193,7 +173,7 @@ export async function listArticlesByAuthor(
   authorId: string,
   limit = 6,
 ): Promise<ArticleWithAuthor[]> {
-  try {
+  return withFailSoft("[knowledge] listArticlesByAuthor gagal:", [], async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -207,11 +187,7 @@ export async function listArticlesByAuthor(
 
     if (error) throw error;
     return (data ?? []) as ArticleWithAuthor[];
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[knowledge] listArticlesByAuthor gagal:", err);
-    return [];
-  }
+  });
 }
 
 /** Komentar artikel beserta penulisnya. */
@@ -223,7 +199,7 @@ export async function listArticleComments(
   articleId: string,
   limit = 50,
 ): Promise<ArticleCommentWithAuthor[]> {
-  try {
+  return withFailSoft("[knowledge] listArticleComments gagal:", [], async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -239,9 +215,5 @@ export async function listArticleComments(
 
     if (error) throw error;
     return (data ?? []) as ArticleCommentWithAuthor[];
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[knowledge] listArticleComments gagal:", err);
-    return [];
-  }
+  });
 }

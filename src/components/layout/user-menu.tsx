@@ -1,7 +1,8 @@
 "use client";
 
-import { Bell, Bookmark, FileText, LayoutDashboard, LogOut, Settings, UserRound } from "lucide-react";
+import { LogOut } from "lucide-react";
 import Link from "next/link";
+import { dashboardNavItems } from "./dashboard-sidebar";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
@@ -16,14 +17,7 @@ interface UserMenuProps {
   };
 }
 
-const menuItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/profil", label: "Profil Saya", icon: UserRound },
-  { href: "/dashboard/artikel", label: "Artikel Saya", icon: FileText },
-  { href: "/dashboard/bookmark", label: "Bookmark", icon: Bookmark },
-  { href: "/dashboard/notifikasi", label: "Notifikasi", icon: Bell },
-  { href: "/dashboard/pengaturan", label: "Pengaturan", icon: Settings },
-];
+const menuItems = dashboardNavItems;
 
 export function UserMenu({ user }: UserMenuProps) {
   const [open, setOpen] = useState(false);

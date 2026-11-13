@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { unstable_rethrow } from "next/navigation";
+import { withFailSoft } from "@/lib/supabase/query";
 import type { Tables } from "@/types/database";
 
 export type JobWithPoster = Tables<"job_listings"> & {
@@ -16,7 +16,7 @@ export const JOB_TYPE_LABELS: Record<Tables<"job_listings">["job_type"], string>
 
 /** Lowongan published terbaru. */
 export async function listPublishedJobs(limit = 30): Promise<JobWithPoster[]> {
-  try {
+  return withFailSoft("[careers] listPublishedJobs gagal:", [], async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -33,11 +33,7 @@ export async function listPublishedJobs(limit = 30): Promise<JobWithPoster[]> {
 
     if (error) throw error;
     return (data ?? []) as JobWithPoster[];
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[careers] listPublishedJobs gagal:", err);
-    return [];
-  }
+  });
 }
 
 /** Lowongan published dengan pagination + filter tipe. */
@@ -50,7 +46,7 @@ export async function listPublishedJobsPaginated({
   pageSize?: number;
   jobType?: Tables<"job_listings">["job_type"];
 }): Promise<{ jobs: JobWithPoster[]; total: number }> {
-  try {
+  return withFailSoft("[careers] listPublishedJobsPaginated gagal:", { jobs: [], total: 0 }, async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -73,11 +69,7 @@ export async function listPublishedJobsPaginated({
 
     if (error) throw error;
     return { jobs: (data ?? []) as JobWithPoster[], total: count ?? 0 };
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[careers] listPublishedJobsPaginated gagal:", err);
-    return { jobs: [], total: 0 };
-  }
+  });
 }
 
 /** Di-cache per request: dipanggil generateMetadata + komponen halaman tanpa query ganda. */
@@ -86,7 +78,7 @@ export const getJobBySlug = cache(async (slug: string) =>
 );
 
 async function getJobBySlugUncached(slug: string): Promise<JobWithPoster | null> {
-  try {
+  return withFailSoft("[careers] getJobBySlug gagal:", null, async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -101,9 +93,5 @@ async function getJobBySlugUncached(slug: string): Promise<JobWithPoster | null>
 
     if (error || !data) return null;
     return data as JobWithPoster;
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[careers] getJobBySlug gagal:", err);
-    return null;
-  }
+  });
 }

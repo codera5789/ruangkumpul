@@ -4,7 +4,9 @@ import {
   TOOL_CATEGORIES,
   TOOL_COUNT,
   TOOLS,
+  getCategoryBySlug,
   getToolBySlug,
+  getToolsByCategory,
 } from "@/modules/tools/tools-registry/registry";
 
 describe("tools registry", () => {
@@ -45,5 +47,19 @@ describe("tools registry", () => {
       expect(tool.howTo.length).toBeGreaterThan(0);
       expect(tool.faqs.length).toBeGreaterThan(0);
     }
+  });
+
+  it("memuat 3 tool terbaru dan helper kategori bekerja akurat", () => {
+    expect(getToolBySlug("markdown-converter")?.category).toBe("developer");
+    expect(getToolBySlug("favicon-generator")?.category).toBe("desain");
+    expect(getToolBySlug("diff-checker")?.category).toBe("developer");
+    expect(getToolBySlug("tidak-ada")).toBeUndefined();
+
+    expect(getCategoryBySlug("developer")?.name).toBeTruthy();
+    expect(getCategoryBySlug("bukan-kategori")).toBeUndefined();
+
+    const devTools = getToolsByCategory("developer");
+    expect(devTools.length).toBeGreaterThan(0);
+    expect(devTools.every((t) => t.category === "developer")).toBe(true);
   });
 });

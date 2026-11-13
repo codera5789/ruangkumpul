@@ -155,7 +155,28 @@ npm test
 
 ---
 
-## 6. Pedoman Desain & Antarmuka (UI Guidelines)
+## 6. Prinsip DRY & Standar Kualitas Kode
+
+Agar codebase tetap ringkas dan mudah dirawat seiring bertambahnya modul baru, ikuti aturan berikut:
+
+1. **Rule of Three (Kapan Sentralisasi)**
+   - Jika logika mekanis atau validasi berulang di **3 tempat atau lebih**, ekstrak menjadi helper terpusat di `src/lib/` atau komponen primitif di `src/components/ui/`.
+   - Gunakan helper resmi yang sudah tersedia:
+     - `src/lib/form.ts`: `ActionState`, `zodFieldErrors()`, `parsePageParam()`, `isUuid()`.
+     - `src/lib/utils.ts`: `cn()`, `slugify()`, `uniqueSlug()`, `safeNext()`, `toJsonLd()`, `postgrestIlikePattern()`, `formatDateId()`, `formatCompactId()`.
+     - `src/lib/supabase/query.ts`: `withFailSoft()` untuk pembungkus query Server Component (`unstable_rethrow` otomatis).
+     - `src/lib/auth.ts`, `src/lib/rate-limit.ts`, `src/lib/datetime.ts`: autentikasi server, rate limiting DB, parsing waktu WIB.
+     - `src/components/ui/`: `Button`, `Card`, `Input`, `Textarea`, `Select`, `Badge`, `EmptyState`, `Pagination`.
+2. **Batas Sehat DRY (Hindari Abstraksi Prematur)**
+   - **Jangan** menggabungkan service kueri bisnis (`services.ts`) atau skema validasi (`schemas.ts`) antar-modul yang berbeda menjadi satu CRUD generik—biarkan relasi tabel, filter, dan aturan bisnis tetap eksplisit per modul.
+   - **Jangan** menggabungkan komponen tool client-side (`src/modules/tools/components/tools/`) ke satu bundle agar *code-splitting* `next/dynamic` per tool tetap ringan.
+3. **Kualitas & Kebersihan Fungsi**
+   - Jaga fungsi tetap kecil, fokus satu tanggung jawab, dan gunakan *early return* untuk menjaga nesting tetap dangkal.
+   - Jangan abaikan error query mutasi/insert di Server Actions atau skrip seeder tanpa penanganan atau logging yang jelas.
+
+---
+
+## 7. Pedoman Desain & Antarmuka (UI Guidelines)
 
 Sebelum memodifikasi atau membuat antarmuka baru, wajib membaca [DESIGN.md](DESIGN.md). Poin utama:
 - **Warna Utama:** Indigo `#3730A3` (`brand-800`), aksen Violet (`accent`), netral Slate.
@@ -165,7 +186,7 @@ Sebelum memodifikasi atau membuat antarmuka baru, wajib membaca [DESIGN.md](DESI
 
 ---
 
-## 7. Verifikasi Kualitas Sebelum Mengajukan PR
+## 8. Verifikasi Kualitas Sebelum Mengajukan PR
 
 Pastikan seluruh perintah berikut berjalan sukses tanpa peringatan atau error di lingkungan lokalmu:
 
@@ -182,7 +203,7 @@ npm test
 
 ---
 
-## 8. Mengajukan Pull Request (PR)
+## 9. Mengajukan Pull Request (PR)
 
 1. Dorong (*push*) branch kamu ke repositori fork:
    ```bash

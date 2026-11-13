@@ -585,14 +585,34 @@ Kantor di dekat area Dago, fleksibel 2 hari remote per minggu.`,
 // EKSEKUSI
 // ---------------------------------------------------------------------------
 
+async function listAllAuthUsers() {
+  const usersByEmail = new Map();
+  const perPage = 1000;
+  for (let page = 1; ; page++) {
+    const { data, error } = await db.auth.admin.listUsers({ page, perPage });
+    if (error) throw new Error(`gagal mengambil daftar user auth (hal. ${page}): ${error.message}`);
+    const batch = data?.users ?? [];
+    for (const user of batch) {
+      if (user.email) usersByEmail.set(user.email, user);
+    }
+    if (batch.length < perPage) break;
+  }
+  return usersByEmail;
+}
+
+async function insertOrThrow(table, payload, context) {
+  const { error } = await db.from(table).insert(payload);
+  if (error) throw new Error(`gagal insert ${context} (${table}): ${error.message}`);
+}
+
 async function main() {
   console.log("🌱 RuangKumpul Content Seeder\n");
 
   // -- Persona: buat/ambil user auth ------------------------------------------
+  const existingUsersByEmail = await listAllAuthUsers();
   const personaIds = [];
   for (const p of PERSONAS) {
-    const { data: existing } = await db.auth.admin.listUsers();
-    const found = existing?.users?.find((u) => u.email === p.email);
+    const found = existingUsersByEmail.get(p.email);
     if (found) {
       personaIds.push(found.id);
       console.log(`  persona ada: ${p.username}`);
@@ -611,11 +631,12 @@ async function main() {
 
   // -- Profil: username + bio --------------------------------------------------
   for (let i = 0; i < PERSONAS.length; i++) {
-    await db.from("profiles").update({
+    const { error } = await db.from("profiles").update({
       username: PERSONAS[i].username,
       full_name: PERSONAS[i].full_name,
       bio: PERSONAS[i].bio,
     }).eq("id", personaIds[i]);
+    if (error) throw new Error(`gagal perbarui profil ${PERSONAS[i].username}: ${error.message}`);
   }
 
   // -- Role contributor untuk semua persona ------------------------------------
@@ -623,7 +644,7 @@ async function main() {
   const roleSet = new Set((existingRoles ?? []).map((r) => `${r.user_id}:${r.role}`));
   for (const id of personaIds) {
     if (!roleSet.has(`${id}:contributor`)) {
-      await db.from("user_roles").insert({ user_id: id, role: "contributor" });
+      await insertOrThrow("user_roles", { user_id: id, role: "contributor" }, `role ${id}`);
     }
   }
   console.log("  role contributor: ok");
@@ -707,9 +728,11 @@ async function main() {
     for (const uid of personaIds) {
       const key = `${communityMap.get(c.slug)}:${uid}`;
       if (memberSet.has(key)) continue;
-      await db.from("community_members").insert({
-        community_id: communityMap.get(c.slug), user_id: uid, role: "member", status: "approved",
-      });
+      await insertOrThrow(
+        "community_members",
+        { community_id: communityMap.get(c.slug), user_id: uid, role: "member", status: "approved" },
+        `keanggotaan ${c.slug}`,
+      );
       addedMembers++;
     }
   }
@@ -749,12 +772,16 @@ async function main() {
       const item = group.items[j];
       const key = `${postId}:${personaIds[item.authorIdx]}:${item.content.slice(0, 40)}`;
       if (commentKeys.has(key)) continue;
-      await db.from("comments").insert({
-        post_id: postId,
-        author_id: personaIds[item.authorIdx],
-        content: item.content,
-        created_at: daysAgo(Math.max(0, POSTS[group.post].daysAgo - 1), 10 + j, 30),
-      });
+      await insertOrThrow(
+        "comments",
+        {
+          post_id: postId,
+          author_id: personaIds[item.authorIdx],
+          content: item.content,
+          created_at: daysAgo(Math.max(0, POSTS[group.post].daysAgo - 1), 10 + j, 30),
+        },
+        `komentar diskusi #${group.post}`,
+      );
       addedComments++;
     }
   }
@@ -769,16 +796,27 @@ async function main() {
       if ((i + u) % 3 === 0) continue; // pola sebaran alami
       const key = `${personaIds[u]}:${postIdList[i]}`;
       if (reactionSet.has(key)) continue;
-      await db.from("reactions").insert({
-        user_id: personaIds[u], target_type: "post", target_id: postIdList[i], reaction_type: "like",
-        created_at: daysAgo(Math.max(0, POSTS[i].daysAgo), 12, u * 7),
-      });
+      await insertOrThrow(
+        "reactions",
+        {
+          user_id: personaIds[u], target_type: "post", target_id: postIdList[i], reaction_type: "like",
+          created_at: daysAgo(Math.max(0, POSTS[i].daysAgo), 12, u * 7),
+        },
+        `reaction post #${i}`,
+      );
       addedLikes++;
     }
   }
   console.log(`  like baru: ${addedLikes}`);
 
   // -- Komentar artikel (2 artikel pertama) -----------------------------------------------
+  const { data: existingArticleComments, error: articleCommentErr } = await db
+    .from("article_comments")
+    .select("article_id, author_id, content");
+  if (articleCommentErr) throw new Error(`gagal mengambil komentar artikel: ${articleCommentErr.message}`);
+  const articleCommentKeys = new Set(
+    (existingArticleComments ?? []).map((c) => `${c.article_id}:${c.author_id}:${c.content.slice(0, 40)}`),
+  );
   const articleCommentSeeds = [
     { idx: 0, items: [
       { authorIdx: 4, content: "UUID generator-nya benar-benar sering saya pakai untuk seed data. Fitur favorit satu klik ratusan." },
@@ -795,13 +833,17 @@ async function main() {
     for (let j = 0; j < group.items.length; j++) {
       const item = group.items[j];
       const key = `${articleId}:${personaIds[item.authorIdx]}:${item.content.slice(0, 40)}`;
-      if (commentKeys.has(key)) continue;
-      await db.from("article_comments").insert({
-        article_id: articleId,
-        author_id: personaIds[item.authorIdx],
-        content: item.content,
-        created_at: daysAgo(Math.max(0, ARTICLES[group.idx].publishedDaysAgo - 1), 11 + j, 20),
-      });
+      if (articleCommentKeys.has(key)) continue;
+      await insertOrThrow(
+        "article_comments",
+        {
+          article_id: articleId,
+          author_id: personaIds[item.authorIdx],
+          content: item.content,
+          created_at: daysAgo(Math.max(0, ARTICLES[group.idx].publishedDaysAgo - 1), 11 + j, 20),
+        },
+        `komentar artikel #${group.idx}`,
+      );
     }
   }
   console.log("  komentar artikel: ok");
@@ -811,21 +853,25 @@ async function main() {
     const slug = slugify(e.title).slice(0, 200);
     const { data: existing } = await db.from("events").select("id").eq("slug", slug).maybeSingle();
     if (existing) continue;
-    await db.from("events").insert({
-      organizer_id: personaIds[e.authorIdx],
-      title: e.title,
-      slug,
-      description: e.description,
-      format: e.format,
-      location: e.location,
-      online_url: e.online ? "https://meet.example.com/ruangkumpul-live" : null,
-      starts_at: daysAhead(e.daysAhead, 19),
-      ends_at: daysAhead(e.daysAhead, 21),
-      category: e.category,
-      status: "published",
-      max_participants: e.max,
-      created_at: daysAgo(2),
-    });
+    await insertOrThrow(
+      "events",
+      {
+        organizer_id: personaIds[e.authorIdx],
+        title: e.title,
+        slug,
+        description: e.description,
+        format: e.format,
+        location: e.location,
+        online_url: e.online ? "https://meet.example.com/ruangkumpul-live" : null,
+        starts_at: daysAhead(e.daysAhead, 19),
+        ends_at: daysAhead(e.daysAhead, 21),
+        category: e.category,
+        status: "published",
+        max_participants: e.max,
+        created_at: daysAgo(2),
+      },
+      `event "${e.title}"`,
+    );
   }
   console.log(`  event: ${EVENTS.length}`);
 
@@ -839,7 +885,11 @@ async function main() {
       if (u % 2 === 0) continue;
       const key = `${ev.id}:${personaIds[u]}`;
       if (regSet.has(key)) continue;
-      await db.from("event_registrations").insert({ event_id: ev.id, user_id: personaIds[u] });
+      await insertOrThrow(
+        "event_registrations",
+        { event_id: ev.id, user_id: personaIds[u] },
+        `pendaftaran event ${ev.slug}`,
+      );
       addedRegs++;
     }
   }
@@ -850,23 +900,27 @@ async function main() {
     const slug = slugify(`${j.company} ${j.title}`).slice(0, 200);
     const { data: existing } = await db.from("job_listings").select("id").eq("slug", slug).maybeSingle();
     if (existing) continue;
-    await db.from("job_listings").insert({
-      posted_by: personaIds[j.authorIdx],
-      company_name: j.company,
-      title: j.title,
-      slug,
-      description: j.description,
-      job_type: j.type,
-      location: j.location,
-      is_remote: j.remote,
-      salary_min: j.salaryMin,
-      salary_max: j.salaryMax,
-      salary_period: j.period,
-      apply_url: j.apply,
-      status: "published",
-      created_at: daysAgo(j.daysAgo, 9, 45),
-      updated_at: daysAgo(j.daysAgo, 9, 45),
-    });
+    await insertOrThrow(
+      "job_listings",
+      {
+        posted_by: personaIds[j.authorIdx],
+        company_name: j.company,
+        title: j.title,
+        slug,
+        description: j.description,
+        job_type: j.type,
+        location: j.location,
+        is_remote: j.remote,
+        salary_min: j.salaryMin,
+        salary_max: j.salaryMax,
+        salary_period: j.period,
+        apply_url: j.apply,
+        status: "published",
+        created_at: daysAgo(j.daysAgo, 9, 45),
+        updated_at: daysAgo(j.daysAgo, 9, 45),
+      },
+      `lowongan "${j.title}"`,
+    );
   }
   console.log(`  lowongan: ${JOBS.length}`);
 

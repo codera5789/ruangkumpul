@@ -22,7 +22,7 @@ interface BookmarkButtonProps {
 export function BookmarkButton({
   resourceType,
   resourceId,
-  initialSaved = false,
+  initialSaved,
   isLoggedIn,
   variant = "icon",
   className,

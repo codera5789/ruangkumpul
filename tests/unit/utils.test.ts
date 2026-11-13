@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { blocksToMarkdown, markdownToBlocks } from "@/modules/knowledge/markdown";
-import { formatCompactId, slugify, truncate } from "@/lib/utils";
+import { formatCompactId, slugify, truncate, uniqueSlug } from "@/lib/utils";
 
 describe("slugify", () => {
   it("mengubah judul menjadi slug url-safe", () => {
@@ -17,6 +17,25 @@ describe("slugify", () => {
 
   it("memadatkan spasi dan tanda hubung berlebih", () => {
     expect(slugify("a   -  b")).toBe("a-b");
+  });
+});
+
+describe("uniqueSlug", () => {
+  it("menambahkan sufiks 6 karakter hex di akhir slug", () => {
+    const out = uniqueSlug("Panduan TypeScript Dasar");
+    expect(out).toMatch(/^panduan-typescript-dasar-[0-9a-f]{6}$/);
+  });
+
+  it("memakai fallback saat judul tidak menghasilkan karakter alfanumerik", () => {
+    expect(uniqueSlug("!!!")).toMatch(/^item-[0-9a-f]{6}$/);
+    expect(uniqueSlug("!!!", "produk")).toMatch(/^produk-[0-9a-f]{6}$/);
+  });
+
+  it("memotong basis slug sesuai maxBaseLength dan tidak meninggalkan tanda hubung di ujung", () => {
+    const out = uniqueSlug("satu dua tiga", "item", 6);
+    expect(out).toMatch(/^satu-d-[0-9a-f]{6}$/);
+    const cleanTrailing = uniqueSlug("satu dua", "item", 5);
+    expect(cleanTrailing).toMatch(/^satu-[0-9a-f]{6}$/);
   });
 });
 

@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { unstable_rethrow } from "next/navigation";
+import { withFailSoft } from "@/lib/supabase/query";
 import { postgrestIlikePattern } from "@/lib/utils";
 import type { Enums, Tables } from "@/types/database";
 import type { MarketplaceSort } from "@/modules/marketplace/constants";
@@ -21,7 +21,7 @@ const PRODUCT_SELECT = `*,
 
 /** Daftar kategori marketplace terurut. */
 export const listMarketplaceCategories = cache(async (): Promise<MarketplaceCategory[]> => {
-  try {
+  return withFailSoft("[marketplace] listMarketplaceCategories gagal:", [], async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -32,11 +32,7 @@ export const listMarketplaceCategories = cache(async (): Promise<MarketplaceCate
 
     if (error) throw error;
     return (data ?? []) as MarketplaceCategory[];
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[marketplace] listMarketplaceCategories gagal:", err);
-    return [];
-  }
+  });
 });
 
 /** Katalog produk published dengan pagination, filter, pencarian, dan pengurutan. */
@@ -55,7 +51,10 @@ export async function listPublishedProductsPaginated({
   search?: string;
   sort?: MarketplaceSort;
 }): Promise<{ products: ProductWithSeller[]; total: number }> {
-  try {
+  return withFailSoft(
+    "[marketplace] listPublishedProductsPaginated gagal:",
+    { products: [], total: 0 },
+    async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -94,18 +93,15 @@ export async function listPublishedProductsPaginated({
 
     if (error) throw error;
     return { products: (data ?? []) as ProductWithSeller[], total: count ?? 0 };
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[marketplace] listPublishedProductsPaginated gagal:", err);
-    return { products: [], total: 0 };
-  }
+  });
 }
 
+/** Inti bersama getter produk: lookup satu kolom dengan fail-soft. */
 async function getProductByColumn(
   column: "slug" | "id",
   value: string,
 ): Promise<ProductWithSeller | null> {
-  try {
+  return withFailSoft(`[marketplace] getProductBy(${column}) gagal:`, null, async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -117,11 +113,7 @@ async function getProductByColumn(
 
     if (error || !data) return null;
     return data as ProductWithSeller;
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error(`[marketplace] getProductBy(${column}) gagal:`, err);
-    return null;
-  }
+  });
 }
 
 /** Detail produk berdasarkan slug, di-cache per request. */
@@ -136,7 +128,7 @@ export const getProductById = cache(async (id: string): Promise<ProductWithSelle
 
 /** Daftar produk milik kreator tertentu (termasuk draft & arsip). */
 export async function listSellerProducts(sellerId: string): Promise<ProductWithSeller[]> {
-  try {
+  return withFailSoft("[marketplace] listSellerProducts gagal:", [], async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -148,16 +140,12 @@ export async function listSellerProducts(sellerId: string): Promise<ProductWithS
 
     if (error) throw error;
     return (data ?? []) as ProductWithSeller[];
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[marketplace] listSellerProducts gagal:", err);
-    return [];
-  }
+  });
 }
 
 /** Daftar inquiry masuk untuk produk milik penjual. */
 export async function listSellerInquiries(sellerId: string): Promise<InquiryWithProduct[]> {
-  try {
+  return withFailSoft("[marketplace] listSellerInquiries gagal:", [], async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -170,9 +158,5 @@ export async function listSellerInquiries(sellerId: string): Promise<InquiryWith
 
     if (error) throw error;
     return (data ?? []) as InquiryWithProduct[];
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[marketplace] listSellerInquiries gagal:", err);
-    return [];
-  }
+  });
 }

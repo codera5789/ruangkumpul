@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { isUuid } from "@/lib/form";
 import { createClient } from "@/lib/supabase/server";
 import { ArticleEditorForm } from "@/modules/knowledge/components/article-editor-form";
 import { blocksToMarkdown } from "@/modules/knowledge/markdown";
@@ -14,7 +15,7 @@ interface EditArticlePageProps {
 export default async function EditArtikelPage({ params }: EditArticlePageProps) {
   const { id } = await params;
 
-  if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  if (!isUuid(id)) notFound();
 
   const supabase = await createClient();
   const {

@@ -45,10 +45,8 @@ export function InquiryForm({
           maxLength={120}
           defaultValue={defaultName ?? ""}
           placeholder="Nama lengkap"
+          error={state.fieldErrors?.buyerName}
         />
-        {state.fieldErrors?.buyerName ? (
-          <p className="mt-1 text-xs text-red-600">{state.fieldErrors.buyerName}</p>
-        ) : null}
       </div>
 
       <div>
@@ -62,10 +60,8 @@ export function InquiryForm({
           minLength={4}
           maxLength={160}
           placeholder="Email, WhatsApp, atau Telegram"
+          error={state.fieldErrors?.buyerContact}
         />
-        {state.fieldErrors?.buyerContact ? (
-          <p className="mt-1 text-xs text-red-600">{state.fieldErrors.buyerContact}</p>
-        ) : null}
       </div>
 
       <div>
@@ -80,10 +76,8 @@ export function InquiryForm({
           minLength={10}
           maxLength={2000}
           placeholder="Tanyakan detail lisensi, kustomisasi, atau mekanisme pemesanan..."
+          error={state.fieldErrors?.message}
         />
-        {state.fieldErrors?.message ? (
-          <p className="mt-1 text-xs text-red-600">{state.fieldErrors.message}</p>
-        ) : null}
       </div>
 
       <SubmitButton pendingText="Mengirim..." className="w-full">

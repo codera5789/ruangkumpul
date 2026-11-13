@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { KumpulMotif } from "@/components/shared/kumpul-motif";
 
 export const metadata: Metadata = {
-  title: "Koneksi Offline · RuangKumpul",
+  title: "Koneksi Offline",
   description: "Koneksi internet terputus. Akses tools gratis yang telah tersimpan di cache peramban.",
 };
 

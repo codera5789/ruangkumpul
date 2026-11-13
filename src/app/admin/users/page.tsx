@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { UserRoleManager } from "@/modules/admin/components/user-role-manager";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateId, postgrestIlikePattern } from "@/lib/utils";
@@ -60,6 +63,28 @@ export default async function AdminUsersPage({
         </p>
       </div>
 
+      <form action="/admin/users" method="GET" className="flex flex-wrap items-center gap-2">
+        <div className="min-w-0 flex-1 sm:max-w-sm">
+          <Input
+            name="q"
+            defaultValue={query}
+            placeholder="Cari nama atau username..."
+            aria-label="Cari pengguna"
+          />
+        </div>
+        <Button type="submit" variant="secondary" size="md">
+          Cari
+        </Button>
+        {query ? (
+          <Link
+            href="/admin/users"
+            className="rounded-lg border border-slate-200 bg-surface px-3.5 py-2 text-sm font-medium text-ink-secondary transition-colors hover:text-ink"
+          >
+            Reset
+          </Link>
+        ) : null}
+      </form>
+
       <Card>
         <ul className="divide-y divide-slate-100">
           {(users ?? []).map((u) => (
@@ -101,23 +126,23 @@ export default async function AdminUsersPage({
       {totalPages > 1 ? (
         <nav aria-label="Navigasi halaman" className="flex justify-center gap-3 text-sm">
           {page > 1 ? (
-            <a
+            <Link
               href={`/admin/users?page=${page - 1}${query ? `&q=${encodeURIComponent(query)}` : ""}`}
               className="rounded-lg border border-slate-200 bg-surface px-4 py-2 font-semibold text-ink-secondary hover:text-ink"
             >
               ← Sebelumnya
-            </a>
+            </Link>
           ) : null}
           <span className="py-2 text-ink-secondary">
             Halaman {page} dari {totalPages}
           </span>
           {page < totalPages ? (
-            <a
+            <Link
               href={`/admin/users?page=${page + 1}${query ? `&q=${encodeURIComponent(query)}` : ""}`}
               className="rounded-lg border border-slate-200 bg-surface px-4 py-2 font-semibold text-ink-secondary hover:text-ink"
             >
               Selanjutnya →
-            </a>
+            </Link>
           ) : null}
         </nav>
       ) : null}

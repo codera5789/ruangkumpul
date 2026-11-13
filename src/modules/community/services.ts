@@ -1,4 +1,4 @@
-import { unstable_rethrow } from "next/navigation";
+import { withFailSoft } from "@/lib/supabase/query";
 import type { Tables } from "@/types/database";
 
 export type CommunitySummary = Tables<"communities">;
@@ -8,7 +8,7 @@ export type CommunitySummary = Tables<"communities">;
  * Gagal koneksi database mengembalikan array kosong (halaman tetap tampil).
  */
 export async function listTopCommunities(limit = 6): Promise<CommunitySummary[]> {
-  try {
+  return withFailSoft("[community] listTopCommunities gagal:", [], async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -22,11 +22,7 @@ export async function listTopCommunities(limit = 6): Promise<CommunitySummary[]>
 
     if (error) throw error;
     return (data ?? []) as CommunitySummary[];
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[community] listTopCommunities gagal:", err);
-    return [];
-  }
+  });
 }
 
 /** Direktori komunitas dengan pagination database (bukan slice di memori). */
@@ -37,7 +33,10 @@ export async function listPublicCommunitiesPaginated({
   page?: number;
   pageSize?: number;
 }): Promise<{ communities: CommunitySummary[]; total: number }> {
-  try {
+  return withFailSoft(
+    "[community] listPublicCommunitiesPaginated gagal:",
+    { communities: [], total: 0 },
+    async () => {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
@@ -55,9 +54,5 @@ export async function listPublicCommunitiesPaginated({
       communities: (data ?? []) as CommunitySummary[],
       total: count ?? 0,
     };
-  } catch (err) {
-    unstable_rethrow(err);
-    console.error("[community] listPublicCommunitiesPaginated gagal:", err);
-    return { communities: [], total: 0 };
-  }
+  });
 }

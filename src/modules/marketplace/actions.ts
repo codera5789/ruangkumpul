@@ -3,9 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
-import { zodFieldErrors } from "@/lib/form";
+import { zodFieldErrors, type ActionState } from "@/lib/form";
 import { enforceRateLimit } from "@/lib/rate-limit";
-import { slugify } from "@/lib/utils";
+import { uniqueSlug } from "@/lib/utils";
 import {
   createInquirySchema,
   createProductSchema,
@@ -14,11 +14,7 @@ import {
   updateProductSchema,
 } from "@/modules/marketplace/schemas";
 
-export interface MarketplaceActionState {
-  error: string | null;
-  success: string | null;
-  fieldErrors?: Record<string, string>;
-}
+export type MarketplaceActionState = ActionState;
 
 function extractProductFields(formData: FormData) {
   return {
@@ -56,8 +52,7 @@ export async function actionCreateProduct(
     return { error: "Batas pembuatan produk tercapai. Coba lagi nanti.", success: null };
   }
 
-  const baseSlug = slugify(parsed.data.title).slice(0, 180) || "produk";
-  const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
+  const slug = uniqueSlug(parsed.data.title, "produk", 180);
 
   const { data: product, error } = await supabase
     .from("marketplace_products")

@@ -1,6 +1,6 @@
 /**
- * Verifikasi migration 0006 di Postgres asli (PGlite/WASM).
- * Jalur: stub Supabase → migration 0001-0005 → 0006 → smoke test RLS + RPC.
+ * Verifikasi keamanan RLS, trigger, dan RPC migration 0001–0010 di Postgres asli (PGlite/WASM).
+ * Jalur: stub Supabase → migration 0001–0010 → smoke test RLS + trigger + RPC.
  */
 import { PGlite } from "@electric-sql/pglite";
 import { pg_trgm } from "@electric-sql/pglite/contrib/pg_trgm";
@@ -75,6 +75,7 @@ try {
   await run("0007_audit_fixes (FILE UJI)", readFileSync(`${ROOT}/supabase/migrations/0007_audit_fixes.sql`, "utf8"));
   await run("0008_accepted_answer (FILE UJI)", readFileSync(`${ROOT}/supabase/migrations/0008_accepted_answer.sql`, "utf8"));
   await run("0009_marketplace (FILE UJI)", readFileSync(`${ROOT}/supabase/migrations/0009_marketplace.sql`, "utf8"));
+  await run("0010_security_and_tools_sync (FILE UJI)", readFileSync(`${ROOT}/supabase/migrations/0010_security_and_tools_sync.sql`, "utf8"));
 
   // ---------- Data uji (superuser, bypass RLS) ----------
   await db.exec(`
@@ -375,7 +376,167 @@ try {
     "TEST18g seller dapat membaca inquiry produk miliknya",
   );
 
-  console.log(`\n${failed === 0 ? "★★★ SEMUA TEST LULUS — migration 0001–0009 aman dijalankan ★★★" : `✗✗✗ ${failed} TEST GAGAL`}`);
+  // 0010: product_inquiries_insert anti-spoof seller_id & kolom imutabel inquiry
+  await asUser("authenticated", STRANGER);
+  await expectBlocked(
+    `insert into product_inquiries (product_id, buyer_id, seller_id, buyer_name, buyer_contact, message, status)
+     values ('${prodPubId}', '${STRANGER}', '${STRANGER}', 'Spoof Seller', 'spoof@example.com', 'Mencoba memalsukan seller_id.', 'new')`,
+    "TEST18h stranger tidak boleh spoof seller_id pada inquiry",
+  );
+
+  await asUser("authenticated", OWNER);
+  await expectBlocked(
+    `update product_inquiries set buyer_name = 'Diubah', message = 'Diubah seller' where product_id = '${prodPubId}'`,
+    "TEST18i seller tidak boleh mengubah detail imutabel pengirim inquiry",
+  );
+  await db.query(`update product_inquiries set status = 'replied' where product_id = '${prodPubId}'`);
+  await expectCount(
+    `select count(*) from product_inquiries where product_id = '${prodPubId}' and status = 'replied'`,
+    1,
+    "TEST18i2 seller tetap dapat memperbarui status inquiry",
+  );
+
+  console.log("\nTEST HARDENING TRIGGER, RLS & TOOLS (0010):");
+  await asUser("postgres");
+  const artRes = await db.query(`
+    insert into articles (author_id, title, slug, content, status)
+    values ('${OWNER}', 'Artikel Test 0010', 'artikel-test-0010', '[{"type":"paragraph","text":"Isi artikel test."}]'::jsonb, 'published')
+    returning id;
+  `);
+  const articleId = artRes.rows[0].id;
+
+  await asUser("authenticated", OWNER);
+  await expectBlocked(
+    `update marketplace_products set inquiry_count = 999 where id = '${prodPubId}'`,
+    "TEST18j1 pemilik tidak boleh memanipulasi inquiry_count langsung",
+  );
+  await expectBlocked(
+    `update posts set view_count = 999 where id = '${questionId}'`,
+    "TEST18j2 pemilik tidak boleh memanipulasi view_count post langsung",
+  );
+  await expectBlocked(
+    `update posts set accepted_comment_id = '${commentId}' where id = '${questionId}'`,
+    "TEST18j3 pemilik tidak boleh menandai solusi lewat UPDATE langsung",
+  );
+  await expectBlocked(
+    `update events set participant_count = 999 where slug = 'event-test'`,
+    "TEST18j4 penyelenggara tidak boleh memanipulasi participant_count langsung",
+  );
+  await expectBlocked(
+    `update articles set view_count = 999 where id = '${articleId}'`,
+    "TEST18j5 penulis tidak boleh memanipulasi view_count artikel langsung",
+  );
+
+  // Alur resmi RPC & FK ON DELETE SET NULL tetap bekerja, tetapi mencabut solusi via UPDATE langsung diblok
+  await db.query(`select set_accepted_answer('${questionId}', '${commentId}')`);
+  await expectBlocked(
+    `update posts set accepted_comment_id = null where id = '${questionId}'`,
+    "TEST18j3b pemilik tidak boleh mencabut solusi lewat UPDATE langsung",
+  );
+  await asUser("authenticated", MEMBER);
+  await db.query(`delete from comments where id = '${commentId}'`);
+  await asUser("anon");
+  await db.query(`select increment_article_view('${articleId}')`);
+  await db.query(`select increment_post_view('${questionId}')`);
+  await asUser("postgres");
+  await expectCount(
+    `select count(*) from posts where id = '${questionId}' and accepted_comment_id is null and view_count = 1`,
+    1,
+    "TEST18j6 FK ON DELETE SET NULL & RPC increment_post_view berfungsi",
+  );
+  await expectCount(
+    `select view_count as count from articles where id = '${articleId}'`,
+    1,
+    "TEST18j7 RPC increment_article_view memperbarui view_count",
+  );
+
+  // Anggota komunitas berstatus 'banned' tidak bisa hapus diri sendiri atau reset status
+  await db.query(`
+    update community_members set status = 'banned'
+    where user_id = '${PENDING}'
+      and community_id = (select id from communities where slug = 'privat-aja')
+  `);
+  await asUser("authenticated", PENDING);
+  await db.query(`
+    delete from community_members
+    where user_id = '${PENDING}'
+      and community_id = (select id from communities where slug = 'privat-aja')
+  `);
+  await db.query(`
+    update community_members set status = 'approved'
+    where user_id = '${PENDING}'
+      and community_id = (select id from communities where slug = 'privat-aja')
+  `);
+  await asUser("postgres");
+  await expectCount(
+    `select count(*) from community_members
+     where user_id = '${PENDING}'
+       and status = 'banned'
+       and community_id = (select id from communities where slug = 'privat-aja')`,
+    1,
+    "TEST18k anggota banned tidak dapat menghapus atau mereset statusnya",
+  );
+
+  // Komunitas 'suspended' menyembunyikan postingan lewat can_read_post
+  const suspRes = await db.query(`
+    with c as (
+      insert into communities (owner_id, name, slug, description, visibility, status)
+      values ('${OWNER}', 'Komunitas Disuspend', 'komunitas-disuspend', 'Komunitas nonaktif', 'public', 'suspended')
+      returning id
+    )
+    insert into posts (community_id, author_id, title, slug, content, status)
+    select c.id, '${OWNER}', 'Post Suspended', 'post-suspended', 'Konten komunitas disuspend', 'published' from c
+    returning id;
+  `);
+  const suspendedPostId = suspRes.rows[0].id;
+  await asUser("anon");
+  await expectCount(
+    `select count(*) from posts where id = '${suspendedPostId}'`,
+    0,
+    "TEST18l1 anon tidak melihat post di komunitas suspended",
+  );
+  await asUser("authenticated", MEMBER);
+  await expectCount(
+    `select count(*) from posts where id = '${suspendedPostId}'`,
+    0,
+    "TEST18l2 user lain tidak melihat post di komunitas suspended",
+  );
+
+  // Rate limit bucket dengan UUID di posisi tengah (tool-usage:<uid>:<slug>)
+  await asUser("authenticated", STRANGER);
+  for (let i = 0; i < 3; i++) {
+    await expectRpc(
+      `select check_rate_limit('tool-usage:${MEMBER}:word-counter', 1, 60) as result`,
+      true,
+      `TEST19a${i + 1} spoofing bucket tool-usage korban diabaikan`,
+    );
+  }
+  await asUser("authenticated", MEMBER);
+  await expectRpc(
+    `select check_rate_limit('tool-usage:${MEMBER}:word-counter', 1, 60) as result`,
+    true,
+    "TEST19b kuota tool-usage korban tetap utuh",
+  );
+  await expectRpc(
+    `select check_rate_limit('tool-usage:${MEMBER}:word-counter', 1, 60) as result`,
+    false,
+    "TEST19c kuota tool-usage milik sendiri tetap berlaku",
+  );
+
+  // Sinkronisasi 24 web tools aktif di public.tools
+  await asUser("anon");
+  await expectCount(
+    `select count(*) from tools where status = 'active'`,
+    24,
+    "TEST19d tabel tools memiliki 24 tool aktif",
+  );
+  await expectCount(
+    `select count(*) from tools where slug in ('markdown-converter', 'favicon-generator', 'diff-checker') and status = 'active'`,
+    3,
+    "TEST19e 3 tool baru tersinkronisasi aktif di tabel tools",
+  );
+
+  console.log(`\n${failed === 0 ? "★★★ SEMUA TEST LULUS — migration 0001–0010 aman dijalankan ★★★" : `✗✗✗ ${failed} TEST GAGAL`}`);
   process.exitCode = failed === 0 ? 0 : 1;
 } catch (e) {
   console.error("Harness error:", e.message);

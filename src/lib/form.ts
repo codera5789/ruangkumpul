@@ -1,5 +1,19 @@
 import type { z } from "zod";
 
+/** State standar untuk Server Action berbasis form React `useActionState`. */
+export interface ActionState<TField extends string = string> {
+  error: string | null;
+  success: string | null;
+  fieldErrors?: Partial<Record<TField, string>> & Record<string, string | undefined>;
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Validasi format UUID standar (v1-v8 / v4) secara ketat. */
+export function isUuid(value: unknown): value is string {
+  return typeof value === "string" && UUID_RE.test(value);
+}
+
 /** Peta error zod → `{ field: pesan }`. Pesan pertama per field menang;
  *  issue tanpa field dipetakan ke kunci "form". */
 export function zodFieldErrors(err: z.ZodError): Record<string, string> {

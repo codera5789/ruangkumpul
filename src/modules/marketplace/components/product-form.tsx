@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { Input, Textarea } from "@/components/ui/input";
+import { Input, Select, Textarea } from "@/components/ui/input";
 import { SubmitButton } from "@/modules/auth/components/submit-button";
 import {
   actionCreateProduct,
@@ -16,14 +16,6 @@ import {
 import type { MarketplaceCategory, ProductWithSeller } from "@/modules/marketplace/services";
 
 const initialState: MarketplaceActionState = { error: null, success: null };
-
-const selectCls =
-  "w-full rounded-xl border border-slate-200 bg-surface px-3.5 py-2.5 text-sm text-ink focus:outline-hidden";
-
-function FieldError({ message }: { message?: string }) {
-  if (!message) return null;
-  return <p className="mt-1 text-xs text-red-600">{message}</p>;
-}
 
 /** Form buat atau sunting listing produk Ruang Marketplace. */
 export function ProductForm({
@@ -69,8 +61,8 @@ export function ProductForm({
               maxLength={200}
               defaultValue={initialProduct?.title ?? ""}
               placeholder="mis. Starter Kit SaaS Next.js + Supabase"
+              error={state.fieldErrors?.title}
             />
-            <FieldError message={state.fieldErrors?.title} />
           </div>
 
           <div>
@@ -85,8 +77,8 @@ export function ProductForm({
               maxLength={300}
               defaultValue={initialProduct?.summary ?? ""}
               placeholder="Ringkasan nilai utama produk dalam satu hingga dua kalimat."
+              error={state.fieldErrors?.summary}
             />
-            <FieldError message={state.fieldErrors?.summary} />
           </div>
 
           <div>
@@ -102,8 +94,8 @@ export function ProductForm({
               maxLength={10000}
               defaultValue={initialProduct?.description ?? ""}
               placeholder="Jelaskan detail produk digital atau layanan yang kamu tawarkan..."
+              error={state.fieldErrors?.description}
             />
-            <FieldError message={state.fieldErrors?.description} />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -117,8 +109,8 @@ export function ProductForm({
                 type="url"
                 defaultValue={initialProduct?.preview_url ?? ""}
                 placeholder="https://github.com/..."
+                error={state.fieldErrors?.previewUrl}
               />
-              <FieldError message={state.fieldErrors?.previewUrl} />
             </div>
             <div>
               <label htmlFor="demoUrl" className="mb-1.5 block text-sm font-semibold text-ink">
@@ -130,8 +122,8 @@ export function ProductForm({
                 type="url"
                 defaultValue={initialProduct?.demo_url ?? ""}
                 placeholder="https://demo.produk.id"
+                error={state.fieldErrors?.demoUrl}
               />
-              <FieldError message={state.fieldErrors?.demoUrl} />
             </div>
           </div>
 
@@ -145,8 +137,8 @@ export function ProductForm({
               maxLength={300}
               defaultValue={initialProduct?.tags.join(", ") ?? ""}
               placeholder="nextjs, tailwind, supabase, ui-kit"
+              error={state.fieldErrors?.tagsRaw}
             />
-            <FieldError message={state.fieldErrors?.tagsRaw} />
           </div>
         </div>
 
@@ -156,11 +148,11 @@ export function ProductForm({
               <label htmlFor="categoryId" className="mb-1.5 block text-xs font-semibold text-ink-secondary">
                 Kategori
               </label>
-              <select
+              <Select
                 id="categoryId"
                 name="categoryId"
                 defaultValue={initialProduct?.category_id ?? ""}
-                className={selectCls}
+                error={state.fieldErrors?.categoryId}
               >
                 <option value="">Pilih kategori</option>
                 {categories.map((cat) => (
@@ -168,44 +160,41 @@ export function ProductForm({
                     {cat.name}
                   </option>
                 ))}
-              </select>
-              <FieldError message={state.fieldErrors?.categoryId} />
+              </Select>
             </div>
 
             <div>
               <label htmlFor="productType" className="mb-1.5 block text-xs font-semibold text-ink-secondary">
                 Tipe produk *
               </label>
-              <select
+              <Select
                 id="productType"
                 name="productType"
                 defaultValue={initialProduct?.product_type ?? "template"}
-                className={selectCls}
               >
                 {Object.entries(PRODUCT_TYPE_LABELS).map(([value, label]) => (
                   <option key={value} value={value}>
                     {label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             <div>
               <label htmlFor="licenseType" className="mb-1.5 block text-xs font-semibold text-ink-secondary">
                 Lisensi *
               </label>
-              <select
+              <Select
                 id="licenseType"
                 name="licenseType"
                 defaultValue={initialProduct?.license_type ?? "personal"}
-                className={selectCls}
               >
                 {Object.entries(LICENSE_TYPE_LABELS).map(([value, label]) => (
                   <option key={value} value={value}>
                     {label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             <div>
@@ -217,29 +206,27 @@ export function ProductForm({
                 name="priceIdr"
                 type="number"
                 min={0}
-                step={1000}
                 required
                 defaultValue={initialProduct?.price_idr ?? 0}
+                error={state.fieldErrors?.priceIdr}
               />
-              <FieldError message={state.fieldErrors?.priceIdr} />
             </div>
 
             <div>
               <label htmlFor="status" className="mb-1.5 block text-xs font-semibold text-ink-secondary">
                 Status tayang *
               </label>
-              <select
+              <Select
                 id="status"
                 name="status"
                 defaultValue={initialProduct?.status ?? "published"}
-                className={selectCls}
               >
                 <option value="published">{PRODUCT_STATUS_LABELS.published}</option>
                 <option value="draft">{PRODUCT_STATUS_LABELS.draft}</option>
                 {isEdit ? (
                   <option value="archived">{PRODUCT_STATUS_LABELS.archived}</option>
                 ) : null}
-              </select>
+              </Select>
             </div>
           </div>
 

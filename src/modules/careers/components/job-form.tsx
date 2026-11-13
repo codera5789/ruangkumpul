@@ -1,14 +1,11 @@
 "use client";
 
 import { useActionState } from "react";
-import { Input, Textarea } from "@/components/ui/input";
+import { Input, Select, Textarea } from "@/components/ui/input";
 import { SubmitButton } from "@/modules/auth/components/submit-button";
 import { actionCreateJob, type JobActionState } from "@/modules/careers/actions";
 
 const initialState: JobActionState = { error: null, success: null };
-
-const inputCls =
-  "w-full rounded-xl border border-slate-200 bg-surface px-3.5 py-2.5 text-sm text-ink focus:outline-hidden";
 
 /** Form pasang lowongan kerja. */
 export function JobForm() {
@@ -59,13 +56,13 @@ export function JobForm() {
             <label htmlFor="jobType" className="mb-1.5 block text-xs font-semibold text-ink-secondary">
               Tipe pekerjaan *
             </label>
-            <select id="jobType" name="jobType" defaultValue="full_time" className={inputCls}>
+            <Select id="jobType" name="jobType" defaultValue="full_time">
               <option value="full_time">Full-time</option>
               <option value="part_time">Part-time</option>
               <option value="contract">Kontrak</option>
               <option value="freelance">Freelance</option>
               <option value="internship">Magang</option>
-            </select>
+            </Select>
 
             <label htmlFor="location" className="mb-1.5 mt-3 block text-xs font-semibold text-ink-secondary">
               Lokasi
@@ -88,12 +85,12 @@ export function JobForm() {
               <Input name="salaryMin" inputMode="numeric" placeholder="4.000.000" aria-label="Gaji minimal" />
               <Input name="salaryMax" inputMode="numeric" placeholder="8.000.000" aria-label="Gaji maksimal" />
             </div>
-            <select name="salaryPeriod" defaultValue="bulan" className={`${inputCls} mt-2`} aria-label="Periode gaji">
+            <Select name="salaryPeriod" defaultValue="bulan" className="mt-2" aria-label="Periode gaji">
               <option value="bulan">per bulan</option>
               <option value="tahun">per tahun</option>
               <option value="proyek">per proyek</option>
               <option value="jam">per jam</option>
-            </select>
+            </Select>
           </div>
 
           {state.fieldErrors ? (

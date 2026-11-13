@@ -1,6 +1,6 @@
 /**
  * Tipe database Supabase untuk RuangKumpul.
- * Disesuaikan dengan supabase/migrations/0001–0007 (schema, RPC, dan enum).
+ * Disesuaikan dengan supabase/migrations/0001–0010 (schema, RPC, dan enum).
  * Regenerasi otomatis (opsional): npx supabase gen types typescript --project-id <ref> > src/types/database.ts
  */
 
