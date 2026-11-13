@@ -6,7 +6,30 @@ Format mengacu pada [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) dan
 ## [Unreleased]
 
 ### Added
-- **Pilar 4 (Ruang Marketplace — Polish & Integrasi):**
+- **Kelengkapan UI Admin & Pengaturan Situs (tanpa migrasi DB tambahan):**
+  - Halaman `/admin/audit` untuk menelusuri `audit_logs` dengan filter `resource_type` dan paginasi.
+  - Halaman `/admin/pengaturan` (`SiteAnnouncementForm` + tabel `site_settings`) dan komponen `SiteAnnouncementBanner` live pada layout publik.
+  - Perluasan panel admin: ringkasan Marketplace dan audit log terbaru di `/admin/dashboard`, tab **Pelanggan Newsletter** di `/admin/users`, 6 tab pengelolaan status di `/admin/konten` (`tools`, `artikel`, `komunitas`, `marketplace`, `event`, `lowongan`), filter status di `/admin/moderation`, serta pembaruan navigasi di `admin-nav.tsx`.
+- **Kelengkapan UI Sunting, Unggah Media, & Pelaporan:**
+  - Helper DRY unggah gambar publik (`src/lib/supabase/storage.ts`) dan komponen `MediaImageField` untuk unggah sampul artikel (bucket `articles`) serta ikon komunitas (bucket `communities`).
+  - Halaman sunting `/komunitas/[slug]/edit`, `/event/[slug]/edit` (menggunakan `formatWibDateTimeLocal` WIB), `/karier/[slug]/edit`, serta aksi buka kembali lowongan (`Buka Kembali`).
+  - Komponen `ReportButton` dan action `actionSubmitReport` terpasang seragam pada target diskusi (`post`), komentar (`comment`), artikel (`article`), komunitas (`community`), dan profil pengguna (`user`).
+  - Pengujian unit Vitest untuk `datetime`, helper penyimpanan media, dan pengaturan situs (`tests/unit/datetime.test.ts`, `tests/unit/storage-helper.test.ts`, `tests/unit/site-settings.test.ts`).
+
+### Fixed
+- Perbaikan pola filter `/api/search/suggest` memakai `ilikePattern()` tanpa pembungkus tanda kutip ganda (yang hanya valid untuk `.or(...)`).
+- Penyeragaman validasi parameter ID di `/dashboard/marketplace/[id]/edit` memakai `isUuid()` dan tautan repositori pada `siteConfig`.
+- Pembersihan 5 aset SVG bawaan scaffold `create-next-app` di `public/`.
+
+### Security & Refactor
+- **Hardening RLS & DRY (`0010_security_and_tools_sync.sql`, PR #9):**
+  - Perbaikan policy `product_inquiries_insert` (self-shadowing `seller_id`), kunci kolom turunan & imutabel via `guard_derived_fields_update()` (`SECURITY INVOKER`), larangan self-delete/reset anggota `banned`, syarat status komunitas `active` dan post `published`, perbaikan `check_rate_limit` untuk UUID di posisi tengah, dan sinkronisasi `24` tool + pesan sambutan `handle_new_user()`.
+  - Sentralisasi helper DRY (`withFailSoft`, `handleViewCountRequest`, `ActionState`, `isUuid`, `uniqueSlug`, `Select`), parser Markdown XSS-safe (`parseMarkdownToHtml`), serta perluasan unit test actions, helper, XSS, dan SQL smoke `0001–0010`.
+
+## [0.2.1] - 2026-11-13
+
+### Added
+- **Pilar 4 (Ruang Marketplace — Polish & Integrasi, PR #8):**
   - Halaman sunting produk `/dashboard/marketplace/[id]/edit` dengan memakai ulang komponen `ProductForm` serta helper `getProductById` (`src/modules/marketplace/services.ts`).
   - Tautan **Sunting** produk di `/dashboard/marketplace` dan `/marketplace/[slug]`.
   - Integrasi produk marketplace pada etalase `/jelajahi` dan pencarian global (`/search`, `/api/search/suggest`, dan `search-input.tsx`).

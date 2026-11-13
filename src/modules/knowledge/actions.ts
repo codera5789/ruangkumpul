@@ -6,6 +6,7 @@ import { z } from "zod";
 import { slugify, uniqueSlug } from "@/lib/utils";
 import { isUuid, zodFieldErrors, type ActionState } from "@/lib/form";
 import { createClient } from "@/lib/supabase/server";
+import { uploadPublicMediaImage } from "@/lib/supabase/storage";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { markdownToBlocks } from "@/modules/knowledge/markdown";
 
@@ -175,6 +176,19 @@ export async function actionCreateArticle(
     return { error: "Batas membuat artikel tercapai. Coba lagi nanti.", success: null };
   }
 
+  let featuredImageUrl: string | null = null;
+  const featuredFile = formData.get("featuredImageFile");
+  if (featuredFile instanceof File && featuredFile.size > 0) {
+    const uploaded = await uploadPublicMediaImage(supabase, {
+      bucket: "articles",
+      userId: user.id,
+      prefix: "cover",
+      file: featuredFile,
+    });
+    if (uploaded.error) return { error: uploaded.error, success: null };
+    featuredImageUrl = uploaded.url;
+  }
+
   const slug = uniqueSlug(parsed.data.title, "artikel", 200);
 
   const { data: article, error } = await supabase
@@ -185,6 +199,7 @@ export async function actionCreateArticle(
       title: parsed.data.title,
       slug,
       excerpt: parsed.data.excerpt || null,
+      featured_image: featuredImageUrl,
       content: markdownToBlocks(parsed.data.content),
       status: parsed.data.status,
       published_at: parsed.data.status === "published" ? new Date().toISOString() : null,
@@ -233,10 +248,26 @@ export async function actionUpdateArticle(
   // Verifikasi kepemilikan (RLS juga membatasi, ini untuk pesan yang jelas).
   const { data: existing } = await supabase
     .from("articles")
-    .select("id, slug, author_id, published_at")
+    .select("id, slug, author_id, published_at, featured_image")
     .eq("id", articleId)
     .single();
   if (!existing) return { error: "Artikel tidak ditemukan.", success: null };
+
+  let nextFeaturedImage: string | null = existing.featured_image;
+  if (formData.get("removeFeaturedImage") === "1") {
+    nextFeaturedImage = null;
+  }
+  const featuredFile = formData.get("featuredImageFile");
+  if (featuredFile instanceof File && featuredFile.size > 0) {
+    const uploaded = await uploadPublicMediaImage(supabase, {
+      bucket: "articles",
+      userId: user.id,
+      prefix: "cover",
+      file: featuredFile,
+    });
+    if (uploaded.error) return { error: uploaded.error, success: null };
+    nextFeaturedImage = uploaded.url;
+  }
 
   // Pertahankan tanggal terbit asli saat artikel sudah pernah terbit.
   const nextPublishedAt =
@@ -250,6 +281,7 @@ export async function actionUpdateArticle(
       category_id: parsed.data.categoryId || null,
       title: parsed.data.title,
       excerpt: parsed.data.excerpt || null,
+      featured_image: nextFeaturedImage,
       content: markdownToBlocks(parsed.data.content),
       status: parsed.data.status,
       published_at: nextPublishedAt,

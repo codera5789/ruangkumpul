@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea } from "@/components/ui/input";
+import { MediaImageField } from "@/components/shared/media-image-field";
 import { cn } from "@/lib/utils";
 import { markdownToBlocks } from "@/modules/knowledge/markdown";
 import {
@@ -30,6 +31,7 @@ interface ArticleEditorFormProps {
     categoryId: string;
     tags: string;
     markdown: string;
+    featuredImage?: string;
     status: "draft" | "review" | "published";
     seoTitle: string;
     seoDescription: string;
@@ -177,6 +179,19 @@ export function ArticleEditorForm({
             <p className="mt-2 text-xs text-ink-muted">
               Artikel review diperiksa moderator sebelum tayang.
             </p>
+          </div>
+
+          <div className="rounded-card border border-slate-200/80 bg-surface p-4">
+            <h2 className="mb-3 text-sm font-bold text-ink">Gambar sampul</h2>
+            <MediaImageField
+              id="featuredImageFile"
+              name="featuredImageFile"
+              label="Unggah sampul artikel (opsional)"
+              currentUrl={defaults?.featuredImage}
+              removeName={mode === "edit" ? "removeFeaturedImage" : undefined}
+              previewClassName="aspect-16/9 w-full rounded-xl"
+              alt="Pratinjau sampul artikel"
+            />
           </div>
 
           <div className="rounded-card border border-slate-200/80 bg-surface p-4">

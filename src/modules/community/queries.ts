@@ -18,6 +18,7 @@ interface CommunityContext {
     status: Tables<"community_members">["status"];
   } | null;
   isOwner: boolean;
+  isLoggedIn: boolean;
 }
 
 /** Detail komunitas + status keanggotaan pengguna saat ini.
@@ -61,6 +62,7 @@ async function getCommunityBySlugUncached(
       community: community as CommunitySummary,
       membership,
       isOwner: Boolean(user && community.owner_id === user.id),
+      isLoggedIn: Boolean(user),
     };
   });
 }

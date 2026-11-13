@@ -2,7 +2,8 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight, Lock, MessageSquare, ShieldCheck, ThumbsUp, Users } from "lucide-react";
+import { ChevronRight, Lock, MessageSquare, Pencil, ShieldCheck, ThumbsUp, Users } from "lucide-react";
+import { ReportButton } from "@/components/shared/report-button";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,7 +56,7 @@ async function CommunityDetailContent({ params }: CommunityDetailPageProps) {
 
   if (!context) notFound();
 
-  const { community, membership, isOwner } = context;
+  const { community, membership, isOwner, isLoggedIn } = context;
   const posts = await listCommunityPosts(community.id);
 
   const isApprovedMember = membership?.status === "approved";
@@ -108,21 +109,37 @@ async function CommunityDetailContent({ params }: CommunityDetailPageProps) {
             </div>
 
             {!isOwner ? (
-              <JoinLeaveButtons
-                slug={community.slug}
-                isMember={isApprovedMember}
-                isPending={isPending}
-                isPrivate={community.visibility === "private"}
-              />
+              <div className="flex flex-wrap items-center gap-2">
+                <JoinLeaveButtons
+                  slug={community.slug}
+                  isMember={isApprovedMember}
+                  isPending={isPending}
+                  isPrivate={community.visibility === "private"}
+                />
+                <ReportButton
+                  targetType="community"
+                  targetId={community.id}
+                  redirectTo={`/komunitas/${community.slug}`}
+                  isLoggedIn={isLoggedIn}
+                />
+              </div>
             ) : (
               <div className="flex flex-col items-stretch gap-2">
                 <Badge variant="brand">Kamu pemilik komunitas ini</Badge>
-                <Button asChild variant="outline" size="sm">
-                  <Link href={`/komunitas/${community.slug}/anggota`}>
-                    <ShieldCheck className="size-4" aria-hidden="true" />
-                    Kelola Anggota
-                  </Link>
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/komunitas/${community.slug}/anggota`}>
+                      <ShieldCheck className="size-4" aria-hidden="true" />
+                      Kelola Anggota
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/komunitas/${community.slug}/edit`}>
+                      <Pencil className="size-4" aria-hidden="true" />
+                      Sunting
+                    </Link>
+                  </Button>
+                </div>
               </div>
             )}
           </div>

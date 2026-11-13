@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { CheckCircle2, Pencil, Trash2 } from "lucide-react";
+import { ReportButton } from "@/components/shared/report-button";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -158,6 +159,17 @@ export function CommentItem({
                   </button>
                 </form>
               </div>
+            ) : null}
+
+            {comment.author_id !== currentUserId ? (
+              <ReportButton
+                targetType="comment"
+                targetId={comment.id}
+                redirectTo={`/diskusi/${postSlug}`}
+                isLoggedIn={Boolean(currentUserId)}
+                compact
+                className="ml-auto items-start"
+              />
             ) : null}
           </div>
         ) : null}

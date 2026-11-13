@@ -29,7 +29,7 @@ export default async function EditArtikelPage({ params }: EditArticlePageProps) 
       supabase
         .from("articles")
         .select(
-          `id, title, excerpt, category_id, content, status, seo_title, seo_description,
+          `id, title, excerpt, featured_image, category_id, content, status, seo_title, seo_description,
            article_tag_relations (tags (name))`,
         )
         .eq("id", id)
@@ -67,6 +67,7 @@ export default async function EditArtikelPage({ params }: EditArticlePageProps) 
           categoryId: article.category_id ?? "",
           tags: tagNames.join(", "),
           markdown: blocksToMarkdown(article.content),
+          featuredImage: article.featured_image ?? "",
           status: (article.status === "archived" ? "draft" : article.status) as
             | "draft"
             | "review"

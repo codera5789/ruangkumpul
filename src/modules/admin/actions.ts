@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { isUuid, type ActionState } from "@/lib/form";
 import { createClient } from "@/lib/supabase/server";
+import {
+  normalizeAnnouncementHref,
+  PLATFORM_ANNOUNCEMENT_KEY,
+} from "@/modules/admin/settings";
 import type { Enums, Json } from "@/types/database";
 
 export type AdminActionState = ActionState;
@@ -209,4 +213,230 @@ export async function actionSetArticleStatus(formData: FormData): Promise<void> 
     status: nextStatus,
   });
   revalidatePath("/admin/konten");
+}
+
+// ---------------------------------------------------------------------------
+// Kelola status komunitas, event, lowongan, dan marketplace
+// ---------------------------------------------------------------------------
+
+export async function actionSetCommunityStatus(formData: FormData): Promise<void> {
+  const actor = await requireAdmin();
+  if (!actor) return;
+
+  const communityId = String(formData.get("communityId") || "");
+  const rawStatus = String(formData.get("nextStatus") || "");
+  if (!isUuid(communityId) || !["active", "suspended", "archived"].includes(rawStatus)) return;
+
+  const nextStatus = rawStatus as Enums["community_status"];
+  const admin = await getAdminDb();
+  const { data: updated, error } = await admin
+    .from("communities")
+    .update({ status: nextStatus })
+    .eq("id", communityId)
+    .select("slug")
+    .single();
+
+  if (error) {
+    console.error("[admin] gagal update komunitas:", error.message);
+    return;
+  }
+
+  await writeAudit(actor.id, "community_status_update", "community", communityId, {
+    status: nextStatus,
+  });
+  revalidatePath("/admin/konten");
+  revalidatePath("/komunitas");
+  if (updated?.slug) revalidatePath(`/komunitas/${updated.slug}`);
+}
+
+export async function actionSetEventStatus(formData: FormData): Promise<void> {
+  const actor = await requireAdmin();
+  if (!actor) return;
+
+  const eventId = String(formData.get("eventId") || "");
+  const rawStatus = String(formData.get("nextStatus") || "");
+  if (!isUuid(eventId) || !["published", "cancelled", "archived"].includes(rawStatus)) return;
+
+  const nextStatus = rawStatus as Enums["event_status"];
+  const admin = await getAdminDb();
+  const { data: updated, error } = await admin
+    .from("events")
+    .update({ status: nextStatus })
+    .eq("id", eventId)
+    .select("slug")
+    .single();
+
+  if (error) {
+    console.error("[admin] gagal update event:", error.message);
+    return;
+  }
+
+  await writeAudit(actor.id, "event_status_update", "event", eventId, { status: nextStatus });
+  revalidatePath("/admin/konten");
+  revalidatePath("/event");
+  if (updated?.slug) revalidatePath(`/event/${updated.slug}`);
+}
+
+export async function actionSetJobStatus(formData: FormData): Promise<void> {
+  const actor = await requireAdmin();
+  if (!actor) return;
+
+  const jobId = String(formData.get("jobId") || "");
+  const rawStatus = String(formData.get("nextStatus") || "");
+  if (!isUuid(jobId) || !["published", "closed"].includes(rawStatus)) return;
+
+  const nextStatus = rawStatus as Enums["job_status"];
+  const admin = await getAdminDb();
+  const { data: updated, error } = await admin
+    .from("job_listings")
+    .update({ status: nextStatus })
+    .eq("id", jobId)
+    .select("slug")
+    .single();
+
+  if (error) {
+    console.error("[admin] gagal update lowongan:", error.message);
+    return;
+  }
+
+  await writeAudit(actor.id, "job_status_update", "job", jobId, { status: nextStatus });
+  revalidatePath("/admin/konten");
+  revalidatePath("/karier");
+  if (updated?.slug) revalidatePath(`/karier/${updated.slug}`);
+}
+
+export async function actionSetMarketplaceProductStatus(formData: FormData): Promise<void> {
+  const actor = await requireAdmin();
+  if (!actor) return;
+
+  const productId = String(formData.get("productId") || "");
+  const rawStatus = String(formData.get("nextStatus") || "");
+  if (!isUuid(productId) || !["draft", "published", "archived"].includes(rawStatus)) return;
+
+  const nextStatus = rawStatus as Enums["marketplace_product_status"];
+  const admin = await getAdminDb();
+  const { data: updated, error } = await admin
+    .from("marketplace_products")
+    .update({ status: nextStatus })
+    .eq("id", productId)
+    .select("slug")
+    .single();
+
+  if (error) {
+    console.error("[admin] gagal update produk marketplace:", error.message);
+    return;
+  }
+
+  await writeAudit(actor.id, "marketplace_status_update", "marketplace", productId, {
+    status: nextStatus,
+  });
+  revalidatePath("/admin/konten");
+  revalidatePath("/marketplace");
+  if (updated?.slug) revalidatePath(`/marketplace/${updated.slug}`);
+}
+
+// ---------------------------------------------------------------------------
+// Kelola pelanggan newsletter & pengaturan situs (`site_settings`)
+// ---------------------------------------------------------------------------
+
+export async function actionToggleNewsletterSubscriber(formData: FormData): Promise<void> {
+  const actor = await requireAdmin();
+  if (!actor) return;
+
+  const subscriberId = String(formData.get("subscriberId") || "");
+  const nextActive = formData.get("nextActive") === "true";
+  if (!isUuid(subscriberId)) return;
+
+  const admin = await getAdminDb();
+  const { error } = await admin
+    .from("newsletter_subscribers")
+    .update({
+      is_active: nextActive,
+      unsubscribed_at: nextActive ? null : new Date().toISOString(),
+    })
+    .eq("id", subscriberId);
+
+  if (error) {
+    console.error("[admin] gagal update subscriber newsletter:", error.message);
+    return;
+  }
+
+  await writeAudit(actor.id, "newsletter_status_update", "newsletter", subscriberId, {
+    is_active: nextActive,
+  });
+  revalidatePath("/admin/users");
+  revalidatePath("/admin/dashboard");
+}
+
+const announcementSchema = z.object({
+  enabled: z.boolean(),
+  message: z.string().trim().max(240, "Pesan pengumuman maksimal 240 karakter"),
+  ctaLabel: z.string().trim().max(40, "Label tombol maksimal 40 karakter"),
+  ctaHref: z.string().trim().max(300, "Tautan terlalu panjang"),
+});
+
+export async function actionSaveSiteAnnouncement(
+  _prev: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const actor = await requireAdmin();
+  if (!actor) return { error: "Akses ditolak. Khusus admin.", success: null };
+
+  const parsed = announcementSchema.safeParse({
+    enabled: formData.get("enabled") === "on",
+    message: String(formData.get("message") ?? ""),
+    ctaLabel: String(formData.get("ctaLabel") ?? ""),
+    ctaHref: String(formData.get("ctaHref") ?? ""),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Input tidak valid.", success: null };
+  }
+
+  if (parsed.data.enabled && parsed.data.message.length < 5) {
+    return {
+      error: "Tulis pesan pengumuman minimal 5 karakter sebelum mengaktifkan banner.",
+      success: null,
+    };
+  }
+
+  const hrefCheck = normalizeAnnouncementHref(parsed.data.ctaHref);
+  if (!hrefCheck.ok) {
+    return { error: hrefCheck.error, success: null };
+  }
+
+  const admin = await getAdminDb();
+  const value: Record<string, Json> = {
+    enabled: parsed.data.enabled,
+    message: parsed.data.message,
+    ctaLabel: parsed.data.ctaLabel,
+    ctaHref: hrefCheck.value,
+  };
+
+  const { data: saved, error } = await admin
+    .from("site_settings")
+    .upsert(
+      {
+        key: PLATFORM_ANNOUNCEMENT_KEY,
+        value,
+        updated_by: actor.id,
+      },
+      { onConflict: "key" },
+    )
+    .select("id")
+    .single();
+
+  if (error) {
+    console.error("[admin] gagal menyimpan site_settings:", error.message);
+    return { error: "Gagal menyimpan pengaturan pengumuman.", success: null };
+  }
+
+  await writeAudit(actor.id, "site_setting_update", "site_setting", saved?.id ?? null, {
+    key: PLATFORM_ANNOUNCEMENT_KEY,
+    enabled: parsed.data.enabled,
+  });
+
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/pengaturan");
+  return { error: null, success: "Pengaturan pengumuman situs disimpan." };
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   formatDateId,
+  ilikePattern,
   postgrestIlikePattern,
   safeNext,
   toJsonLd,
@@ -35,6 +36,13 @@ describe("toJsonLd", () => {
     expect(payload).toContain("\\u003c");
     // Tetap JSON valid.
     expect(JSON.parse(payload).title).toContain("<script>");
+  });
+});
+
+describe("ilikePattern", () => {
+  it("meng-escape wildcard dan backslash tanpa pembungkus tanda kutip", () => {
+    expect(ilikePattern("50%_\\a")).toBe("%50\\%\\_\\\\a%");
+    expect(ilikePattern('a"b')).toBe('%a"b%');
   });
 });
 

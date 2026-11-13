@@ -3,12 +3,16 @@ import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import { HeaderSkeleton } from "@/components/layout/header-skeleton";
 import { MobileNav } from "@/components/layout/mobile-nav";
+import { SiteAnnouncementBanner } from "@/components/layout/site-announcement-banner";
 
 export default function PublicLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <>
+      <Suspense fallback={null}>
+        <SiteAnnouncementBanner />
+      </Suspense>
       {/* Header membaca sesi (cookies) — di-stream agar sisa halaman tetap statis. */}
       <Suspense fallback={<HeaderSkeleton />}>
         <Header />

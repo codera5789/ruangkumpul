@@ -81,17 +81,24 @@ export function toJsonLd(data: unknown): string {
   return JSON.stringify(data).replace(/</g, "\\u003c");
 }
 
+function escapeIlikeWildcards(input: string): string {
+  return input
+    .replace(/\\/g, "\\\\")
+    .replace(/[%_]/g, (match) => `\\${match}`);
+}
+
+/** Bangun pola `ILIKE` tanpa kutip untuk pemanggilan `.ilike(column, pattern)` langsung. */
+export function ilikePattern(input: string): string {
+  return `%${escapeIlikeWildcards(input)}%`;
+}
+
 /**
  * Bangun nilai filter PostgREST `ILIKE` yang aman untuk `.or(...)`.
  * Nilai dibungkus tanda kutip ganda agar koma/tanda kurung dari input pengguna
  * tidak memecah logika filter, dan `%`/`_`/`\` di-escape sebagai literal.
  */
 export function postgrestIlikePattern(input: string): string {
-  const escaped = input
-    .replace(/\\/g, "\\\\")
-    .replace(/[%_]/g, (match) => `\\${match}`)
-    .replace(/"/g, '\\"');
-  return `"%${escaped}%"`;
+  return `"%${escapeIlikeWildcards(input).replace(/"/g, '\\"')}%"`;
 }
 
 /**
