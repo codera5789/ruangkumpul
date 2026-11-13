@@ -223,6 +223,9 @@ async function MarketplaceDetailContent({
                 Pantau pesan inquiry masuk atau perbarui status tayang produk dari dashboard.
               </p>
               <Button asChild className="w-full">
+                <Link href={`/dashboard/marketplace/${product.id}/edit`}>Sunting Produk</Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full">
                 <Link href="/dashboard/marketplace">Buka Dashboard Marketplace</Link>
               </Button>
               {product.status === "published" ? (

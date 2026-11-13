@@ -16,8 +16,8 @@ Dokumen ini mencatat target pencapaian utama (*milestone*) pengembangan platform
 - [x] Desain skema database, trigger sinkronisasi inquiry, dan kebijakan RLS (`0009_marketplace.sql`).
 - [x] Pembaruan tipe TypeScript database (`src/types/database.ts`) dan pengujian RLS di `tests/sql-security-smoke.mjs`.
 - [x] Modul aplikasi `src/modules/marketplace/` (konstanta, skema Zod, layanan kueri, Server Actions) + unit test.
-- [x] Antarmuka pengguna publik (`/marketplace`, `/marketplace/[slug]`, `/marketplace/buat`), dashboard (`/dashboard/marketplace`), dan integrasi navigasi/sitemap.
-- [x] Verifikasi kualitas penuh (`typecheck`, `lint`, `vitest`, `sql-security-smoke`).
+- [x] Antarmuka pengguna publik (`/marketplace`, `/marketplace/[slug]`, `/marketplace/buat`), dashboard (`/dashboard/marketplace`, `/dashboard/marketplace/[id]/edit`), dan integrasi navigasi/sitemap/`/jelajahi`/`/search`.
+- [x] Verifikasi kualitas penuh (`typecheck`, `lint`, `vitest`, `sql-security-smoke`, `next build`).
 
 ## M3 — Penyempurnaan UX & Kepatuhan Platform (Direncanakan)
 - [ ] Pencarian universal / Command Palette (`Ctrl+K` / `Cmd+K`).

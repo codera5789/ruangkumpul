@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, MessageSquare, Search, Users, Wrench } from "lucide-react";
+import { FileText, MessageSquare, Search, Store, Users, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Suggestion {
-  type: "tool" | "article" | "community" | "post";
+  type: "tool" | "article" | "community" | "post" | "product";
   title: string;
   href: string;
 }
@@ -17,6 +17,7 @@ const typeIcons = {
   article: FileText,
   community: Users,
   post: MessageSquare,
+  product: Store,
 } as const;
 
 interface SearchInputProps {
@@ -164,7 +165,7 @@ export function SearchInput({
                   </span>
                   <span className="truncate text-ink">{s.title}</span>
                   <span className="ml-auto shrink-0 text-xs text-ink-muted capitalize">
-                    {s.type === "post" ? "diskusi" : s.type}
+                    {s.type === "post" ? "diskusi" : s.type === "product" ? "produk" : s.type}
                   </span>
                 </button>
               </li>
