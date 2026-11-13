@@ -7,7 +7,7 @@ export const siteConfig = {
   locale: "id_ID",
   ogImage: "/images/og-default.png",
   links: {
-    github: "https://github.com/ruangkumpul",
+    github: "https://github.com/codera5789/ruangkumpul",
   },
 } as const;
 

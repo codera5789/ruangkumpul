@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { requireUser } from "@/lib/auth";
+import { isUuid } from "@/lib/form";
 import { ProductForm } from "@/modules/marketplace/components/product-form";
 import { getProductById, listMarketplaceCategories } from "@/modules/marketplace/services";
 
@@ -18,7 +19,7 @@ async function EditMarketplaceProductContent({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  if (!isUuid(id)) notFound();
 
   const { user } = await requireUser();
   if (!user) redirect(`/login?next=/dashboard/marketplace/${id}/edit`);

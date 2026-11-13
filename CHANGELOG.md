@@ -5,8 +5,20 @@ Format mengacu pada [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) dan
 
 ## [Unreleased]
 
+### Fixed
+- Perbaikan pola filter `/api/search/suggest` memakai `ilikePattern()` tanpa pembungkus tanda kutip ganda (yang hanya valid untuk `.or(...)`).
+- Penyeragaman validasi parameter ID di `/dashboard/marketplace/[id]/edit` memakai `isUuid()` dan tautan repositori pada `siteConfig`.
+- Pembersihan 5 aset SVG bawaan scaffold `create-next-app` di `public/`.
+
+### Security & Refactor
+- **Hardening RLS & DRY (`0010_security_and_tools_sync.sql`, PR #9):**
+  - Perbaikan policy `product_inquiries_insert` (self-shadowing `seller_id`), kunci kolom turunan & imutabel via `guard_derived_fields_update()` (`SECURITY INVOKER`), larangan self-delete/reset anggota `banned`, syarat status komunitas `active` dan post `published`, perbaikan `check_rate_limit` untuk UUID di posisi tengah, dan sinkronisasi `24` tool + pesan sambutan `handle_new_user()`.
+  - Sentralisasi helper DRY (`withFailSoft`, `handleViewCountRequest`, `ActionState`, `isUuid`, `uniqueSlug`, `Select`), parser Markdown XSS-safe (`parseMarkdownToHtml`), serta perluasan unit test actions, helper, XSS, dan SQL smoke `0001–0010`.
+
+## [0.2.1] - 2026-11-13
+
 ### Added
-- **Pilar 4 (Ruang Marketplace — Polish & Integrasi):**
+- **Pilar 4 (Ruang Marketplace — Polish & Integrasi, PR #8):**
   - Halaman sunting produk `/dashboard/marketplace/[id]/edit` dengan memakai ulang komponen `ProductForm` serta helper `getProductById` (`src/modules/marketplace/services.ts`).
   - Tautan **Sunting** produk di `/dashboard/marketplace` dan `/marketplace/[slug]`.
   - Integrasi produk marketplace pada etalase `/jelajahi` dan pencarian global (`/search`, `/api/search/suggest`, dan `search-input.tsx`).
