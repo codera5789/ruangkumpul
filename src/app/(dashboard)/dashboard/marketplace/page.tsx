@@ -1,9 +1,11 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Plus, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { requireUser } from "@/lib/auth";
 import { formatDateId } from "@/lib/utils";
 import {
@@ -22,7 +24,7 @@ export const metadata: Metadata = {
   title: "Kelola Marketplace · Dashboard",
 };
 
-export default async function DashboardMarketplacePage() {
+async function DashboardMarketplaceContent() {
   const { user } = await requireUser();
   if (!user) redirect("/login?next=/dashboard/marketplace");
 
@@ -195,5 +197,13 @@ export default async function DashboardMarketplacePage() {
         )}
       </section>
     </div>
+  );
+}
+
+export default function DashboardMarketplacePage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <DashboardMarketplaceContent />
+    </Suspense>
   );
 }

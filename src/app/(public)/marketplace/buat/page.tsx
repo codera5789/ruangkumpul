@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { requireUser } from "@/lib/auth";
 import { ProductForm } from "@/modules/marketplace/components/product-form";
 import { listMarketplaceCategories } from "@/modules/marketplace/services";
@@ -11,7 +13,7 @@ export const metadata: Metadata = {
   description: "Terbitkan template kode, modul UI, aset digital, atau jasa freelance ke RuangKumpul.",
 };
 
-export default async function CreateMarketplaceProductPage() {
+async function CreateMarketplaceProductContent() {
   const { user } = await requireUser();
   if (!user) redirect("/login?next=/marketplace/buat");
 
@@ -38,5 +40,13 @@ export default async function CreateMarketplaceProductPage() {
 
       <ProductForm categories={categories} />
     </div>
+  );
+}
+
+export default function CreateMarketplaceProductPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <CreateMarketplaceProductContent />
+    </Suspense>
   );
 }

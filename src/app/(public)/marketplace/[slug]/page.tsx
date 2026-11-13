@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -10,6 +11,7 @@ import {
   Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { siteConfig } from "@/config/site";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateId, toJsonLd } from "@/lib/utils";
@@ -39,7 +41,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function MarketplaceDetailPage({
+async function MarketplaceDetailContent({
   params,
 }: {
   params: Promise<{ slug: string }>;
@@ -273,5 +275,15 @@ export default async function MarketplaceDetailPage({
         </aside>
       </div>
     </div>
+  );
+}
+
+export default function MarketplaceDetailPage(props: {
+  params: Promise<{ slug: string }>;
+}) {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <MarketplaceDetailContent params={props.params} />
+    </Suspense>
   );
 }
